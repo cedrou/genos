@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "boot", "src\boot\boot.vcproj", "{4B7588DD-BF7E-484C-97D6-346B8F3FD664}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "License", "License", "{576A8AA5-781B-49F9-B990-8DF9ADA45AD1}"
+	ProjectSection(SolutionItems) = preProject
+		license.txt = license.txt
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "VM", "VM", "{13696BF1-A3F9-4F38-98DA-CFDCAFE053F5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "VirtualPC", "VirtualPC", "{AB702D91-E387-4160-98C5-0FD01D2C271A}"
+	ProjectSection(SolutionItems) = preProject
+		vm\VirtualPC\GenOs.vmc = vm\VirtualPC\GenOs.vmc
+		vm\VirtualPC\hd1.vhd = vm\VirtualPC\hd1.vhd
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4B7588DD-BF7E-484C-97D6-346B8F3FD664}.Debug|Win32.ActiveCfg = Release|Win32
+		{4B7588DD-BF7E-484C-97D6-346B8F3FD664}.Debug|Win32.Build.0 = Release|Win32
+		{4B7588DD-BF7E-484C-97D6-346B8F3FD664}.Release|Win32.ActiveCfg = Release|Win32
+		{4B7588DD-BF7E-484C-97D6-346B8F3FD664}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{AB702D91-E387-4160-98C5-0FD01D2C271A} = {13696BF1-A3F9-4F38-98DA-CFDCAFE053F5}
+	EndGlobalSection
+EndGlobal
