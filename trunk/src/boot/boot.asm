@@ -1,7 +1,8 @@
 ;------------------------------------------------------------------------------
 ; GenOS boot loader
+;   This code is loaded by the BIOS at the linear address 7C00h
 ;------------------------------------------------------------------------------
-; Copyright (c) 2008, Cédric Rousseau
+; Copyright (c) 2008, Cedric Rousseau
 ; All rights reserved.
 ; 
 ; Redistribution and use in source and binary forms, with or without 
@@ -26,21 +27,78 @@
 ; THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ;------------------------------------------------------------------------------
 
+%define BOOT_SEG              07C0h
+
+%define INT_VIDEO             int 10h
+%define INT_DISK              int 13h
+
+%define VIDEO_OUTPUT_CHAR     0Eh
+
+%define DISK_RESET            00h
+%define DISK_READ_SECTORS     02h
 
 [BITS 16]                   ; the BIOS starts out in 16-bit real mode
 [ORG 0]
 
+    jmp BOOT_SEG:EntryPoint
+    
+;------------------------------------------------------------------------------
+; Data
+;------------------------------------------------------------------------------
+boot_drive db 0
+    
+    
 EntryPoint:
 ;------------------------------------------------------------------------------
 ; The main procedure of the boot process
 ;------------------------------------------------------------------------------
-    mov ax,0x7c0            ; The BIOS loads the boot sector at 0000:7C00h, so set DS accordinly
-    mov ds,ax               ; Therefore, we don't have to add 7C00h to all our data
+    mov ax, cs                 ; The BIOS loads the boot sector at 0000:7C00h, so set DS accordinly
+    mov ds, ax                 ; Therefore, we don't have to add 7C00h to all our data
 
-    mov ax,0x9c0            ; Set the stack 2000h bytes after the boot sector
-    mov ss,ax
-    mov sp,0
+    mov [boot_drive], dl       ; Save the BIOS number of the bootable device
+    
+    mov ax, 0x9c0              ; Set the stack 2000h bytes after the boot sector
+    mov ss, ax
+    mov sp, 0
 
+
+reset_disk:                      
+    mov ax, DISK_RESET         ; Reset the floppy drive
+    mov dl, [boot_drive]       ; Set the drive
+    INT_DISK
+    jc reset_disk	       ; loop until success
+
+
+read_sector:
+    mov ax, cs                 ; write into 07C0:new_sector
+    mov es, ax                 ;
+    mov bx, new_sector         ;
+
+    mov ah, DISK_READ_SECTORS  ; Read sector from drive
+    mov al, 1                  ; Load 1 sector
+    mov ch, 0                  ; Cylinder=0
+    mov cl, 2                  ; Sector=2
+    mov dh, 0                  ; Head=0
+    mov dl, [boot_drive]       ; Bootable drive
+    INT_DISK
+    jc read_sector             ; loop until success
+
+
+    jmp new_sector             ; Jump to the program
+
+
+;------------------------------------------------------------------------------
+; A valid boot sector must have the signature 0xAA55 at offset 510
+;------------------------------------------------------------------------------
+    times 510-($-$$) db 0
+    dw 0xAA55
+
+
+
+;------------------------------------------------------------------------------
+; Starting from here, the code is not loaded by the BIOS.
+;------------------------------------------------------------------------------
+new_sector:
     mov si,boot_message     ; Display the startup message
     call PrintMessage
 
@@ -51,30 +109,24 @@ NeverendingLoop:
     hlt
     jmp NeverendingLoop
 
+;------------------------------------------------------------------------------
+; Data
+;------------------------------------------------------------------------------
+boot_message    db 'Codename: Genesis',13,10,' - loading GenOS...',0
 
 PrintMessage:          
 ;------------------------------------------------------------------------------
 ; Print ds:si to screen using BIOS interrupt
 ;------------------------------------------------------------------------------
-    mov bx,0007             ; attribute
-    mov ah,0eh              ; put character
+    mov bh, 00h                ; page number
+    mov bl, 07h                ; foreground color
+    mov ah, VIDEO_OUTPUT_CHAR  ; put character
 PM_loop:
-    lodsb                   ; load byte at ds:si into al
-    or al,al                ; test if character is 0 (end)
+    lodsb                      ; load byte at ds:si into al
+    or al, al                  ; test if character is 0 (end)
     jz PM_done
-    int 0x10                ; call BIOS
+    INT_VIDEO                  ; call BIOS
     jmp PM_loop
 PM_done:
     ret
 
-;------------------------------------------------------------------------------
-; Data
-;------------------------------------------------------------------------------
-boot_message    db 'Welcome to the birth of GenOS...',13,10,0
-
-
-;------------------------------------------------------------------------------
-; A valid boot sector must have the signature 0xAA55 at offset 510
-;------------------------------------------------------------------------------
-    times 510-($-$$) db 0
-    dw 0xAA55
