@@ -1,7 +1,7 @@
 ;------------------------------------------------------------------------------
 ; GenOS floppy generator
 ;------------------------------------------------------------------------------
-; Copyright (c) 2008, Cédric Rousseau
+; Copyright (c) 2008, Cedric Rousseau
 ; All rights reserved.
 ; 
 ; Redistribution and use in source and binary forms, with or without 
