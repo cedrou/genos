@@ -38,16 +38,38 @@
 %define DISK_READ_SECTORS     02h
 
 [BITS 16]                   ; the BIOS starts out in 16-bit real mode
-[ORG 0]
+[ORG 7C00h]
 
     jmp BOOT_SEG:EntryPoint
     
 ;------------------------------------------------------------------------------
 ; Data
 ;------------------------------------------------------------------------------
-boot_drive db 0
-    
-    
+boot_drive      db 0
+gdt:
+        dd 0            ; Null Segment
+        dd 0
+
+        dw 0FFFFh       ; Code segment, read/execute, nonconforming
+        dw 0
+        db 0
+        db 10011010b
+        db 11001111b
+        db 0
+
+        dw 0FFFFh       ; Data segment, read/write, expand down
+        dw 0
+        db 0
+        db 10010010b
+        db 11001111b
+        db 0
+
+gdt_desc:                       ; The GDT descriptor
+        dw gdt_desc - gdt - 1    ; Limit (size)
+        dd gdt                  ; Address of the GDT
+
+
+
 EntryPoint:
 ;------------------------------------------------------------------------------
 ; The main procedure of the boot process
@@ -56,10 +78,6 @@ EntryPoint:
     mov ds, ax                 ; Therefore, we don't have to add 7C00h to all our data
 
     mov [boot_drive], dl       ; Save the BIOS number of the bootable device
-    
-    mov ax, 0x9c0              ; Set the stack 2000h bytes after the boot sector
-    mov ss, ax
-    mov sp, 0
 
 
 reset_disk:                      
@@ -84,7 +102,57 @@ read_sector:
     jc read_sector             ; loop until success
 
 
-    jmp new_sector             ; Jump to the program
+    cli                     ; no more interruptions
+    
+
+    ; set A20 line
+    
+    xor cx, cx
+    
+clear_buf:
+    in al, 64h              ; get input from keyboard status port
+    test al, 02h            ; test the buffer full flag
+    loopnz clear_buf        ; loop until buffer is empty
+    mov al, 0D1h            ; keyboard: write to output port
+    out 64h, al             ; output command to keyboard
+clear_buf2:
+    in al, 64h              ; wait 'till buffer is empty again
+    test al, 02h
+    loopnz clear_buf2
+    mov al, 0dfh            ; keyboard: set A20
+    out 60h, al             ; send it to the keyboard controller
+    mov cx, 14h
+wait_kbc:                   ; this is approx. a 25uS delay to wait
+    out 0edh, ax            ; for the kb controler to execute our 
+    loop wait_kbc           ; command.
+
+    
+    ; load GDT
+    xor ax, ax
+    mov ds, ax              ; Set DS-register to 0 - used by lgdt
+
+    lgdt [gdt_desc]         ; Load the GDT descriptor
+
+
+    ; enter pmode
+    mov eax, cr0            ; load the control register in
+    or  al, 1               ; set bit 0: pmode bit
+    mov cr0, eax            ; copy it back to the control register
+
+    jmp 08h:protected_mode
+
+[Bits 32]
+protected_mode:   
+    mov ax, 10h             ; Save data segment identifier
+    mov ds, ax              ; Move a valid data segment into the data segment register
+    mov ss, ax              ; Move a valid data segment into the stack segment register
+    mov esp, 090000h        ; Move the stack pointer to 090000h
+
+    mov byte [ds:0B8000h], 'A'      ; Move the ASCII-code of 'P' into first video memory
+    mov byte [ds:0B8001h], 1Bh      ; Assign a color code
+
+    jmp new_sector
+
 
 
 ;------------------------------------------------------------------------------
@@ -96,37 +164,18 @@ read_sector:
 
 
 ;------------------------------------------------------------------------------
-; Starting from here, the code is not loaded by the BIOS.
+; Starting from here, the code is not loaded by the BIOS and must be
+; loaded manually.
 ;------------------------------------------------------------------------------
+
 new_sector:
-    mov si,boot_message     ; Display the startup message
-    call PrintMessage
+    
+    mov byte [ds:0B8002h], 'B'      ; Move the ASCII-code of 'P' into first video memory
+    mov byte [ds:0B8003h], 1Bh      ; Assign a color code
 
 NeverendingLoop:
 ;------------------------------------------------------------------------------
 ; This is a loop which never ends and which does not consume CPU power.
 ;------------------------------------------------------------------------------
-    hlt
+    ;hlt
     jmp NeverendingLoop
-
-;------------------------------------------------------------------------------
-; Data
-;------------------------------------------------------------------------------
-boot_message    db 'Codename: Genesis',13,10,' - loading GenOS...',0
-
-PrintMessage:          
-;------------------------------------------------------------------------------
-; Print ds:si to screen using BIOS interrupt
-;------------------------------------------------------------------------------
-    mov bh, 00h                ; page number
-    mov bl, 07h                ; foreground color
-    mov ah, VIDEO_OUTPUT_CHAR  ; put character
-PM_loop:
-    lodsb                      ; load byte at ds:si into al
-    or al, al                  ; test if character is 0 (end)
-    jz PM_done
-    INT_VIDEO                  ; call BIOS
-    jmp PM_loop
-PM_done:
-    ret
-
