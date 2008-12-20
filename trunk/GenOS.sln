@@ -2,6 +2,9 @@
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "boot", "src\boot\boot.vcproj", "{4B7588DD-BF7E-484C-97D6-346B8F3FD664}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FBF19DC3-2F6C-4F50-953C-5CEC752B7A4B} = {FBF19DC3-2F6C-4F50-953C-5CEC752B7A4B}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "License", "License", "{576A8AA5-781B-49F9-B990-8DF9ADA45AD1}"
 	ProjectSection(SolutionItems) = preProject
@@ -16,6 +19,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "VirtualPC", "VirtualPC", "{
 		vm\VirtualPC\hd1.vhd = vm\VirtualPC\hd1.vhd
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "createfloppy", "src\tools\createfloppy\createfloppy.vcproj", "{EA7789E4-D4B4-4890-B3FD-13B7DA5F1D60}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{3DB81519-5234-46E2-89FC-B6DB6BA1B66B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "make", "src\make\make.vcproj", "{EF5160E6-F197-488F-97CB-AAFA994FF2B0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FBF19DC3-2F6C-4F50-953C-5CEC752B7A4B} = {FBF19DC3-2F6C-4F50-953C-5CEC752B7A4B}
+		{4B7588DD-BF7E-484C-97D6-346B8F3FD664} = {4B7588DD-BF7E-484C-97D6-346B8F3FD664}
+		{EA7789E4-D4B4-4890-B3FD-13B7DA5F1D60} = {EA7789E4-D4B4-4890-B3FD-13B7DA5F1D60}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kernel", "src\kernel\kernel.vcproj", "{FBF19DC3-2F6C-4F50-953C-5CEC752B7A4B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -26,11 +42,24 @@ Global
 		{4B7588DD-BF7E-484C-97D6-346B8F3FD664}.Debug|Win32.Build.0 = Release|Win32
 		{4B7588DD-BF7E-484C-97D6-346B8F3FD664}.Release|Win32.ActiveCfg = Release|Win32
 		{4B7588DD-BF7E-484C-97D6-346B8F3FD664}.Release|Win32.Build.0 = Release|Win32
+		{EA7789E4-D4B4-4890-B3FD-13B7DA5F1D60}.Debug|Win32.ActiveCfg = Debug|Win32
+		{EA7789E4-D4B4-4890-B3FD-13B7DA5F1D60}.Debug|Win32.Build.0 = Debug|Win32
+		{EA7789E4-D4B4-4890-B3FD-13B7DA5F1D60}.Release|Win32.ActiveCfg = Release|Win32
+		{EA7789E4-D4B4-4890-B3FD-13B7DA5F1D60}.Release|Win32.Build.0 = Release|Win32
+		{EF5160E6-F197-488F-97CB-AAFA994FF2B0}.Debug|Win32.ActiveCfg = Debug|Win32
+		{EF5160E6-F197-488F-97CB-AAFA994FF2B0}.Debug|Win32.Build.0 = Debug|Win32
+		{EF5160E6-F197-488F-97CB-AAFA994FF2B0}.Release|Win32.ActiveCfg = Release|Win32
+		{EF5160E6-F197-488F-97CB-AAFA994FF2B0}.Release|Win32.Build.0 = Release|Win32
+		{FBF19DC3-2F6C-4F50-953C-5CEC752B7A4B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FBF19DC3-2F6C-4F50-953C-5CEC752B7A4B}.Debug|Win32.Build.0 = Debug|Win32
+		{FBF19DC3-2F6C-4F50-953C-5CEC752B7A4B}.Release|Win32.ActiveCfg = Release|Win32
+		{FBF19DC3-2F6C-4F50-953C-5CEC752B7A4B}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{AB702D91-E387-4160-98C5-0FD01D2C271A} = {13696BF1-A3F9-4F38-98DA-CFDCAFE053F5}
+		{EA7789E4-D4B4-4890-B3FD-13B7DA5F1D60} = {3DB81519-5234-46E2-89FC-B6DB6BA1B66B}
 	EndGlobalSection
 EndGlobal

@@ -24,10 +24,10 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nasm.exe -o $(TargetPath) -f bin floppy.asm"
-				ReBuildCommandLine="nasm.exe -o $(TargetPath) -f bin floppy.asm"
+				BuildCommandLine="nasm.exe -o $(TargetPath) -f bin boot.asm"
+				ReBuildCommandLine="nasm.exe -o $(TargetPath) -f bin boot.asm"
 				CleanCommandLine="del $(TargetPath)"
-				Output="$(SolutionDir)vm\floppy.ima"
+				Output="$(SolutionDir)bin\boot.bin"
 				PreprocessorDefinitions=""
 				IncludeSearchPath=""
 				ForcedIncludes=""
@@ -47,10 +47,6 @@
 			>
 			<File
 				RelativePath=".\boot.asm"
-				>
-			</File>
-			<File
-				RelativePath=".\floppy.asm"
 				>
 			</File>
 		</Filter>

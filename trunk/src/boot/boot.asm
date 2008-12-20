@@ -88,12 +88,12 @@ reset_disk:
 
 
 read_sector:
-    mov ax, cs                 ; write into 07C0:new_sector
+    mov ax, 01000h             ; write into 07C0:new_sector
     mov es, ax                 ;
-    mov bx, new_sector         ;
+    xor bx, bx                 ;
 
     mov ah, DISK_READ_SECTORS  ; Read sector from drive
-    mov al, 1                  ; Load 1 sector
+    mov al, 2                  ; Load 1 sector
     mov ch, 0                  ; Cylinder=0
     mov cl, 2                  ; Sector=2
     mov dh, 0                  ; Head=0
@@ -148,10 +148,10 @@ protected_mode:
     mov ss, ax              ; Move a valid data segment into the stack segment register
     mov esp, 090000h        ; Move the stack pointer to 090000h
 
-    mov byte [ds:0B8000h], 'A'      ; Move the ASCII-code of 'P' into first video memory
-    mov byte [ds:0B8001h], 1Bh      ; Assign a color code
+    mov byte [0B8000h], 'A'      ; Move the ASCII-code of 'P' into first video memory
+    mov byte [0B8001h], 1Bh      ; Assign a color code
 
-    jmp new_sector
+    jmp 010200h
 
 
 
@@ -160,22 +160,3 @@ protected_mode:
 ;------------------------------------------------------------------------------
     times 510-($-$$) db 0
     dw 0xAA55
-
-
-
-;------------------------------------------------------------------------------
-; Starting from here, the code is not loaded by the BIOS and must be
-; loaded manually.
-;------------------------------------------------------------------------------
-
-new_sector:
-    
-    mov byte [ds:0B8002h], 'B'      ; Move the ASCII-code of 'P' into first video memory
-    mov byte [ds:0B8003h], 1Bh      ; Assign a color code
-
-NeverendingLoop:
-;------------------------------------------------------------------------------
-; This is a loop which never ends and which does not consume CPU power.
-;------------------------------------------------------------------------------
-    ;hlt
-    jmp NeverendingLoop
