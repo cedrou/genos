@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// kmain.cpp
-//  Entry point
+// ioports.h
+//	
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -27,12 +27,15 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#include "screen.h"
+#pragma once
 
-void __declspec(naked) kmain()
-{
-	Screen::Clear();
-  Screen::WriteString("Starting GenOS"); 
+#include "common.h"
 
-	__asm jmp $
-}
+
+// Write a byte out to the specified port.
+void outb(uint16 port, uint8 value);
+
+// Read a byte/word/dword in the specified port.
+uint8  inb(uint16 port);
+uint16 inw(uint16 port);
+uint32 ind(uint16 port);

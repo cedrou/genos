@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// kmain.cpp
-//  Entry point
+// screen.h
+//	Definition of the Screen class
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -27,12 +27,30 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#include "screen.h"
+#pragma once
 
-void __declspec(naked) kmain()
+#include "common.h"
+
+class Screen
 {
-	Screen::Clear();
-  Screen::WriteString("Starting GenOS"); 
+private:
+	static uint16 cursor_x;
+	static uint16 cursor_y;
 
-	__asm jmp $
-}
+public:
+	// Clears the screen and puts the cursor in top left
+	static void Clear();
+
+	// Outputs a single character to the screen.
+  static void WriteChar(char c);
+  // Outputs a null-terminated ASCII string to the screen.
+	static void WriteString(const char* string);
+	// Outputs a hexadecimal number to the screen.
+	static void WriteHex(uint32 value)
+	// Outputs a decimal number to the screen.
+	static void WriteInt(uint32 value)
+
+private:
+	static void Scroll();
+	static void SetCursor();
+};
