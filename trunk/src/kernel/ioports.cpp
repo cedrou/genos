@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// kmain.cpp
-//  Entry point
+// ioports.cpp
+//	Declare some global constants and functions
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -27,12 +27,42 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#include "screen.h"
+#include "ioports.h"
 
-void __declspec(naked) kmain()
+void outb(uint16 port, uint8 value)
 {
-	Screen::Clear();
-  Screen::WriteString("Starting GenOS"); 
-
-	__asm jmp $
+	__asm
+	{
+		mov al, value
+		mov dx, port
+		out dx, al
+	}
 }
+
+uint8 inb(uint16 port)
+{
+	__asm
+	{
+		mov dx, port
+		in al, dx
+	}
+}
+
+uint16 inw(uint16 port)
+{
+	__asm
+	{
+		mov dx, port
+		in ax, dx
+	}
+}
+
+uint32 ind(uint16 port)
+{
+	__asm
+	{
+		mov dx, port
+		in eax, dx
+	}
+}
+

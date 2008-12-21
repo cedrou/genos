@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// kmain.cpp
-//  Entry point
+// common.cpp
+//	Declare some global constants and functions
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -27,12 +27,15 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#include "screen.h"
+#include "common.h"
 
-void __declspec(naked) kmain()
+
+void memcpy(const char* src, char* dst, size_t count)
 {
-	Screen::Clear();
-  Screen::WriteString("Starting GenOS"); 
+	while(count--) { *dst++ = *src++; }
+}
 
-	__asm jmp $
+void memset(char* dst, uint8 value, size_t count)
+{
+	while(count--) { *dst++ = value; }
 }

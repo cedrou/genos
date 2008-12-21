@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// kmain.cpp
-//  Entry point
+// common.h
+//	Declare some global constants and functions
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -27,12 +27,18 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#include "screen.h"
+#pragma once
 
-void __declspec(naked) kmain()
-{
-	Screen::Clear();
-  Screen::WriteString("Starting GenOS"); 
+// These typedefs are written for 32-bit X86.
+typedef unsigned int   uint32;
+typedef          int   int32;
+typedef unsigned short uint16;
+typedef          short int16;
+typedef unsigned char  uint8;
+typedef          char  int8;
+typedef unsigned int   size_t;
 
-	__asm jmp $
-}
+#include "ioports.h"
+
+void memcpy(const char* src, char* dst, size_t count);
+void memset(char* dst, uint8 value, size_t count);

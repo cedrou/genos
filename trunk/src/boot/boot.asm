@@ -40,12 +40,15 @@
 [BITS 16]                   ; the BIOS starts out in 16-bit real mode
 [ORG 7C00h]
 
-    jmp BOOT_SEG:EntryPoint
+    jmp 07C0h:EntryPoint
     
 ;------------------------------------------------------------------------------
 ; Data
 ;------------------------------------------------------------------------------
 boot_drive      db 0
+kernel_size     dd 0
+entry_point     dd 0
+code_base       dd 0
 gdt:
         dd 0            ; Null Segment
         dd 0
@@ -69,7 +72,13 @@ gdt_desc:                       ; The GDT descriptor
         dd gdt                  ; Address of the GDT
 
 
-
+Error:
+    mov bx, 7               ; attribute
+    mov ah,0eh              ; put character
+    mov al,'!'
+    INT_VIDEO               ; call BIOS
+    jmp $
+    
 EntryPoint:
 ;------------------------------------------------------------------------------
 ; The main procedure of the boot process
@@ -87,19 +96,66 @@ reset_disk:
     jc reset_disk	       ; loop until success
 
 
-read_sector:
-    mov ax, 01000h             ; write into 07C0:new_sector
+read_kernel_header:
+    mov ax, 01000h             ; write into 1000h:0000h
     mov es, ax                 ;
     xor bx, bx                 ;
 
     mov ah, DISK_READ_SECTORS  ; Read sector from drive
-    mov al, 2                  ; Load 1 sector
-    mov ch, 0                  ; Cylinder=0
-    mov cl, 2                  ; Sector=2
-    mov dh, 0                  ; Head=0
+    mov al, 1                  ; Number of sectors
+    mov ch, 0                  ; Cylinder
+    mov cl, 2                  ; Sector
+    mov dh, 0                  ; Head
     mov dl, [boot_drive]       ; Bootable drive
     INT_DISK
-    jc read_sector             ; loop until success
+    jc read_kernel_header      ; loop until success
+    
+    mov ax, 01000h
+    mov ds, ax
+    
+    xor bx, bx
+    
+    ; Check MZ signature
+    mov ax, [bx]
+    cmp ax, 'MZ'
+    jnz Error
+    
+    ; Read PE offset and move
+    mov ax, [bx+3Ch]
+    add bx, ax
+    
+    ; Check PE signature
+    mov ax, [bx]
+    cmp ax, 'PE'
+    jnz Error
+    
+    ; Read code size
+    mov eax, [bx+1Ch]
+    shr eax, 9
+    mov [kernel_size], eax
+    
+    ; Read address of entry point
+    mov eax, [bx+28h]
+    add eax, 10000h
+    mov [entry_point], eax
+
+    ; Read base of code segment
+    mov eax, [bx+2Ch]
+    mov [code_base], eax
+
+read_kernel:
+    mov ax, 01000h             ; write into 1000h:[code_base]
+    mov es, ax                 ;
+    mov bx, [code_base]        ;
+
+    mov ah, DISK_READ_SECTORS  ; Read sector from drive
+    mov al, [kernel_size]      ; Number of sectors
+    mov ch, 0                  ; Cylinder
+    mov cl, 3                  ; Sector
+    mov dh, 0                  ; Head
+    mov dl, [boot_drive]       ; Bootable drive
+    INT_DISK
+    jc read_kernel             ; loop until success
 
 
     cli                     ; no more interruptions
@@ -127,6 +183,8 @@ wait_kbc:                   ; this is approx. a 25uS delay to wait
     loop wait_kbc           ; command.
 
     
+    mov ecx, [entry_point]
+
     ; load GDT
     xor ax, ax
     mov ds, ax              ; Set DS-register to 0 - used by lgdt
@@ -142,7 +200,7 @@ wait_kbc:                   ; this is approx. a 25uS delay to wait
     jmp 08h:protected_mode
 
 [Bits 32]
-protected_mode:   
+protected_mode:
     mov ax, 10h             ; Save data segment identifier
     mov ds, ax              ; Move a valid data segment into the data segment register
     mov ss, ax              ; Move a valid data segment into the stack segment register
@@ -151,8 +209,11 @@ protected_mode:
     mov byte [0B8000h], 'A'      ; Move the ASCII-code of 'P' into first video memory
     mov byte [0B8001h], 1Bh      ; Assign a color code
 
-    jmp 010200h
+    call ecx
 
+    mov byte [0B8000h], 'Z'      ; Move the ASCII-code of 'P' into first video memory
+    mov byte [0B8001h], 1Bh      ; Assign a color code
+    jmp $
 
 
 ;------------------------------------------------------------------------------
