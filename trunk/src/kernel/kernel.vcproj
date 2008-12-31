@@ -14,6 +14,9 @@
 		/>
 	</Platforms>
 	<ToolFiles>
+		<ToolFile
+			RelativePath="..\..\nasmrule.rules"
+		/>
 	</ToolFiles>
 	<Configurations>
 		<Configuration
@@ -28,6 +31,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="Nasm build"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -48,6 +54,7 @@
 				RuntimeLibrary="3"
 				BufferSecurityCheck="false"
 				UsePrecompiledHeader="0"
+				AssemblerOutput="2"
 				WarningLevel="4"
 				DebugInformationFormat="3"
 			/>
@@ -62,14 +69,16 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/MERGE:.rdata=.text /MERGE:.data=.text"
+				AdditionalOptions="/safeseh:no /filealign:0x1000"
+				ShowProgress="0"
 				LinkIncremental="1"
 				GenerateManifest="false"
 				IgnoreAllDefaultLibraries="true"
-				GenerateDebugInformation="false"
-				SubSystem="3"
+				GenerateDebugInformation="true"
+				GenerateMapFile="true"
+				SubSystem="1"
 				EntryPointSymbol="kmain"
-				BaseAddress="0x10000"
+				BaseAddress="0x100000"
 				RandomizedBaseAddress="1"
 				FixedBaseAddress="2"
 				DataExecutionPrevention="0"
@@ -112,6 +121,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="Nasm build"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -183,7 +195,19 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\akmain.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\common.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\gdt.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\intmgr.cpp"
 				>
 			</File>
 			<File
@@ -191,11 +215,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\kmain.cpp"
+				RelativePath=".\kernel.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\registers.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\screen.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\timer.cpp"
 				>
 			</File>
 		</Filter>
@@ -209,11 +241,31 @@
 				>
 			</File>
 			<File
+				RelativePath=".\gdt.h"
+				>
+			</File>
+			<File
+				RelativePath=".\intmgr.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ioports.h"
 				>
 			</File>
 			<File
+				RelativePath=".\kernel.h"
+				>
+			</File>
+			<File
+				RelativePath=".\registers.h"
+				>
+			</File>
+			<File
 				RelativePath=".\screen.h"
+				>
+			</File>
+			<File
+				RelativePath=".\timer.h"
 				>
 			</File>
 		</Filter>

@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// common.cpp
-//	Declare some global constants and functions
+// timer.h
+//	
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -27,18 +27,24 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
+#pragma once
+
 #include "common.h"
+#include "registers.h"
 
-
-void memcpy(const void* src, void* dst, size_t count)
+namespace GenOS 
 {
-	const char* s = (const char*)src;
-	char* d = (char*)dst;
-	while(count--) { *d++ = *s++; }
-}
 
-void memset(void* dst, uint8 value, size_t count)
-{
-	char* d = (char*)dst;
-	while(count--) { *d++ = value; }
+  class Timer
+  {
+  private:
+    static uint32 _tick;
+
+  public:
+	  static void Initialize(uint32 freq);
+
+  private:
+    static void __stdcall TickHandler(Registers reg);
+  };
+
 }

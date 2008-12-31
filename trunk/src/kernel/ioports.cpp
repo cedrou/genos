@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
 // ioports.cpp
-//	Declare some global constants and functions
+//	IO hardware ports
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -29,7 +29,9 @@
 
 #include "ioports.h"
 
-void outb(uint16 port, uint8 value)
+using namespace GenOS;
+
+void IOPort::Out8(uint16 port, uint8 value)
 {
 	__asm
 	{
@@ -38,8 +40,26 @@ void outb(uint16 port, uint8 value)
 		out dx, al
 	}
 }
+void IOPort::Out16(uint16 port, uint16 value)
+{
+	__asm
+	{
+		mov ax, value
+		mov dx, port
+		out dx, ax
+	}
+}
+void IOPort::Out32(uint16 port, uint32 value)
+{
+	__asm
+	{
+		mov eax, value
+		mov dx, port
+		out dx, eax
+	}
+}
 
-uint8 inb(uint16 port)
+uint8 IOPort::In8(uint16 port)
 {
 	__asm
 	{
@@ -48,7 +68,7 @@ uint8 inb(uint16 port)
 	}
 }
 
-uint16 inw(uint16 port)
+uint16 IOPort::In16(uint16 port)
 {
 	__asm
 	{
@@ -57,7 +77,7 @@ uint16 inw(uint16 port)
 	}
 }
 
-uint32 ind(uint16 port)
+uint32 IOPort::In32(uint16 port)
 {
 	__asm
 	{

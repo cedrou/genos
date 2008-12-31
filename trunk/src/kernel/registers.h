@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// kmain.cpp
-//  Entry point
+// register.h
+//	
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -27,12 +27,21 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#include "screen.h"
+#pragma once
 
-void __declspec(naked) kmain()
+#include "common.h"
+
+namespace GenOS {
+
+struct Registers
 {
-	Screen::Clear();
-  Screen::WriteString("Starting GenOS"); 
+	uint32 ds;																			// Data segment selector
+	uint32 edi, esi, ebp, esp, ebx, edx, ecx, eax;	// Pushed by pusha.
+	uint32 int_no, err_code;												// Interrupt number and error code (if applicable)
+	uint32 eip, cs, eflags, useresp, ss;						// Pushed by the processor automatically.
 
-	__asm jmp $
+  void Print();
+  static void PrintRegs();
+}; 
+
 }

@@ -38,7 +38,7 @@ typedef unsigned char  uint8;
 typedef          char  int8;
 typedef unsigned int   size_t;
 
-#include "ioports.h"
+void memcpy(const void* src, void* dst, size_t count);
+void memset(void* dst, uint8 value, size_t count);
 
-void memcpy(const char* src, char* dst, size_t count);
-void memset(char* dst, uint8 value, size_t count);
+#define NULL 0
