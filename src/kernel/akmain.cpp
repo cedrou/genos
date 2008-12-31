@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// common.cpp
-//	Declare some global constants and functions
+// kmain.cpp
+//  Entry point
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -27,18 +27,63 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#include "common.h"
+#include "kernel.h"
+
+#define dd(x)                        \
+        __asm _emit (x)       & 0xff \
+        __asm _emit (x) >> 8  & 0xff \
+        __asm _emit (x) >> 16 & 0xff \
+        __asm _emit (x) >> 24 & 0xff
+
+#define MULTIBOOT_MAGIC     0x1BADB002
+#define MULTIBOOT_FLAGS     0x00010000
+#define MULTIBOOT_CKSUM     (-(MULTIBOOT_MAGIC+MULTIBOOT_FLAGS))
+
+#define KERNEL_BASE         0x00100000
+#define KERNEL_START        0x00101000
+#define KERNEL_TEXT_LEN     0x00002000
+#define KERNEL_DATA_LEN     0x00001000
+#define KERNEL_LENGTH       (KERNEL_TEXT_LEN + KERNEL_DATA_LEN)
+#define KERNEL_END          (KERNEL_START + KERNEL_LENGTH)
+#define KERNEL_STACK_LEN    0x0FFF
+#define KERNEL_STACK        KERNEL_END + KERNEL_STACK_LEN
 
 
-void memcpy(const void* src, void* dst, size_t count)
+void kmain(unsigned long, void*);
+
+void __declspec(naked) __multiboot_entry__(void)
 {
-	const char* s = (const char*)src;
-	char* d = (char*)dst;
-	while(count--) { *d++ = *s++; }
+  __asm {
+    dd(MULTIBOOT_MAGIC)          ; magic
+    dd(MULTIBOOT_FLAGS)          ; flags
+    dd(MULTIBOOT_CKSUM)          ; checksum
+
+    dd(KERNEL_START)             ; header_addr
+    dd(KERNEL_START)             ; load_addr
+    dd(KERNEL_END)               ; load_end_addr
+    dd(0x00000000)               ; bss_end_addr
+    dd(0x00101030)               ; entry_addr
+    dd(0x00000000)               ; mode_type
+    dd(0x00000000)               ; width
+    dd(0x00000000)               ; height
+    dd(0x00000000)               ; depth
+
+    mov   esp, KERNEL_STACK
+
+    xor   ecx, ecx
+    push  ecx
+    popf
+
+    push  ebx       ; multiboot info address
+    push  eax       ; magic
+    call  kmain
+
+    jmp   $
+  }
 }
 
-void memset(void* dst, uint8 value, size_t count)
+void kmain(unsigned long magic, void* multiboot_info)
 {
-	char* d = (char*)dst;
-	while(count--) { *d++ = value; }
+  GenOS::Kernel kernel;
+  kernel.Run();
 }

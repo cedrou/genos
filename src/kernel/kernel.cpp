@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// common.cpp
-//	Declare some global constants and functions
+// kernel.h
+//	Kernel class
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -27,18 +27,54 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#include "common.h"
+#include "kernel.h"
+#include "screen.h"
+#include "gdt.h"
+#include "intmgr.h"
+#include "timer.h"
 
+using namespace GenOS;
 
-void memcpy(const void* src, void* dst, size_t count)
+void Kernel::Run()
 {
-	const char* s = (const char*)src;
-	char* d = (char*)dst;
-	while(count--) { *d++ = *s++; }
+  Screen::Initialize();
+
+  Screen::WriteString("Starting GenOS\n"); 
+
+  Screen::WriteString("  - Initializing segments...\n"); 
+  GDT::Initialize();
+
+  Screen::WriteString("  - Initializing interrupts...\n"); 
+  InterruptManager::Initialize();
+
+  Screen::WriteString("  - Initializing timer...\n"); 
+	Timer::Initialize(50); 
+
+  Screen::WriteString("  - Entering idle loop...\n"); 
+  __asm sti
+  Idle();
 }
 
-void memset(void* dst, uint8 value, size_t count)
+
+void Kernel::Panic(const char* message)
 {
-	char* d = (char*)dst;
-	while(count--) { *d++ = value; }
+  Screen::WriteString("***********************\n"); 
+  Screen::WriteString("******** PANIC ********\n"); 
+  Screen::WriteString("***********************\n"); 
+  Screen::WriteString(message); 
+
+  Hang();
+}
+
+void __declspec(naked) Kernel::Idle()
+{
+  __asm hlt
+	__asm jmp Idle
+}
+
+
+void __declspec(naked) Kernel::Hang()
+{
+	__asm cli
+  __asm hlt
 }

@@ -1,0 +1,24 @@
+#config_interface: wx
+display_library: win32, options="legacyF12"
+
+romimage: file=$BXSHARE/BIOS-bochs-latest 
+cpu: count=1, ips=10000000, reset_on_triple_fault=1
+megs: 32
+vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
+vga: extension=vbe
+vga_update_interval: 300000
+
+floppya: image=D:\Dev\GenOS\trunk\vm\floppy.ima, status=inserted
+boot: floppy
+clock: sync=realtime
+log: bochsout.txt
+logprefix: %i%e%d
+panic: action=report
+error: action=report
+info: action=report
+debug: action=ignore
+pass: action=report
+
+debugger_log: debuggerout.txt
+
+mouse: enabled=0

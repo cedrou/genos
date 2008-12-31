@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
-	Name="make"
+	Name="build-distrib"
 	ProjectGUID="{EF5160E6-F197-488F-97CB-AAFA994FF2B0}"
 	RootNamespace="make"
 	Keyword="MakeFileProj"
@@ -24,7 +24,7 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="$(SolutionDir)\bin\createfloppy.exe $(SolutionDir)\bin\boot.bin $(SolutionDir)\bin\kernel.exe $(SolutionDir)\vm\floppy.ima"
+				BuildCommandLine="$(SolutionDir)\build-distrib.bat"
 				ReBuildCommandLine=""
 				CleanCommandLine=""
 				Output="$(SolutionDir)\vm\floppy.ima"
@@ -60,6 +60,26 @@
 	<References>
 	</References>
 	<Files>
+		<Filter
+			Name="grub"
+			>
+			<File
+				RelativePath="..\grub\menu.lst"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="scripts"
+			>
+			<File
+				RelativePath="..\..\build-distrib.bat"
+				>
+			</File>
+			<File
+				RelativePath="..\..\run-qemu.bat"
+				>
+			</File>
+		</Filter>
 	</Files>
 	<Globals>
 	</Globals>

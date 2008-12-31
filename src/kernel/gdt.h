@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// common.cpp
-//	Declare some global constants and functions
+// gdt.h
+//	GDT setup
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -27,18 +27,19 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
+#pragma once
+
 #include "common.h"
 
+namespace GenOS {
 
-void memcpy(const void* src, void* dst, size_t count)
-{
-	const char* s = (const char*)src;
-	char* d = (char*)dst;
-	while(count--) { *d++ = *s++; }
-}
+  class GDT
+  {
+  public:
+    static void Initialize();
 
-void memset(void* dst, uint8 value, size_t count)
-{
-	char* d = (char*)dst;
-	while(count--) { *d++ = value; }
+  private:
+    static void EncryptGdtEntry(uint8 index, uint32 base, uint32 limit, uint8 access, uint8 granularity);
+
+  };
 }

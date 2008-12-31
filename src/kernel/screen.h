@@ -31,26 +31,35 @@
 
 #include "common.h"
 
-class Screen
-{
-private:
-	static uint16 cursor_x;
-	static uint16 cursor_y;
+namespace GenOS {
 
-public:
-	// Clears the screen and puts the cursor in top left
-	static void Clear();
+  class Screen
+  {
+  private:
+	  static uint16 cursor_x;
+	  static uint16 cursor_y;
+	  static uint16* video_memory;
 
-	// Outputs a single character to the screen.
-  static void WriteChar(char c);
-  // Outputs a null-terminated ASCII string to the screen.
-	static void WriteString(const char* string);
-	// Outputs a hexadecimal number to the screen.
-	static void WriteHex(uint32 value)
-	// Outputs a decimal number to the screen.
-	static void WriteInt(uint32 value)
+  public:
+    static void Initialize();
 
-private:
-	static void Scroll();
-	static void SetCursor();
-};
+	  // Clears the screen and puts the cursor in top left
+	  static void Clear();
+
+	  // Outputs a single character to the screen.
+    static void WriteChar(char c);
+    // Outputs a null-terminated ASCII string to the screen.
+	  static void WriteString(const char* string);
+	  // Outputs a hexadecimal number to the screen.
+	  static void WriteHex(uint32 value, uint8 bits = 32);
+	  // Outputs a decimal number to the screen.
+	  static void WriteInt(uint32 value);
+
+    static void DumpMemory(void* start, uint32 size);
+
+  private:
+	  static void Scroll();
+	  static void SetCursor();
+  };
+
+}

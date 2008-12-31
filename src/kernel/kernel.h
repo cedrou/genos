@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// common.cpp
-//	Declare some global constants and functions
+// kernel.h
+//	Kernel class
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -27,18 +27,20 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
+#pragma once
+
 #include "common.h"
 
+namespace GenOS {
 
-void memcpy(const void* src, void* dst, size_t count)
-{
-	const char* s = (const char*)src;
-	char* d = (char*)dst;
-	while(count--) { *d++ = *s++; }
-}
+  class Kernel 
+  {
+  public:
+    void Run();
 
-void memset(void* dst, uint8 value, size_t count)
-{
-	char* d = (char*)dst;
-	while(count--) { *d++ = value; }
-}
+    static void Panic(const char* message);
+    static void Hang();
+    static void Idle();
+  };
+
+};

@@ -1,9 +1,6 @@
 //------------------------------------------------------------------------------
-// Create a floppy disk that contains the files which path are passed in 
-// parameters.
-//
-// Usage: createfloppy.exe <InputFilePath> [<InputFilePath>*] <OutputFilePath>
-//
+// timer.cpp
+//	
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -30,36 +27,45 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#define _CRT_SECURE_NO_WARNINGS
+#include "timer.h"
+#include "intmgr.h"
+#include "screen.h"
+#include "ioports.h"
 
-#include <stdio.h>
-#include <tchar.h>
-#include <string.h>
+using namespace GenOS;
 
 
-int _tmain(int argc, _TCHAR* argv[])
+uint32 Timer::_tick = 0;
+
+void Timer::Initialize(uint32 freq)
 {
-	unsigned char * floppy = new unsigned char [1474560];
-	memset(floppy, 0, 1474560);
-	unsigned char* current_floppy = floppy;
+  // Register the timer interrupt handler.
+  InterruptManager::RegisterInterrupt(InterruptManager::SystemTimer, &TickHandler);
 
-	for (int i=1; i<argc-1; i++)
-	{
-		FILE* f = _tfopen(argv[i], _T("rb"));
-		fseek(f,0,SEEK_END);
-		long filesize = ftell(f);
-		fseek(f,0,SEEK_SET);
-		fread(current_floppy, 1, filesize, f);
-		current_floppy += filesize;
-    fclose(f);
-	}
+  // The value we send to the PIT is the value to divide it's input clock
+  // (1193180 Hz) by, to get our required frequency. Important to note is
+  // that the divisor must be small enough to fit into 16-bits.
+  uint32 divisor = 1193180 / freq;
 
-	FILE* f = _tfopen(argv[argc-1], _T("wb"));
-	fwrite(floppy, 1, 1474560, f);
-	fclose(f);
+  // Send the command byte.
+  IOPort::Out8(IOPort::PIT_Control, 0x36);
 
-	delete floppy;
+  // Divisor has to be sent byte-wise, so split here into upper/lower bytes.
+  uint8 l = (uint8)(divisor & 0xFF);
+  uint8 h = (uint8)( (divisor>>8) & 0xFF );
 
-	return 0;
+  // Send the frequency divisor.
+  IOPort::Out8(IOPort::PIT_0, l);
+  IOPort::Out8(IOPort::PIT_0, h);
 }
 
+void Timer::TickHandler(Registers /*reg*/)
+{
+  _tick++;
+  if(_tick%50==0)
+  {
+    Screen::WriteString("Tick: ");
+    Screen::WriteHex(_tick);
+    Screen::WriteChar('\r');
+  }
+}

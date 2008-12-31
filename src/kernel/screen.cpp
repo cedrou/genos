@@ -28,12 +28,23 @@
 //------------------------------------------------------------------------------
 
 #include "screen.h"
+#include "ioports.h"
 
-uint16 Screen::cursor_x = 0;
-uint16 Screen::cursor_y = 0;
-uint16* Screen::video_memory = ((uint16*)0xB8000);
+using namespace GenOS;
+
+uint16 Screen::cursor_x;
+uint16 Screen::cursor_y;
+uint16* Screen::video_memory;
 
 
+void Screen::Initialize()
+{
+  cursor_x = 0;
+  cursor_y = 0;
+  video_memory = ((uint16*)0xB8000);
+
+  Clear();
+}
 
 // Writes a single character out to the screen.
 void Screen::WriteChar(char c)
@@ -51,7 +62,7 @@ void Screen::WriteChar(char c)
 			cursor_y--;
 		}
 
-		(char*)(&video_memory[cursor_y*80 + cursor_x]) = ' ';
+		*(char*)(&video_memory[cursor_y*80 + cursor_x]) = ' ';
 	}
 
 	// Handle a tab by increasing the cursor's X, but only to a point
@@ -77,7 +88,18 @@ void Screen::WriteChar(char c)
 	// Handle any other printable character.
 	else if(c >= ' ')
 	{
-		video_memory[cursor_y*80 + cursor_x] = c | attribute;
+    // The background colour is black (0), the foreground is white (15).
+    uint8 backColour = 0;
+    uint8 foreColour = 15;
+
+    // The attribute byte is made up of two nibbles - the lower being the
+    // foreground colour, and the upper the background colour.
+    uint8  attributeByte = (backColour << 4) | (foreColour & 0x0F);
+    // The attribute byte is the top 8 bits of the word we have to send to the
+    // VGA board.
+    uint16 attribute = attributeByte << 8;
+
+	  video_memory[cursor_y*80 + cursor_x] = c | attribute;
 		cursor_x++;
 	}
 
@@ -116,14 +138,40 @@ void Screen::WriteString(const char* string)
 } 
 
 // Outputs a hexadecimal number to the screen.
-void Screen::WriteHex(uint32 value)
+void Screen::WriteHex(uint32 value, uint8 bits)
 {
+  uint8 max = bits/4;
+	for( uint8 i=0; i<max; i++)
+	{
+		WriteChar("0123456789ABCDEF"[((value >> ((max-1-i)*4)) & 0xF)]);
+	}
 } 
 
 // Outputs a decimal number to the screen.
 void Screen::WriteInt(uint32 value)
 {
 } 
+
+void Screen::DumpMemory(void* start, uint32 size)
+{
+  uint8* buffer = (uint8*)start;
+  for (uint32 i=0; i<size; i++)
+  {
+    if(i%16==0)
+    {
+      WriteHex((uint32)buffer,32);
+      WriteString(" | ");
+    }
+    WriteHex(*buffer++,8);
+    WriteChar(' ');
+    if(i%16==15)
+    {
+      WriteChar('\n');
+    }
+  }
+  WriteChar('\n');
+}
+
 
 // Scrolls the text on the screen up by one line.
 void Screen::Scroll()
@@ -155,9 +203,10 @@ void Screen::SetCursor()
 	// The screen is 80 characters wide...
 	uint16 cursorLocation = cursor_y * 80 + cursor_x;
 
-	outb(0x3D4, 0x0E);                  // Tell the VGA board we are setting the high cursor byte.
-	outb(0x3D5, (cursorLocation >> 8) & 0xFF); // Send the high cursor byte.
-	outb(0x3D4, 0x0F);                  // Tell the VGA board we are setting the low cursor byte.
-	outb(0x3D5, cursorLocation & 0xFF);      // Send the low cursor byte.
+  // Set the high cursor byte.
+	IOPort::Out8(IOPort::CGA_selector, 0x0E);                  
+	IOPort::Out8(IOPort::CGA_data, (cursorLocation >> 8) & 0xFF);
+  // Set the low cursor byte.
+	IOPort::Out8(IOPort::CGA_selector, 0x0F);                  
+	IOPort::Out8(IOPort::CGA_data, cursorLocation & 0xFF);
 }
-
