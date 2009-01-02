@@ -35,35 +35,44 @@ namespace GenOS {
 
   class Screen
   {
+  public:
+    static Screen cout;
+    static const char* endl;
   private:
-	  static uint16 cursor_x;
-	  static uint16 cursor_y;
-	  static uint16* video_memory;
+	  uint16 cursor_x;
+	  uint16 cursor_y;
+	  uint16* video_memory;
 
   public:
     static void Initialize();
 
 	  // Clears the screen and puts the cursor in top left
-	  static void Clear();
+	  void Clear();
 
-	  // Outputs a single character to the screen.
-    static void WriteChar(char c);
-    
-    // Outputs a null-terminated ASCII string to the screen.
-	  static void WriteString(const char* string);
-	  
-    // Outputs a hexadecimal number to the screen.
-	  static void WriteHex(uint32 value, uint8 bits = 32);
-    static void WriteHex(intptr value) { WriteHex((uint32)value, 32); }
+    void DumpMemory(intptr start, uint32 size);
 
-	  // Outputs a decimal number to the screen.
-	  static void WriteInt(uint32 value);
-
-    static void DumpMemory(intptr start, uint32 size);
+    Screen& operator <<(uint8 n);
+    Screen& operator <<(uint16 n);
+    Screen& operator <<(uint32 n);
+    Screen& operator <<(intptr n);
+    Screen& operator <<(const char* s);
 
   private:
-	  static void Scroll();
-	  static void SetCursor();
+	  // Outputs a single character to the screen.
+    void WriteChar(char c);
+    
+    // Outputs a null-terminated ASCII string to the screen.
+	  void WriteString(const char* string);
+	  
+    // Outputs a hexadecimal number to the screen.
+	  void WriteHex(uint32 value, uint8 bits = 32);
+    void WriteHex(intptr value) { WriteHex((uint32)value, 32); }
+
+	  // Outputs a decimal number to the screen.
+	  void WriteInt(uint32 value);
+
+	  void Scroll();
+	  void SetCursor();
   };
 
 }

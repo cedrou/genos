@@ -60,8 +60,6 @@ void FrameManager::Initialize(intptr start, uint32 size)
     uint32 bit = (index & 0x1F);   // frame_index % 32
     _bitset[item] &= ~(1 << bit);
   }
-
-  Screen::DumpMemory(_bitset, 64);
 }
 
 void FrameManager::Set(intptr frame)

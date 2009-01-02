@@ -64,8 +64,6 @@ void Timer::TickHandler(Registers /*reg*/)
   _tick++;
   if(_tick%50==0)
   {
-    Screen::WriteString("Tick: ");
-    Screen::WriteHex(_tick);
-    Screen::WriteChar('\r');
+    Screen::cout << "Tick: "<< _tick << "\r";
   }
 }
