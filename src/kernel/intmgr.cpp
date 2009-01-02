@@ -151,7 +151,7 @@ void InterruptManager::Initialize()
   IOPort::Out8(IOPort::PIC_Slave_Data, 0x0);
 
   // Fill in the IDT
-  memset(&idt, 0, sizeof(InterruptDescriptor)*256);
+  memset(&idt, (uint8)0, sizeof(InterruptDescriptor)*256);
 
   EncryptIdtEntry( 0, (uint32)Int0 , 0x08, 0x8E);
   EncryptIdtEntry( 1, (uint32)Int1 , 0x08, 0x8E);

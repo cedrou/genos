@@ -48,14 +48,18 @@ namespace GenOS {
 
 	  // Outputs a single character to the screen.
     static void WriteChar(char c);
+    
     // Outputs a null-terminated ASCII string to the screen.
 	  static void WriteString(const char* string);
-	  // Outputs a hexadecimal number to the screen.
+	  
+    // Outputs a hexadecimal number to the screen.
 	  static void WriteHex(uint32 value, uint8 bits = 32);
+    static void WriteHex(intptr value) { WriteHex((uint32)value, 32); }
+
 	  // Outputs a decimal number to the screen.
 	  static void WriteInt(uint32 value);
 
-    static void DumpMemory(void* start, uint32 size);
+    static void DumpMemory(intptr start, uint32 size);
 
   private:
 	  static void Scroll();

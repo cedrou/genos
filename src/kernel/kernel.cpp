@@ -32,12 +32,30 @@
 #include "gdt.h"
 #include "intmgr.h"
 #include "timer.h"
+#include "framemanager.h"
 
 using namespace GenOS;
+
+Kernel::Kernel(const intptr kernel_start, const intptr kernel_end, const size_t upper_memory_size)
+: _start(kernel_start), _end(kernel_end), _upper_memory_size(upper_memory_size)
+{
+}
 
 void Kernel::Run()
 {
   Screen::Initialize();
+
+  Screen::WriteString("Kernel loaded at address 0x");
+  Screen::WriteHex(_start);
+  Screen::WriteChar('\n');
+
+  Screen::WriteString("Kernel ends at address 0x");
+  Screen::WriteHex(_end);
+  Screen::WriteChar('\n');
+
+  Screen::WriteString("Available upper memory 0x");
+  Screen::WriteHex(_upper_memory_size);
+  Screen::WriteString(" bytes\n");
 
   Screen::WriteString("Starting GenOS\n"); 
 
@@ -46,6 +64,9 @@ void Kernel::Run()
 
   Screen::WriteString("  - Initializing interrupts...\n"); 
   InterruptManager::Initialize();
+
+  Screen::WriteString("  - Initializing frame manager...\n"); 
+	FrameManager::Initialize(_end, _upper_memory_size - ((uint32)_end - (uint32)_start));
 
   Screen::WriteString("  - Initializing timer...\n"); 
 	Timer::Initialize(50); 

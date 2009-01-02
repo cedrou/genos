@@ -35,12 +35,22 @@ namespace GenOS {
 
   class Kernel 
   {
+  private:
+    const intptr _start;
+    const intptr _end;
+    const size_t _upper_memory_size;
+
   public:
+    Kernel(const intptr kernel_start, const intptr kernel_end, const size_t upper_memory_size);
     void Run();
 
     static void Panic(const char* message);
     static void Hang();
     static void Idle();
+
+  private:
+    Kernel(const Kernel&);
+    Kernel& operator=(const Kernel&);
   };
 
 };

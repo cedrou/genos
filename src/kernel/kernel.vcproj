@@ -199,7 +199,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\bitmanip.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\common.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\framemanager.cpp"
 				>
 			</File>
 			<File
@@ -237,7 +245,15 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\bitmanip.h"
+				>
+			</File>
+			<File
 				RelativePath=".\common.h"
+				>
+			</File>
+			<File
+				RelativePath=".\framemanager.h"
 				>
 			</File>
 			<File

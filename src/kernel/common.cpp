@@ -30,15 +30,27 @@
 #include "common.h"
 
 
-void memcpy(const void* src, void* dst, size_t count)
+void memcpy(const intptr src, intptr dst, size_t count)
 {
 	const char* s = (const char*)src;
 	char* d = (char*)dst;
 	while(count--) { *d++ = *s++; }
 }
 
-void memset(void* dst, uint8 value, size_t count)
+void memset(intptr dst, uint8 value, size_t count)
 {
-	char* d = (char*)dst;
+	uint8* d = (uint8*)dst;
+	while(count--) { *d++ = value; }
+}
+
+void memset(intptr dst, uint16 value, size_t count)
+{
+	uint16* d = (uint16*)dst;
+	while(count--) { *d++ = value; }
+}
+
+void memset(intptr dst, uint32 value, size_t count)
+{
+	uint32* d = (uint32*)dst;
 	while(count--) { *d++ = value; }
 }
