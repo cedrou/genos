@@ -32,18 +32,16 @@
 
 using namespace GenOS;
 
-uint16 Screen::cursor_x;
-uint16 Screen::cursor_y;
-uint16* Screen::video_memory;
-
+Screen Screen::cout;
+const char* Screen::endl = "\n";
 
 void Screen::Initialize()
 {
-  cursor_x = 0;
-  cursor_y = 0;
-  video_memory = ((uint16*)0xB8000);
+  cout.cursor_x = 0;
+  cout.cursor_y = 0;
+  cout.video_memory = ((uint16*)0xB8000);
 
-  Clear();
+  cout.Clear();
 }
 
 // Writes a single character out to the screen.
@@ -210,3 +208,35 @@ void Screen::SetCursor()
 	IOPort::Out8(IOPort::CGA_selector, 0x0F);                  
 	IOPort::Out8(IOPort::CGA_data, cursorLocation & 0xFF);
 }
+
+
+Screen& Screen::operator <<(uint8 n)
+{
+  WriteHex(n,8);
+  return *this;
+}
+
+Screen& Screen::operator <<(uint16 n)
+{
+  WriteHex(n,16);
+  return *this;
+}
+
+Screen& Screen::operator <<(uint32 n)
+{
+  WriteHex(n,32);
+  return *this;
+}
+
+Screen& Screen::operator <<(intptr n)
+{
+  WriteHex((uint32)n,32);
+  return *this;
+}
+
+Screen& Screen::operator <<(const char* s)
+{
+  WriteString(s);
+  return *this;
+}
+

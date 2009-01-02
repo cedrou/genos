@@ -262,15 +262,11 @@ void InterruptManager::Isr(Registers regs)
       "Machine check exception"
     };
 
-    Screen::WriteString("**** Unhandled exception: ");
-    Screen::WriteString(CpuExceptions[regs.int_no]); 
-    Screen::WriteString(" ****\n");
+    Screen::cout << "**** Unhandled exception: " << CpuExceptions[regs.int_no] << " ****" << Screen::endl;
   }
   else
   {
-    Screen::WriteString("**** Unhandled interrupt: 0x");
-    Screen::WriteHex(regs.int_no, 8);
-    Screen::WriteString(" ****\n");
+    Screen::cout << "**** Unhandled interrupt: 0x" << (uint8)regs.int_no << " ****" << Screen::endl;
   }
 
   regs.Print();

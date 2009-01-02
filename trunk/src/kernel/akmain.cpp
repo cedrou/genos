@@ -36,13 +36,13 @@
         __asm _emit (x) >> 24 & 0xff
 
 #define MULTIBOOT_MAGIC     0x1BADB002
-#define MULTIBOOT_FLAGS     0x00010000
+#define MULTIBOOT_FLAGS     0x00010002
 #define MULTIBOOT_CKSUM     (-(MULTIBOOT_MAGIC+MULTIBOOT_FLAGS))
 
 #define KERNEL_BASE         0x00100000
 #define KERNEL_START        0x00101000
 #define KERNEL_TEXT_LEN     0x00002000
-#define KERNEL_DATA_LEN     0x00001000
+#define KERNEL_DATA_LEN     0x00002000
 #define KERNEL_LENGTH       (KERNEL_TEXT_LEN + KERNEL_DATA_LEN)
 #define KERNEL_END          (KERNEL_START + KERNEL_LENGTH)
 #define KERNEL_STACK_LEN    0x1000
@@ -82,45 +82,8 @@ void __declspec(naked) __multiboot_entry__(void)
   }
 }
 
-/* The symbol table for a.out. */
-typedef struct aout_symbol_table
-{
-  unsigned long tabsize;
-  unsigned long strsize;
-  unsigned long addr;
-  unsigned long reserved;
-} aout_symbol_table_t;
-
-/* The section header table for ELF. */
-typedef struct elf_section_header_table
-{
-  unsigned long num;
-  unsigned long size;
-  unsigned long addr;
-  unsigned long shndx;
-} elf_section_header_table_t;
-struct multiboot_info
-{
-  unsigned long flags;
-  unsigned long mem_lower;
-  unsigned long mem_upper;
-  unsigned long boot_device;
-  unsigned long cmdline;
-  unsigned long mods_count;
-  unsigned long mods_addr;
-  union
-  {
-    aout_symbol_table_t aout_sym;
-    elf_section_header_table_t elf_sec;
-  } u;
-  unsigned long mmap_length;
-  unsigned long mmap_addr;
-};
-
 void kmain(uint32 /*magic*/, uint32 mbinfo)
 {
-  multiboot_info* mbi = (multiboot_info*)mbinfo;
-
-  GenOS::Kernel kernel((intptr)KERNEL_BASE, (intptr)KERNEL_STACK, mbi->mem_upper * 1024);
+  GenOS::Kernel kernel((intptr)KERNEL_BASE, (intptr)KERNEL_STACK, mbinfo);
   kernel.Run();
 }

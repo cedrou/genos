@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// kernel.h
+// kernel.cpp
 //	Kernel class
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
@@ -36,53 +36,109 @@
 
 using namespace GenOS;
 
-Kernel::Kernel(const intptr kernel_start, const intptr kernel_end, const size_t upper_memory_size)
-: _start(kernel_start), _end(kernel_end), _upper_memory_size(upper_memory_size)
+
+
+#pragma pack(push,1)
+
+struct MemoryMap
+{
+  uint32 Size;
+  uint32 BaseAddrLow;
+  uint32 BaseAddrHigh;
+  uint32 LengthLow;
+  uint32 LengthHigh;
+  uint32 Type;
+};
+
+struct MultibootInfo
+{
+  uint32      Flags;
+  uint32      MemoryLower;
+  uint32      MemoryUpper;
+  uint8       BootDevice[4];
+  const char* Cmdline;
+  uint32      ModulesCount;
+  intptr      Modules;
+  uint32      Unused[4];
+  uint32      MmapLength;
+  MemoryMap*  Mmap;
+};
+
+#pragma pack(pop)
+
+
+Kernel::Kernel(const intptr kernel_start, const intptr kernel_end, const uint32 mbinfo)
+: _start(kernel_start), _end(kernel_end), _mbinfo(mbinfo)
 {
 }
 
 void Kernel::Run()
 {
+  MultibootInfo* mbi = (MultibootInfo*)_mbinfo;
+
   Screen::Initialize();
 
-  Screen::WriteString("Kernel loaded at address 0x");
-  Screen::WriteHex(_start);
-  Screen::WriteChar('\n');
+#if 0
+  Screen::cout << "Kernel loaded at address 0x" << _start << Screen::endl;
+  Screen::cout << "Kernel ends at address 0x" << _end << Screen::endl;
+  Screen::cout << "Available upper memory 0x" << (uint32)mbi->MemoryUpper << " KiB" << Screen::endl;
+#endif
 
-  Screen::WriteString("Kernel ends at address 0x");
-  Screen::WriteHex(_end);
-  Screen::WriteChar('\n');
+#if 0
+  Screen::cout << " Flags         " << mbi->Flags << Screen::endl;         
+  Screen::cout << " MemoryLower   " << mbi->MemoryLower << Screen::endl; 
+  Screen::cout << " MemoryUpper   " << mbi->MemoryUpper << Screen::endl; 
+  Screen::cout << " BootDevice    " << mbi->BootDevice[0] << mbi->BootDevice[1] << mbi->BootDevice[2] << mbi->BootDevice[3] << Screen::endl; 
+  Screen::cout << " Cmdline       " << mbi->Cmdline << Screen::endl;
+  Screen::cout << " ModulesCount  " << mbi->ModulesCount << Screen::endl; 
+  Screen::cout << " Modules       " << mbi->Modules << Screen::endl; 
+  Screen::cout << " Unused[4]     " << mbi->Unused[0] << mbi->Unused[1] << mbi->Unused[2] << mbi->Unused[3] << Screen::endl; 
+  Screen::cout << " MmapLength    " << mbi->MmapLength << Screen::endl; 
+  Screen::cout << " Mmap          " << mbi->Mmap << Screen::endl; 
+#endif
 
-  Screen::WriteString("Available upper memory 0x");
-  Screen::WriteHex(_upper_memory_size);
-  Screen::WriteString(" bytes\n");
+#if 0
+  if ((mbi->Flags & (1<<6)) && mbi->MmapLength)
+  {
+    Screen::cout << "Memory map (" << mbi->MmapLength << " bytes):" << Screen::endl;
+    uint32 items = mbi->MmapLength / sizeof(MemoryMap);
+    for (uint32 i=0; i<items; i++)
+    {
+      Screen::cout << " 0x" << mbi->Mmap[i].BaseAddrHigh << mbi->Mmap[i].BaseAddrLow;
+      Screen::cout << " 0x"<< mbi->Mmap[i].LengthHigh << mbi->Mmap[i].LengthLow;
+      Screen::cout << (mbi->Mmap[i].Type ? " (available)" : " (reserved)");
+      Screen::cout << Screen::endl;
+    }
+  }
+#endif
 
-  Screen::WriteString("Starting GenOS\n"); 
+  Screen::cout << "Starting GenOS" << Screen::endl; 
 
-  Screen::WriteString("  - Initializing segments...\n"); 
+  Screen::cout << "  - Initializing segments..." << Screen::endl;
   GDT::Initialize();
 
-  Screen::WriteString("  - Initializing interrupts...\n"); 
+  Screen::cout << "  - Initializing interrupts..." << Screen::endl; 
   InterruptManager::Initialize();
 
-  Screen::WriteString("  - Initializing frame manager...\n"); 
-	FrameManager::Initialize(_end, _upper_memory_size - ((uint32)_end - (uint32)_start));
+  Screen::cout << "  - Initializing frame manager..." << Screen::endl; 
+  FrameManager::Initialize(_end, mbi->MemoryUpper*1024 - ((uint32)_end - (uint32)_start));
 
-  Screen::WriteString("  - Initializing timer...\n"); 
+  Screen::cout << "  - Initializing timer..." << Screen::endl; 
 	Timer::Initialize(50); 
 
-  Screen::WriteString("  - Entering idle loop...\n"); 
   __asm sti
+
+  Screen::cout << "  - Entering idle loop..." << Screen::endl; 
   Idle();
 }
 
 
 void Kernel::Panic(const char* message)
 {
-  Screen::WriteString("***********************\n"); 
-  Screen::WriteString("******** PANIC ********\n"); 
-  Screen::WriteString("***********************\n"); 
-  Screen::WriteString(message); 
+  Screen::cout << "***********************" << Screen::endl; 
+  Screen::cout << "******** PANIC ********" << Screen::endl; 
+  Screen::cout << "***********************" << Screen::endl; 
+  Screen::cout << message << Screen::endl; 
 
   Hang();
 }

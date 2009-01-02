@@ -34,22 +34,22 @@ using namespace GenOS;
 
 void Registers::Print()
 {
-  Screen::WriteString("DS  "); Screen::WriteHex(ds); Screen::WriteChar('\t');
-  Screen::WriteString("EDI "); Screen::WriteHex(edi); Screen::WriteChar('\t');
-  Screen::WriteString("ESI "); Screen::WriteHex(esi); Screen::WriteChar('\t');
-  Screen::WriteString("EBP "); Screen::WriteHex(ebp); Screen::WriteChar('\t');
-  Screen::WriteString("ESP "); Screen::WriteHex(esp); Screen::WriteChar('\n');
-  Screen::WriteString("EBX "); Screen::WriteHex(ebx); Screen::WriteChar('\t');
-  Screen::WriteString("EDX "); Screen::WriteHex(edx); Screen::WriteChar('\t');
-  Screen::WriteString("ECX "); Screen::WriteHex(ecx); Screen::WriteChar('\t');
-  Screen::WriteString("EAX "); Screen::WriteHex(eax); Screen::WriteChar('\t');
-  Screen::WriteString("INT "); Screen::WriteHex(int_no); Screen::WriteChar('\n');
-  Screen::WriteString("ERR "); Screen::WriteHex(err_code); Screen::WriteChar('\t');
-  Screen::WriteString("EIP "); Screen::WriteHex(eip); Screen::WriteChar('\t');
-  Screen::WriteString("CS  "); Screen::WriteHex(cs); Screen::WriteChar('\t');
-  Screen::WriteString("EFL "); Screen::WriteHex(eflags); Screen::WriteChar('\t');
-  Screen::WriteString("USP "); Screen::WriteHex(useresp); Screen::WriteChar('\n');
-  Screen::WriteString("SS  "); Screen::WriteHex(ss); Screen::WriteChar('\n');
+  Screen::cout << "DS  " << ds << "\t";
+  Screen::cout << "EDI " << edi << "\t";
+  Screen::cout << "ESI " << esi << "\t";
+  Screen::cout << "EBP " << ebp << "\t";
+  Screen::cout << "ESP " << esp << "\n";
+  Screen::cout << "EBX " << ebx << "\t";
+  Screen::cout << "EDX " << edx << "\t";
+  Screen::cout << "ECX " << ecx << "\t";
+  Screen::cout << "EAX " << eax << "\t";
+  Screen::cout << "INT " << int_no << "\n";
+  Screen::cout << "ERR " << err_code << "\t";
+  Screen::cout << "EIP " << eip << "\t";
+  Screen::cout << "CS  " << cs << "\t";
+  Screen::cout << "EFL " << eflags << "\t";
+  Screen::cout << "USP " << useresp << "\n";
+  Screen::cout << "SS  " << ss << "\n";
 }
 
 void Registers::PrintRegs()
@@ -77,19 +77,19 @@ void Registers::PrintRegs()
     mov word ptr regs.gs, gs
   }
 
-  Screen::WriteString("EAX "); Screen::WriteHex(regs.eax); Screen::WriteChar('\t');
-  Screen::WriteString("EBX "); Screen::WriteHex(regs.ebx); Screen::WriteChar('\t');
-  Screen::WriteString("ECX "); Screen::WriteHex(regs.ecx); Screen::WriteChar('\t');
-  Screen::WriteString("EDX "); Screen::WriteHex(regs.edx); Screen::WriteChar('\n');
-  Screen::WriteString("ESP "); Screen::WriteHex(regs.esp); Screen::WriteChar('\t');
-  Screen::WriteString("EBP "); Screen::WriteHex(regs.ebp); Screen::WriteChar('\t');
-  Screen::WriteString("EDI "); Screen::WriteHex(regs.edi); Screen::WriteChar('\t');
-  Screen::WriteString("ESI "); Screen::WriteHex(regs.esi); Screen::WriteChar('\n');
-  Screen::WriteString(" CS "); Screen::WriteHex(regs.cs); Screen::WriteChar('\t');
-  Screen::WriteString(" DS "); Screen::WriteHex(regs.ds); Screen::WriteChar('\t');
-  Screen::WriteString(" SS "); Screen::WriteHex(regs.ss); Screen::WriteChar('\n');
-  Screen::WriteString(" ES "); Screen::WriteHex(regs.es); Screen::WriteChar('\t');
-  Screen::WriteString(" FS "); Screen::WriteHex(regs.fs); Screen::WriteChar('\t');
-  Screen::WriteString(" GS "); Screen::WriteHex(regs.gs); Screen::WriteChar('\n');
+  Screen::cout << "EAX " << regs.eax << "\t";
+  Screen::cout << "EBX " << regs.ebx << "\t";
+  Screen::cout << "ECX " << regs.ecx << "\t";
+  Screen::cout << "EDX " << regs.edx << "\n";
+  Screen::cout << "ESP " << regs.esp << "\t";
+  Screen::cout << "EBP " << regs.ebp << "\t";
+  Screen::cout << "EDI " << regs.edi << "\t";
+  Screen::cout << "ESI " << regs.esi << "\n";
+  Screen::cout << " CS " << regs.cs << "\t";
+  Screen::cout << " DS " << regs.ds << "\t";
+  Screen::cout << " SS " << regs.ss << "\n";
+  Screen::cout << " ES " << regs.es << "\t";
+  Screen::cout << " FS " << regs.fs << "\t";
+  Screen::cout << " GS " << regs.gs << "\n";
 }
 

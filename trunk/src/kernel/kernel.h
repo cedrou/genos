@@ -38,10 +38,10 @@ namespace GenOS {
   private:
     const intptr _start;
     const intptr _end;
-    const size_t _upper_memory_size;
+    const uint32 _mbinfo;
 
   public:
-    Kernel(const intptr kernel_start, const intptr kernel_end, const size_t upper_memory_size);
+    Kernel(const intptr kernel_start, const intptr kernel_end, const uint32 mbinfo);
     void Run();
 
     static void Panic(const char* message);
