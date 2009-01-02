@@ -1,6 +1,8 @@
 //------------------------------------------------------------------------------
-// common.h
-//	Declare some global constants and functions
+// bitmanip.h
+//	Implements several optimized bit twiddling algorithms
+//
+// See http://graphics.stanford.edu/~seander/bithacks.html
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -29,19 +31,14 @@
 
 #pragma once
 
-// These typedefs are written for 32-bit X86.
-typedef unsigned int   uint32;
-typedef          int   int32;
-typedef unsigned short uint16;
-typedef          short int16;
-typedef unsigned char  uint8;
-typedef          char  int8;
-typedef unsigned int   size_t;
-typedef          void* intptr;
+#include "common.h"
 
-void memcpy(const intptr src, intptr dst, size_t count);
-void memset(intptr dst, uint8 value, size_t count);
-void memset(intptr dst, uint16 value, size_t count);
-void memset(intptr dst, uint32 value, size_t count);
+namespace GenOS {
 
-#define NULL 0
+  class BitManip
+  {
+  public:
+    // Find integer log base 2 of an integer (aka the position of the highest bit set) 
+    static uint32 Log2(uint32 value);
+  };
+}

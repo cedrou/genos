@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// common.h
-//	Declare some global constants and functions
+// framemanager.h
+//	Physical memory pages allocator
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -29,19 +29,24 @@
 
 #pragma once
 
-// These typedefs are written for 32-bit X86.
-typedef unsigned int   uint32;
-typedef          int   int32;
-typedef unsigned short uint16;
-typedef          short int16;
-typedef unsigned char  uint8;
-typedef          char  int8;
-typedef unsigned int   size_t;
-typedef          void* intptr;
+#include "common.h"
 
-void memcpy(const intptr src, intptr dst, size_t count);
-void memset(intptr dst, uint8 value, size_t count);
-void memset(intptr dst, uint16 value, size_t count);
-void memset(intptr dst, uint32 value, size_t count);
-
-#define NULL 0
+namespace GenOS
+{
+  class FrameManager
+  {
+  private:
+    static uint32* _bitset;
+    static uint32  _bitset_items;
+  
+  public:
+    static void Initialize(intptr start, uint32 size);
+    static intptr Get();
+    static void Release(intptr frame);
+  
+  private:
+    static void Set(intptr frame);
+    static void Clear(intptr frame);
+    static intptr FindFirst();
+  };
+}

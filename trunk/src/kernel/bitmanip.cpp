@@ -1,6 +1,8 @@
 //------------------------------------------------------------------------------
-// common.h
-//	Declare some global constants and functions
+// bitmanip.cpp
+//	Implements several optimized bit twiddling algorithms
+//
+// See http://graphics.stanford.edu/~seander/bithacks.html
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -27,21 +29,45 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#pragma once
+#include "bitmanip.h"
 
-// These typedefs are written for 32-bit X86.
-typedef unsigned int   uint32;
-typedef          int   int32;
-typedef unsigned short uint16;
-typedef          short int16;
-typedef unsigned char  uint8;
-typedef          char  int8;
-typedef unsigned int   size_t;
-typedef          void* intptr;
+using namespace GenOS;
 
-void memcpy(const intptr src, intptr dst, size_t count);
-void memset(intptr dst, uint8 value, size_t count);
-void memset(intptr dst, uint16 value, size_t count);
-void memset(intptr dst, uint32 value, size_t count);
+static const char LogTable256[] = 
+{
+  0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3,
+  4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+  5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+  5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+  6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+  6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+  6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+  6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7
+};
 
-#define NULL 0
+// Find integer log base 2 of an integer (aka the position of the highest bit set) 
+uint32 BitManip::Log2(uint32 value)
+{
+  uint32 bit = 0;
+  //uint32 a = value >> 16;
+  if (uint32 a = value >> 16)
+  {
+    uint32 b = a >> 8;
+    bit = b ? 24 + LogTable256[b] : 16 + LogTable256[a];
+  }
+  else 
+  {
+    uint32 b = value >> 8;
+    bit = b ? 8 + LogTable256[b] : LogTable256[value];
+  }
+
+  return bit;
+}

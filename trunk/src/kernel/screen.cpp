@@ -148,11 +148,11 @@ void Screen::WriteHex(uint32 value, uint8 bits)
 } 
 
 // Outputs a decimal number to the screen.
-void Screen::WriteInt(uint32 value)
+void Screen::WriteInt(uint32 /*value*/)
 {
 } 
 
-void Screen::DumpMemory(void* start, uint32 size)
+void Screen::DumpMemory(intptr start, uint32 size)
 {
   uint8* buffer = (uint8*)start;
   for (uint32 i=0; i<size; i++)
@@ -181,7 +181,7 @@ void Screen::Scroll()
 
 	// Move the current text chunk that makes up the screen
 	// back in the buffer by a line
-	memcpy((const char*)(video_memory + 80), (char*)video_memory, 24*2*80);
+	memcpy((intptr)(video_memory + 80), (intptr)video_memory, 24*2*80);
 
 	// The last line should now be blank. Do this by writing
 	// 80 spaces to it.
