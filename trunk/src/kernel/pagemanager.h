@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// kernel.h
-//	Kernel class
+// pagemanager.h
+//	
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -31,30 +31,52 @@
 
 #include "common.h"
 
-namespace GenOS {
-
-#define PANIC(msg) Kernel::Panic(msg, __FILE__, __LINE__);
-#define ASSERT(b) ((b) ? (void)0 : Kernel::Assert(#b, __FILE__, __LINE__))
-
-  class Kernel 
+namespace GenOS
+{
+  class PageManager
   {
   private:
-    const intptr _start;
-    const intptr _end;
-    const uint32 _mbinfo;
+    enum PageState
+    {
+      Present        = 0x0001,  // If set, the page is in physical memory. Otherwise, the pqge is swapped. 
+      RW             = 0x0002,  // If set, the page is read/write. Otherwise the page is read-only. 
+      User           = 0x0004,  // If set, the page may be accessed by all. Otherwise, only the supervisor can access it. 
+      WriteThrough   = 0x0008,  // If set, write-through caching is enabled. If not, write-back is enabled. 
+      CacheDisabled  = 0x0010,  // If set, the page will not be cached. 
+      Accessed       = 0x0020,  // If set, the page has been read or written to. This bit is not updated by the CPU. 
+      Dirty          = 0x0040,  // (PageTable only) If set, the page table has been written to. This flag is not updated by the CPU. 
+      PageSize       = 0x0080,  // (Page only) If set, pages are 4 MiB in size. Otherwise, they are 4 KiB. 
+      Global         = 0x0100,  // (PageTable only) If set, prevents the TLB from updating the address in it's cache if CR3 is reset. Note, that the page global enable bit in CR4 must be set to enable this feature. 
+    };
 
-  public:
-    Kernel(const intptr kernel_start, const intptr kernel_end, const uint32 mbinfo);
-    void Run();
-
-    static void Panic(const char* message, const char* file, uint32 line);
-    static void Assert(const char* message, const char* file, uint32 line);
-    static void Hang();
-    static void Idle();
+    struct PageTable
+    {
+      uint32 Pages[1024];
+    };
+    struct PageDirectory
+    {
+      uint32 Tables[1024];
+    };
 
   private:
-    Kernel(const Kernel&);
-    Kernel& operator=(const Kernel&);
-  };
+    PageDirectory dir;
 
-};
+  public:
+    static PageManager* Current;
+
+  public:
+    static void Initialize(intptr kernel_start, intptr kernel_end);
+  
+    void Map(uint32 physicalAddress, uint32 virtualAddress, uint32 flags);
+    void Unmap(uint32 virtualAddress);
+
+    void Switch();
+
+  private:
+    void PreMap(uint32 physicalAddress, uint32 virtualAddress);
+    intptr GetPhysicalAddress(intptr virtualAddress);
+
+
+    static void __stdcall PageFaultHandler(Registers reg);
+  };
+}

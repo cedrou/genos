@@ -33,6 +33,7 @@
 #include "intmgr.h"
 #include "timer.h"
 #include "framemanager.h"
+#include "pagemanager.h"
 #include "keyboard.h"
 
 using namespace GenOS;
@@ -131,21 +132,35 @@ void Kernel::Run()
   Screen::cout << "  - Initializing frame manager..." << Screen::endl; 
   FrameManager::Initialize(_end, mbi->MemoryUpper*1024 - ((uint32)_end - (uint32)_start));
 
+  Screen::cout << "  - Initializing page manager..." << Screen::endl; 
+  PageManager::Initialize(_start, _end);
+
   Screen::cout << "  - Initializing timer..." << Screen::endl; 
 	Timer::Initialize(50); 
 
-  __asm sti
+  __asm sti;
 
   Screen::cout << "  - Entering idle loop..." << Screen::endl; 
   Idle();
 }
 
 
-void Kernel::Panic(const char* message)
+void Kernel::Panic(const char* message, const char* file, uint32 line)
 {
-  Screen::cout << "***********************" << Screen::endl; 
-  Screen::cout << "******** PANIC ********" << Screen::endl; 
-  Screen::cout << "***********************" << Screen::endl; 
+  __asm cli;
+
+  Screen::cout << "******** PANIC (" << message << ") ********" << Screen::endl; 
+  Screen::cout << "at " << file << ":" << line << Screen::endl;
+
+  Hang();
+}
+
+void Kernel::Assert(const char* message, const char* file, uint32 line)
+{
+  __asm cli;
+
+  Screen::cout << "******** ASSERTION FAILED ********" << Screen::endl; 
+  Screen::cout << "at " << file << ":" << line << Screen::endl;
   Screen::cout << message << Screen::endl; 
 
   Hang();
