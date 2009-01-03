@@ -44,4 +44,6 @@ void memset(intptr dst, uint8 value, size_t count);
 void memset(intptr dst, uint16 value, size_t count);
 void memset(intptr dst, uint32 value, size_t count);
 
+#include "registers.h"
+
 #define NULL 0

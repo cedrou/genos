@@ -231,6 +231,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\pagemanager.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\registers.cpp"
 				>
 			</File>
@@ -278,6 +282,10 @@
 			</File>
 			<File
 				RelativePath=".\keyboard.h"
+				>
+			</File>
+			<File
+				RelativePath=".\pagemanager.h"
 				>
 			</File>
 			<File

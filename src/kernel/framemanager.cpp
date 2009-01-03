@@ -62,7 +62,7 @@ void FrameManager::Initialize(intptr start, uint32 size)
   }
 }
 
-void FrameManager::Set(intptr frame)
+void FrameManager::SetBit(intptr frame)
 {
   uint32 index = ((uint32)frame >> 12);  // frame / 0x1000;
   uint32 item = (index >> 5);    // frame_index / 32;
@@ -70,7 +70,7 @@ void FrameManager::Set(intptr frame)
   _bitset[item] |= (1 << bit);
 }
 
-void FrameManager::Clear(intptr frame)
+void FrameManager::ClearBit(intptr frame)
 {
   uint32 index = ((uint32)frame >> 12);  // frame / 0x1000;
   uint32 item = (index >> 5);    // frame_index / 32;
@@ -98,7 +98,9 @@ intptr FrameManager::FindFirst()
 intptr FrameManager::Get()
 {
   intptr frame = FindFirst();
-  Clear(frame);
+  ClearBit(frame);
+  memset(frame, (uint8)0, 0x1000);
+
   return frame;
 }
 
@@ -107,6 +109,6 @@ void FrameManager::Release(intptr frame)
 {
   if (frame)
   {
-    Set(frame);
+    SetBit(frame);
   }
 } 

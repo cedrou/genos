@@ -45,8 +45,8 @@ namespace GenOS
     static void Release(intptr frame);
   
   private:
-    static void Set(intptr frame);
-    static void Clear(intptr frame);
+    static void SetBit(intptr frame);
+    static void ClearBit(intptr frame);
     static intptr FindFirst();
   };
 }
