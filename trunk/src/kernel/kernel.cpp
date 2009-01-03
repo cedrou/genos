@@ -33,6 +33,7 @@
 #include "intmgr.h"
 #include "timer.h"
 #include "framemanager.h"
+#include "keyboard.h"
 
 using namespace GenOS;
 
@@ -78,10 +79,11 @@ void Kernel::Run()
 
   Screen::Initialize();
 
-#if 0
-  Screen::cout << "Kernel loaded at address 0x" << _start << Screen::endl;
-  Screen::cout << "Kernel ends at address 0x" << _end << Screen::endl;
-  Screen::cout << "Available upper memory 0x" << (uint32)mbi->MemoryUpper << " KiB" << Screen::endl;
+  Screen::cout << "Starting GenOS" << Screen::endl; 
+
+#if 1
+  Screen::cout << "Available memory 0x" << (uint32)mbi->MemoryUpper << " KiB" << Screen::endl;
+  Screen::cout << "Kernel 0x" << _start << "-0x" << _end << Screen::endl;
 #endif
 
 #if 0
@@ -106,19 +108,25 @@ void Kernel::Run()
     {
       Screen::cout << " 0x" << mbi->Mmap[i].BaseAddrHigh << mbi->Mmap[i].BaseAddrLow;
       Screen::cout << " 0x"<< mbi->Mmap[i].LengthHigh << mbi->Mmap[i].LengthLow;
-      Screen::cout << (mbi->Mmap[i].Type ? " (available)" : " (reserved)");
-      Screen::cout << Screen::endl;
+      switch(mbi->Mmap[i].Type)
+      {
+      case 1: Screen::cout << " Available" << Screen::endl; break;
+      case 2: Screen::cout << " Reserved" << Screen::endl; break;
+      case 3: Screen::cout << " ACPI Reclaim Memory" << Screen::endl; break;
+      case 4: Screen::cout << " ACPI NVS Memory" << Screen::endl; break;
+      }
     }
   }
 #endif
-
-  Screen::cout << "Starting GenOS" << Screen::endl; 
 
   Screen::cout << "  - Initializing segments..." << Screen::endl;
   GDT::Initialize();
 
   Screen::cout << "  - Initializing interrupts..." << Screen::endl; 
   InterruptManager::Initialize();
+
+  Screen::cout << "  - Initializing keyboard..." << Screen::endl; 
+	Keyboard::Initialize(); 
 
   Screen::cout << "  - Initializing frame manager..." << Screen::endl; 
   FrameManager::Initialize(_end, mbi->MemoryUpper*1024 - ((uint32)_end - (uint32)_start));
