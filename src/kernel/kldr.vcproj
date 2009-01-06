@@ -46,7 +46,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
+				Optimization="3"
 				IgnoreStandardIncludePath="true"
 				MinimalRebuild="false"
 				ExceptionHandling="0"
@@ -59,7 +59,7 @@
 				UsePrecompiledHeader="0"
 				AssemblerOutput="2"
 				WarningLevel="4"
-				DebugInformationFormat="3"
+				DebugInformationFormat="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -78,7 +78,7 @@
 				GenerateManifest="false"
 				EnableUAC="true"
 				IgnoreAllDefaultLibraries="true"
-				GenerateDebugInformation="true"
+				GenerateDebugInformation="false"
 				GenerateMapFile="true"
 				SubSystem="3"
 				OptimizeReferences="0"
@@ -203,32 +203,12 @@
 				RelativePath=".\akldr.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\common.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ioports.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\screen.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\common.h"
-				>
-			</File>
-			<File
-				RelativePath=".\screen.h"
-				>
-			</File>
 		</Filter>
 	</Files>
 	<Globals>

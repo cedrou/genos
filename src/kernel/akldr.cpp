@@ -27,13 +27,11 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#define dw(x)                           \
+#define dd(x)                         \
         __asm _emit (x)       & 0xff  \
-        __asm _emit (x) >> 8  & 0xff 
-
-#define dd(x)       \
-        dw(x)       \
-        dw((x)>>16)
+        __asm _emit (x) >> 8  & 0xff  \
+        __asm _emit (x) >> 16 & 0xff  \
+        __asm _emit (x) >> 24 & 0xff 
 
 #define MULTIBOOT_MAGIC     0x1BADB002
 #define MULTIBOOT_FLAGS     0x00010002
@@ -43,18 +41,13 @@
 #define KERNEL_BASE         0x00100000
 #define KERNEL_START        0x00101000
 #define KERNEL_TEXT_LEN     0x00001000
-#define KERNEL_DATA_LEN     0x00002000
+#define KERNEL_DATA_LEN     0x00000000
 #define KERNEL_LENGTH       (KERNEL_TEXT_LEN + KERNEL_DATA_LEN)
 #define KERNEL_END          (KERNEL_START + KERNEL_LENGTH)
-#define KERNEL_STACK_LEN    0x1000
-#define KERNEL_STACK        (KERNEL_END + KERNEL_STACK_LEN)
 
-#include "common.h"
-#include "screen.h"
-
-using namespace GenOS;
-
-
+typedef unsigned int   uint32;
+typedef unsigned char  uint8;
+typedef          void* intptr;
 
 struct MBModule
 {
@@ -108,81 +101,61 @@ void __declspec(naked) __multiboot_header__(void)
   }
 }
 
+void memset(intptr dst, uint32 value, size_t count);
+
 void __declspec(naked) __entry_point__(void)
 {
-  uint32 magic;
   MBInfo* mbi;
+
+  uint32 kernelPhysicalStart;
+  uint32 kernelPhysicalEnd;
+  uint32 kernelPhysicalStack;
+  uint32 kernelVirtualStart;
+  uint32 kernelVirtualEnd;
+  uint32 kernelVirtualStack;
+  
+  uint32 physicalBase;
+  uint32 physicalSize;
+
+  uint32 kernelSize;
+
+  uint32* pageDirectory;
+  uint32* pageTable0;
+  uint32* pageTable768;
 
   __asm
   {
-    mov magic, eax;
+    cmp eax, MULTIBOOT_KEY
+    jz valid_grub_id
+    hlt
+
+valid_grub_id:
     mov mbi, ebx;
   }
 
-  Screen::Initialize();
+  kernelPhysicalStart = mbi->Modules[0].Start;
+  kernelPhysicalEnd   = mbi->Modules[0].End;
+  kernelPhysicalStack = kernelPhysicalEnd + 0x1000;
 
-  if(magic != MULTIBOOT_KEY)
-  {
-    Screen::cout << "Invalid GRUB magic key !" << Screen::endl;
-    __asm hlt;
-  }
-
-  Screen::cout << "Loading GenOS..." << Screen::endl;
-  Screen::cout << Screen::endl;
-
-  Screen::cout << "Multiboot information structure:" << Screen::endl;
-  Screen::cout << "  Flags         " << mbi->Flags << Screen::endl;         
-  Screen::cout << "  MemoryLower   " << mbi->MemoryLower << Screen::endl; 
-  Screen::cout << "  MemoryUpper   " << mbi->MemoryUpper << Screen::endl; 
-  Screen::cout << "  BootDevice    " << mbi->BootDevice[0] << mbi->BootDevice[1] << mbi->BootDevice[2] << mbi->BootDevice[3] << Screen::endl; 
-  Screen::cout << "  Cmdline       " << mbi->Cmdline << Screen::endl;
-  Screen::cout << "  ModulesCount  " << mbi->ModulesCount << Screen::endl; 
-  Screen::cout << "  Modules       " << (uint32)mbi->Modules << Screen::endl; 
-  Screen::cout << "  Unused[4]     " << mbi->Unused[0] << mbi->Unused[1] << mbi->Unused[2] << mbi->Unused[3] << Screen::endl; 
-  Screen::cout << "  MmapLength    " << mbi->MmapLength << Screen::endl; 
-  Screen::cout << "  Mmap          " << mbi->Mmap << Screen::endl; 
-  Screen::cout << Screen::endl;
+  kernelVirtualStart  = 0xC0000000;
+  kernelVirtualEnd    = kernelVirtualStart - kernelPhysicalStart + kernelPhysicalEnd;
+  kernelVirtualStack  = kernelVirtualStart - kernelPhysicalStart + kernelPhysicalStack;
   
-  Screen::cout << "Modules:" << Screen::endl; 
-  for(uint32 i=0; i<mbi->ModulesCount; i++)
-  {
-    Screen::cout << "  Start         " << mbi->Modules[i].Start << Screen::endl; 
-    Screen::cout << "  End           " << mbi->Modules[i].End << Screen::endl; 
-    Screen::cout << "  CmdLine       " << mbi->Modules[i].CmdLine << Screen::endl; 
-    Screen::cout << "  Reserved      " << mbi->Modules[i].Reserved << Screen::endl; 
-  }
+  kernelSize          = kernelVirtualStack - kernelVirtualStart;
+  
+  physicalBase        = kernelPhysicalStack;
 
-  if ((mbi->Flags & (1<<6)) && mbi->MmapLength)
-  {
-    Screen::cout << "Memory map (" << mbi->MmapLength << " bytes):" << Screen::endl;
-    uint32 items = mbi->MmapLength / sizeof(MBMemoryMap);
-    for (uint32 i=0; i<items; i++)
-    {
-      Screen::cout << "  0x" << mbi->Mmap[i].BaseAddrHigh << mbi->Mmap[i].BaseAddrLow;
-      Screen::cout << " 0x"<< mbi->Mmap[i].LengthHigh << mbi->Mmap[i].LengthLow;
-      switch(mbi->Mmap[i].Type)
-      {
-      case 1: Screen::cout << " Available" << Screen::endl; break;
-      case 2: Screen::cout << " Reserved" << Screen::endl; break;
-      case 3: Screen::cout << " ACPI Reclaim Memory" << Screen::endl; break;
-      case 4: Screen::cout << " ACPI NVS Memory" << Screen::endl; break;
-      }
-    }
-  }
-
-  const uint32 kernelPhysicalStart = mbi->Modules[0].Start;
-  const uint32 kernelPhysicalEnd = mbi->Modules[0].End;
-  const uint32 kernelPhysicalStack = kernelPhysicalEnd + 0x1000;
-  uint32 physicalBase = kernelPhysicalStack;
+  // Prepare paging
+  //----------------------------------------------
 
   // Allocate a frame to store the page directory
-  uint32* pageDirectory = (uint32*)physicalBase;
+  pageDirectory = (uint32*)physicalBase;
   physicalBase += 0x1000;
   memset((intptr)pageDirectory, (uint32)0, 1024);
 
   // Allocate a frame for a page table.
-  // Identity map the lower memory + kldr (0 -> kernelStart)
-  uint32* pageTable0 = (uint32*)physicalBase;
+  // Identity map: lower memory + kldr (0 -> kernelStart)
+  pageTable0 = (uint32*)physicalBase;
   physicalBase += 0x1000;
   memset((intptr)pageTable0, (uint32)0, 1024);
   pageDirectory[0] = (uint32)pageTable0 | 3;
@@ -193,7 +166,7 @@ void __declspec(naked) __entry_point__(void)
 
   // Allocate a frame for a page table.
   // Map the kernel at 3GiB
-  uint32* pageTable768 = (uint32*)physicalBase;
+  pageTable768 = (uint32*)physicalBase;
   physicalBase += 0x1000;
   memset((intptr)pageTable768, (uint32)0, 1024);
   pageDirectory[768] = (uint32)pageTable768 | 3;
@@ -204,37 +177,26 @@ void __declspec(naked) __entry_point__(void)
     pageTable768[pageIndex] = address | 3;
   }
 
+  // Recursive map of the page directory
   pageDirectory[1023] = (uint32)pageDirectory | 3;
 
 
-  // Enable paging
+  physicalSize = mbi->MemoryUpper - (physicalBase - 0x00100000);
+
   __asm
   {
+; Enable paging
     mov eax, [pageDirectory]
     mov cr3, eax
 
     mov eax, cr0
     or eax, 0x80000000
     mov cr0, eax
-  }
 
-  const uint32 kernelVirtualStart = 0xC0000000;
-  const uint32 kernelVirtualEnd = kernelVirtualStart - kernelPhysicalStart + kernelPhysicalEnd;
-  const uint32 kernelVirtualStack = kernelVirtualStart - kernelPhysicalStart + kernelPhysicalStack;
-  const uint32 kernelSize = kernelVirtualStack - kernelVirtualStart;
-  const uint32 physicalSize = mbi->MemoryUpper - (physicalBase - 0x00100000);
-
-  Screen::cout << kernelPhysicalStart << " -> " << kernelVirtualStart << Screen::endl;
-  Screen::cout << kernelPhysicalEnd << " -> " << kernelVirtualEnd << Screen::endl;
-  Screen::cout << kernelPhysicalStack << " -> " << kernelVirtualStack << Screen::endl;
-  Screen::cout << kernelSize << Screen::endl;
-  Screen::cout << physicalSize << Screen::endl;
-
-  __asm
-  {
-    ; set up the stack for our kernel
+; set up the stack for our kernel
     mov esp, kernelVirtualStack
 
+; call kernel
     push physicalSize;
     push physicalBase;
     push kernelSize;
@@ -243,9 +205,12 @@ void __declspec(naked) __entry_point__(void)
     call eax;
   }
 
+  // This should never be reached
   __asm hlt
 }
 
-void kldr()
+void memset(intptr dst, uint32 value, size_t count)
 {
+	uint32* d = (uint32*)dst;
+	while(count--) { *d++ = value; }
 }
