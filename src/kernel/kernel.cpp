@@ -69,56 +69,16 @@ struct MultibootInfo
 #pragma pack(pop)
 
 
-Kernel::Kernel(const intptr kernel_start, const intptr kernel_end, const uint32 mbinfo)
-: _start(kernel_start), _end(kernel_end), _mbinfo(mbinfo)
+Kernel::Kernel(uint32 kernel_size, intptr physical_base, uint32 physical_size)
+: _size(kernel_size), _physical_base(physical_base), _physical_size(physical_size)
 {
 }
 
 void Kernel::Run()
 {
-  MultibootInfo* mbi = (MultibootInfo*)_mbinfo;
-
   Screen::Initialize();
 
   Screen::cout << "Starting GenOS" << Screen::endl; 
-
-#if 1
-  Screen::cout << "Available memory 0x" << (uint32)mbi->MemoryUpper << " KiB" << Screen::endl;
-  Screen::cout << "Kernel 0x" << _start << "-0x" << _end << Screen::endl;
-#endif
-
-#if 0
-  Screen::cout << " Flags         " << mbi->Flags << Screen::endl;         
-  Screen::cout << " MemoryLower   " << mbi->MemoryLower << Screen::endl; 
-  Screen::cout << " MemoryUpper   " << mbi->MemoryUpper << Screen::endl; 
-  Screen::cout << " BootDevice    " << mbi->BootDevice[0] << mbi->BootDevice[1] << mbi->BootDevice[2] << mbi->BootDevice[3] << Screen::endl; 
-  Screen::cout << " Cmdline       " << mbi->Cmdline << Screen::endl;
-  Screen::cout << " ModulesCount  " << mbi->ModulesCount << Screen::endl; 
-  Screen::cout << " Modules       " << mbi->Modules << Screen::endl; 
-  Screen::cout << " Unused[4]     " << mbi->Unused[0] << mbi->Unused[1] << mbi->Unused[2] << mbi->Unused[3] << Screen::endl; 
-  Screen::cout << " MmapLength    " << mbi->MmapLength << Screen::endl; 
-  Screen::cout << " Mmap          " << mbi->Mmap << Screen::endl; 
-#endif
-
-#if 0
-  if ((mbi->Flags & (1<<6)) && mbi->MmapLength)
-  {
-    Screen::cout << "Memory map (" << mbi->MmapLength << " bytes):" << Screen::endl;
-    uint32 items = mbi->MmapLength / sizeof(MemoryMap);
-    for (uint32 i=0; i<items; i++)
-    {
-      Screen::cout << " 0x" << mbi->Mmap[i].BaseAddrHigh << mbi->Mmap[i].BaseAddrLow;
-      Screen::cout << " 0x"<< mbi->Mmap[i].LengthHigh << mbi->Mmap[i].LengthLow;
-      switch(mbi->Mmap[i].Type)
-      {
-      case 1: Screen::cout << " Available" << Screen::endl; break;
-      case 2: Screen::cout << " Reserved" << Screen::endl; break;
-      case 3: Screen::cout << " ACPI Reclaim Memory" << Screen::endl; break;
-      case 4: Screen::cout << " ACPI NVS Memory" << Screen::endl; break;
-      }
-    }
-  }
-#endif
 
   Screen::cout << "  - Initializing segments..." << Screen::endl;
   GDT::Initialize();
@@ -130,10 +90,10 @@ void Kernel::Run()
 	Keyboard::Initialize(); 
 
   Screen::cout << "  - Initializing frame manager..." << Screen::endl; 
-  FrameManager::Initialize(_end, mbi->MemoryUpper*1024 - ((uint32)_end - (uint32)_start));
+  FrameManager::Initialize((intptr)_physical_base, _physical_size);
 
-  Screen::cout << "  - Initializing page manager..." << Screen::endl; 
-  PageManager::Initialize(_start, _end);
+  //Screen::cout << "  - Initializing page manager..." << Screen::endl; 
+  //PageManager::Initialize(_start, _end);
 
   Screen::cout << "  - Initializing timer..." << Screen::endl; 
 	Timer::Initialize(50); 

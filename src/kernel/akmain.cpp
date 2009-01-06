@@ -1,3 +1,4 @@
+
 //------------------------------------------------------------------------------
 // kmain.cpp
 //  Entry point
@@ -29,61 +30,8 @@
 
 #include "kernel.h"
 
-#define dd(x)                        \
-        __asm _emit (x)       & 0xff \
-        __asm _emit (x) >> 8  & 0xff \
-        __asm _emit (x) >> 16 & 0xff \
-        __asm _emit (x) >> 24 & 0xff
-
-#define MULTIBOOT_MAGIC     0x1BADB002
-#define MULTIBOOT_FLAGS     0x00010002
-#define MULTIBOOT_CKSUM     (-(MULTIBOOT_MAGIC+MULTIBOOT_FLAGS))
-
-#define KERNEL_BASE         0x00100000
-#define KERNEL_START        0x00101000
-#define KERNEL_TEXT_LEN     0x00002000
-#define KERNEL_DATA_LEN     0x00003000
-#define KERNEL_LENGTH       (KERNEL_TEXT_LEN + KERNEL_DATA_LEN)
-#define KERNEL_END          (KERNEL_START + KERNEL_LENGTH)
-#define KERNEL_STACK_LEN    0x1000
-#define KERNEL_STACK        (KERNEL_END + KERNEL_STACK_LEN)
-
-
-void kmain(uint32 magic, uint32 mbinfo);
-
-void __declspec(naked) __multiboot_entry__(void)
+void kmain(uint32 kernel_size, intptr physical_base, uint32 physical_size)
 {
-  __asm {
-    dd(MULTIBOOT_MAGIC)          ; magic
-    dd(MULTIBOOT_FLAGS)          ; flags
-    dd(MULTIBOOT_CKSUM)          ; checksum
-
-    dd(KERNEL_START)             ; header_addr
-    dd(KERNEL_START)             ; load_addr
-    dd(KERNEL_END)               ; load_end_addr
-    dd(0x00000000)               ; bss_end_addr
-    dd(0x00101030)               ; entry_addr
-    dd(0x00000000)               ; mode_type
-    dd(0x00000000)               ; width
-    dd(0x00000000)               ; height
-    dd(0x00000000)               ; depth
-
-    mov   esp, KERNEL_STACK-1
-
-    xor   ecx, ecx
-    push  ecx
-    popf
-
-    push  ebx       ; multiboot info address
-    push  eax       ; magic
-    call  kmain
-
-    jmp   $
-  }
-}
-
-void kmain(uint32 /*magic*/, uint32 mbinfo)
-{
-  GenOS::Kernel kernel((intptr)KERNEL_BASE, (intptr)KERNEL_STACK, mbinfo);
+  GenOS::Kernel kernel(kernel_size, physical_base, physical_size);
   kernel.Run();
 }

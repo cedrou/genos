@@ -1,1 +1,2 @@
-kernel /kernel.exe
+kernel /kldr.exe
+module /kernel.exe
