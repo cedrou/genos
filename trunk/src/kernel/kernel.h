@@ -39,12 +39,12 @@ namespace GenOS {
   class Kernel 
   {
   private:
-    const intptr _start;
-    const intptr _end;
-    const uint32 _mbinfo;
+    const uint32 _size;
+    const intptr _physical_base;
+    const uint32 _physical_size;
 
   public:
-    Kernel(const intptr kernel_start, const intptr kernel_end, const uint32 mbinfo);
+    Kernel(uint32 kernel_size, intptr physical_base, uint32 physical_size);
     void Run();
 
     static void Panic(const char* message, const char* file, uint32 line);

@@ -8,10 +8,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "License", "License", "{576A
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "build-distrib", "src\make\make.vcproj", "{EF5160E6-F197-488F-97CB-AAFA994FF2B0}"
 	ProjectSection(ProjectDependencies) = postProject
+		{2ACA7262-EFF5-4399-8D5C-51CAE38F44FF} = {2ACA7262-EFF5-4399-8D5C-51CAE38F44FF}
 		{FBF19DC3-2F6C-4F50-953C-5CEC752B7A4B} = {FBF19DC3-2F6C-4F50-953C-5CEC752B7A4B}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kernel", "src\kernel\kernel.vcproj", "{FBF19DC3-2F6C-4F50-953C-5CEC752B7A4B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kldr", "src\kernel\kldr.vcproj", "{2ACA7262-EFF5-4399-8D5C-51CAE38F44FF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +30,10 @@ Global
 		{FBF19DC3-2F6C-4F50-953C-5CEC752B7A4B}.Debug|Win32.Build.0 = Debug|Win32
 		{FBF19DC3-2F6C-4F50-953C-5CEC752B7A4B}.Release|Win32.ActiveCfg = Release|Win32
 		{FBF19DC3-2F6C-4F50-953C-5CEC752B7A4B}.Release|Win32.Build.0 = Release|Win32
+		{2ACA7262-EFF5-4399-8D5C-51CAE38F44FF}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2ACA7262-EFF5-4399-8D5C-51CAE38F44FF}.Debug|Win32.Build.0 = Debug|Win32
+		{2ACA7262-EFF5-4399-8D5C-51CAE38F44FF}.Release|Win32.ActiveCfg = Release|Win32
+		{2ACA7262-EFF5-4399-8D5C-51CAE38F44FF}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
