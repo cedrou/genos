@@ -36,27 +36,63 @@ namespace GenOS
   class PageManager
   {
   private:
-    enum PageState
+    class PageTableEntry
     {
-      Present        = 0x0001,  // If set, the page is in physical memory. Otherwise, the pqge is swapped. 
-      RW             = 0x0002,  // If set, the page is read/write. Otherwise the page is read-only. 
-      User           = 0x0004,  // If set, the page may be accessed by all. Otherwise, only the supervisor can access it. 
-      WriteThrough   = 0x0008,  // If set, write-through caching is enabled. If not, write-back is enabled. 
-      CacheDisabled  = 0x0010,  // If set, the page will not be cached. 
-      Accessed       = 0x0020,  // If set, the page has been read or written to. This bit is not updated by the CPU. 
-      Dirty          = 0x0040,  // (PageTable only) If set, the page table has been written to. This flag is not updated by the CPU. 
-      PageSize       = 0x0080,  // (Page only) If set, pages are 4 MiB in size. Otherwise, they are 4 KiB. 
-      Global         = 0x0100,  // (PageTable only) If set, prevents the TLB from updating the address in it's cache if CR3 is reset. Note, that the page global enable bit in CR4 must be set to enable this feature. 
+    private:
+      uint32 data;
+
+    public:
+      enum Flags
+      {
+        Present        = 0x00000001,  // If set, the page is in physical memory. Otherwise, the page is swapped. 
+        Writable       = 0x00000002,  // If set, the page is read/write. Otherwise the page is read-only. 
+        User           = 0x00000004,  // If set, the page may be accessed by all. Otherwise, only the supervisor can access it. 
+        Accessed       = 0x00000020,  // If set, the page has been read or written to. This bit is set by the CPU. 
+        Dirty          = 0x00000040,  // (PageTable only) If set, the page table has been written to. This flag set by the CPU. 
+        Frame          = 0xFFFFF000,  // (PageTable only) If set, prevents the TLB from updating the address in it's cache if CR3 is reset. Note, that the page global enable bit in CR4 must be set to enable this feature. 
+      };
+
+    public:
+      void  SetFrame(paddr frame);
+      paddr GetFrame();
+
+      bool  IsPresent();
+      bool  IsWritable();
+      bool  IsUser();
     };
 
-    struct PageTable
+    class PageDirectoryEntry
     {
-      uint32 Pages[1024];
+    private:
+      uint32 data;
+
+    public:
+      enum Flags
+      {
+        Present        = 0x00000001,  // If set, the page is in physical memory. Otherwise, the page is swapped. 
+        Writable       = 0x00000002,  // If set, the page is read/write. Otherwise the page is read-only. 
+        User           = 0x00000004,  // If set, the page may be accessed by all. Otherwise, only the supervisor can access it. 
+        WriteThrough   = 0x00000008,  // If set, write-through caching is enabled. If not, write-back is enabled. 
+        CacheDisabled  = 0x00000010,  // If set, the page will not be cached. 
+        Accessed       = 0x00000020,  // If set, the page has been read or written to. This bit is set by the CPU. 
+        //Dirty          = 0x00000040,  // (PageTable only) If set, the page table has been written to. This flag set by the CPU. 
+        LargePage      = 0x00000080,  // If set, pages are 4 MiB in size. Otherwise, they are 4 KiB. 
+        Global         = 0x00000100,  // If set, prevents the TLB from updating the address in it's cache if CR3 is reset. Note, that the page global enable bit in CR4 must be set to enable this feature. 
+        Frame          = 0xFFFFF000,
+      };
+
+    public:
+      void  SetFrame(paddr frame);
+      paddr GetFrame();
+
+      bool  IsPresent();
+      bool  IsWritable();
+      bool  IsUser();
+      bool  IsLargePage();
     };
-    struct PageDirectory
-    {
-      uint32 Tables[1024];
-    };
+
+    typedef PageTableEntry PageTable[1024];
+    typedef PageDirectoryEntry PageDirectory[1024];
 
   private:
     PageDirectory dir;
@@ -65,16 +101,16 @@ namespace GenOS
     static PageManager* Current;
 
   public:
-    static void Initialize(intptr kernel_start, intptr kernel_end);
+    static void Initialize();
   
-    void Map(uint32 physicalAddress, uint32 virtualAddress, uint32 flags);
-    void Unmap(uint32 virtualAddress);
+    //void Map(uint32 physicalAddress, uint32 virtualAddress, uint32 flags);
+    //void Unmap(uint32 virtualAddress);
 
-    void Switch();
+    //void Switch();
 
   private:
-    void PreMap(uint32 physicalAddress, uint32 virtualAddress);
-    intptr GetPhysicalAddress(intptr virtualAddress);
+    //void PreMap(uint32 physicalAddress, uint32 virtualAddress);
+    //intptr GetPhysicalAddress(intptr virtualAddress);
 
 
     static void __stdcall PageFaultHandler(Registers reg);

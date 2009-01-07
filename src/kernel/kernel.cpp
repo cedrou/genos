@@ -69,7 +69,7 @@ struct MultibootInfo
 #pragma pack(pop)
 
 
-Kernel::Kernel(uint32 kernel_size, intptr physical_base, uint32 physical_size)
+Kernel::Kernel(uint32 kernel_size, paddr physical_base, uint32 physical_size)
 : _size(kernel_size), _physical_base(physical_base), _physical_size(physical_size)
 {
 }
@@ -86,14 +86,14 @@ void Kernel::Run()
   Screen::cout << "  - Initializing interrupts..." << Screen::endl; 
   InterruptManager::Initialize();
 
+  Screen::cout << "  - Initializing frame manager..." << Screen::endl; 
+  FrameManager::Initialize(_physical_base, _physical_size);
+
+  Screen::cout << "  - Initializing page manager..." << Screen::endl; 
+  PageManager::Initialize();
+
   Screen::cout << "  - Initializing keyboard..." << Screen::endl; 
 	Keyboard::Initialize(); 
-
-  Screen::cout << "  - Initializing frame manager..." << Screen::endl; 
-  FrameManager::Initialize((intptr)_physical_base, _physical_size);
-
-  //Screen::cout << "  - Initializing page manager..." << Screen::endl; 
-  //PageManager::Initialize(_start, _end);
 
   Screen::cout << "  - Initializing timer..." << Screen::endl; 
 	Timer::Initialize(50); 

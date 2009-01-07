@@ -40,11 +40,11 @@ namespace GenOS {
   {
   private:
     const uint32 _size;
-    const intptr _physical_base;
+    const paddr _physical_base;
     const uint32 _physical_size;
 
   public:
-    Kernel(uint32 kernel_size, intptr physical_base, uint32 physical_size);
+    Kernel(uint32 kernel_size, paddr physical_base, uint32 physical_size);
     void Run();
 
     static void Panic(const char* message, const char* file, uint32 line);

@@ -35,106 +35,59 @@
 
 using namespace GenOS;
 
-void PageManager::Initialize(intptr kernel_start, intptr kernel_end)
+void PageManager::Initialize()
 {
-  // Allocate a frame to store the page directory
-  PageManager* newManager = (PageManager*)FrameManager::Get();
-
-  // Identity map
-  // 0x00000000 -> 0x00100000 : Lower memory
-  for( uint32 address = 0x00000000; address < 0x00100000; address += 0x1000)
-  {
-    newManager->PreMap(address, address);
-  }
-
-  // Identity map
-  // kernel_start -> kernel_end : Kernel
-  for( uint32 address = (uint32)kernel_start; address < (uint32)kernel_end; address += 0x1000)
-  {
-    newManager->PreMap(address, address);
-  }
-
-  // 0xFFFFF000 -> 0xFFFFFFFF : Kernel page directory
-  newManager->PreMap((uint32)newManager, 0xFFFFF000);
-
   // Register the timer interrupt handler.
   InterruptManager::RegisterInterrupt(InterruptManager::PageFault, &PageFaultHandler);
-
-  // Enable paging
-  __asm
-  {
-    mov eax, [newManager]
-    mov cr3, eax
-
-    mov eax, cr0
-    or eax, 0x80000000
-    mov cr0, eax
-  }
 }
 
-void PageManager::PreMap(uint32 physicalAddress, uint32 virtualAddress)
-{
-  const uint32 tableIndex = (uint32)virtualAddress >> 22; // (address / 4096) / 1024
-  const uint32 pageIndex = ((uint32)virtualAddress >> 12) & 0x03FF; // (address / 4096) % 1024
-
-  if(!(dir.Tables[tableIndex] & Present))
-  {
-    dir.Tables[tableIndex] = (uint32)FrameManager::Get() | Present | RW;
-  }
-
-  PageManager::PageTable* table = (PageManager::PageTable*)(dir.Tables[tableIndex] & 0xFFFFF000);
-  
-  table->Pages[pageIndex] = physicalAddress | Present | RW;
-}
-
-
-void PageManager::Map(uint32 physicalAddress, uint32 virtualAddress, uint32 flags)
-{
-  const uint32 tableIndex = (uint32)virtualAddress >> 22; // (address / 4096) / 1024
-  const uint32 pageIndex = ((uint32)virtualAddress >> 12) & 0x03FF; // (address / 4096) % 1024
-
-  // Paging is enabled, so this = dir = 0xFFFFF000;
-  if(!dir.Tables[tableIndex] & Present)
-  {
-    // doesn't exist, so alloc a page and add into pdir
-    dir.Tables[tableIndex] = (uint32)FrameManager::Get() | Present | RW;
-  }
-
-  PageManager::PageTable* table = (PageManager::PageTable*)(0xFFC00000 + (tableIndex * 0x1000)); // virt addr of page table
-  if(!table->Pages[pageIndex] & Present)
-  {
-    // page isn't mapped
-    table->Pages[pageIndex] = physicalAddress | (flags & 0x0FFF) | Present;
-  }
-}
-
-void PageManager::Switch()
-{
-  intptr physicalAddress = GetPhysicalAddress((intptr)0xFFFFF000);
-  __asm
-  {
-    mov eax, [physicalAddress]
-    mov cr3, eax
-
-    mov eax, cr0
-    or eax, 0x80000000
-    mov cr0, eax
-  }
-}
-
-intptr PageManager::GetPhysicalAddress(intptr virtualAddress)
-{
-  uint32 tableIndex = (uint32)virtualAddress >> 22;           // (address / 4096) / 1024
-  uint32 pageIndex = ((uint32)virtualAddress >> 12) & 0x03FF; // (address / 4096) % 1024
-
-  PageDirectory* pageDirectory = (PageDirectory*)0xFFFFF000;
-  if(!dir.Tables[tableIndex] & Present) return NULL;
-
-  PageTable* table = (PageTable*)(0xFFC00000 + (tableIndex * 0x1000)); // virt addr of page table
-  if(!table->Pages[pageIndex] & Present) return NULL;
-
-  return (intptr)((table->Pages[pageIndex] & ~0xFFF) + ((uint32)virtualAddress & 0xFFF));
-}
+//void PageManager::MapCurrent(uint32 physicalAddress, uint32 virtualAddress, uint32 flags)
+//{
+//  const uint32 tableIndex = (uint32)virtualAddress >> 22; // (address / 4096) / 1024
+//  const uint32 pageIndex = ((uint32)virtualAddress >> 12) & 0x03FF; // (address / 4096) % 1024
+//
+//  // Paging is enabled, so this = dir = 0xFFFFF000;
+//  if(!dir.Tables[tableIndex] & Present)
+//  {
+//    // doesn't exist, so alloc a page and add into pdir
+//    dir.Tables[tableIndex] = (uint32)FrameManager::Get() | Present | RW;
+//  }
+//
+//  PageManager::PageTable* table = (PageManager::PageTable*)(0xFFC00000 + (tableIndex * 0x1000)); // virt addr of page table
+//  if(!table->Pages[pageIndex] & Present)
+//  {
+//    // page isn't mapped
+//    table->Pages[pageIndex] = physicalAddress | (flags & 0x0FFF) | Present;
+//  }
+//}
+//
+//void PageManager::Switch()
+//{
+//  intptr physicalAddress = GetPhysicalAddress((intptr)0xFFFFF000);
+//  __asm
+//  {
+//    mov eax, [physicalAddress]
+//    mov cr3, eax
+//
+//    mov eax, cr0
+//    or eax, 0x80000000
+//    mov cr0, eax
+//  }
+//}
+//
+//intptr PageManager::GetPhysicalAddress(intptr virtualAddress)
+//{
+//  uint32 tableIndex = (uint32)virtualAddress >> 22;           // (address / 4096) / 1024
+//  uint32 pageIndex = ((uint32)virtualAddress >> 12) & 0x03FF; // (address / 4096) % 1024
+//
+//  PageDirectory* pageDirectory = (PageDirectory*)0xFFFFF000;
+//  if(!dir.Tables[tableIndex] & Present) return NULL;
+//
+//  PageTable* table = (PageTable*)(0xFFC00000 + (tableIndex * 0x1000)); // virt addr of page table
+//  if(!table->Pages[pageIndex] & Present) return NULL;
+//
+//  return (intptr)((table->Pages[pageIndex] & ~0xFFF) + ((uint32)virtualAddress & 0xFFF));
+//}
 
 void PageManager::PageFaultHandler(Registers regs)
 {
