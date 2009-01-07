@@ -34,53 +34,20 @@
 using namespace GenOS;
 
 uint32* FrameManager::_bitset = NULL;
-uint32  FrameManager::_bitset_items = 0;
+uint32* FrameManager::_bitset_items = NULL;
 
-void FrameManager::Initialize(intptr start, uint32 size)
+void FrameManager::Initialize(paddr start, uint32 size)
 {
-  // Place the bitset at the start of the free memory block
-  _bitset = (uint32*)start;
+  // Place the size of the bitset at the start of the free memory block
+  _bitset_items = (uint32*)start;
 
-  // Compute the total number of frames and the size (in 32 bits words)
-  // of the bitset
-  uint32 frames = size / 0x1000;
-  _bitset_items = frames / 32;
-
-  // Initialize the bitset to 1 (all frames are available)
-  memset(_bitset, 0xFFFFFFFF, _bitset_items);
-
-  // Compute the number of frames used by the bitset
-  uint32 bitset_size = _bitset_items * 8;
-  uint32 bitset_frames = (bitset_size + 0x0FFF) / 0x1000;
-
-  // Clear the corresponding bits in the bitset
-  for(uint32 index=0; index<bitset_frames; index++)
-  {
-    uint32 item = (index >> 5);    // frame_index / 32;
-    uint32 bit = (index & 0x1F);   // frame_index % 32
-    _bitset[item] &= ~(1 << bit);
-  }
+  // The bitset immediately follows this value
+  _bitset = &((uint32*)start)[1];
 }
 
-void FrameManager::SetBit(intptr frame)
+intptr FrameManager::FindFreeFrame()
 {
-  uint32 index = ((uint32)frame >> 12);  // frame / 0x1000;
-  uint32 item = (index >> 5);    // frame_index / 32;
-  uint32 bit = (index & 0x1F);   // frame_index % 32
-  _bitset[item] |= (1 << bit);
-}
-
-void FrameManager::ClearBit(intptr frame)
-{
-  uint32 index = ((uint32)frame >> 12);  // frame / 0x1000;
-  uint32 item = (index >> 5);    // frame_index / 32;
-  uint32 bit = (index & 0x1F);   // frame_index % 32
-  _bitset[item] &= ~(1 << bit);
-}
-
-intptr FrameManager::FindFirst()
-{
-  for (uint32 item=0; item<_bitset_items; item++)
+  for (uint32 item=0; item<*_bitset_items; item++)
   {
     uint32 current = _bitset[item];
     if (current != 0)
@@ -95,20 +62,31 @@ intptr FrameManager::FindFirst()
 
 
 // Function to allocate a frame.
-intptr FrameManager::Get()
+paddr FrameManager::GetFrame(bool zeroFrame)
 {
-  intptr frame = FindFirst();
-  ClearBit(frame);
-  memset(frame, (uint8)0, 0x1000);
+  paddr frame = FindFreeFrame();
+  
+  if(zeroFrame)
+    memset(frame, (uint8)0, 0x1000);
+
+  const uint32 index = ((uint32)frame >> 12);  // frame / 0x1000;
+  const uint32 item = (index >> 5);    // frame_index / 32;
+  const uint32 bit = (index & 0x1F);   // frame_index % 32
+
+  _bitset[item] &= ~(1 << bit);
 
   return frame;
 }
 
 // Function to deallocate a frame.
-void FrameManager::Release(intptr frame)
+void FrameManager::ReleaseFrame(paddr frame)
 {
-  if (frame)
-  {
-    SetBit(frame);
-  }
+  if (frame == NULL)
+    return;
+  
+  const uint32 index  = ((uint32)frame >> 12); // frame / 0x1000;
+  const uint32 item   = (index >> 5);          // frame_index / 32;
+  const uint32 bit    = (index & 0x1F);        // frame_index % 32;
+
+  _bitset[item] |= (1 << bit);
 } 

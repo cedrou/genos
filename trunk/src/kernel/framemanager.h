@@ -37,16 +37,19 @@ namespace GenOS
   {
   private:
     static uint32* _bitset;
-    static uint32  _bitset_items;
+    static uint32* _bitset_items;
   
   public:
-    static void Initialize(intptr start, uint32 size);
-    static intptr Get();
-    static void Release(intptr frame);
+    // Initialization of tha manager
+    static void   Initialize(paddr start, uint32 size);
+    
+    // Allocate a frame
+    static paddr  GetFrame(bool zeroFrame = true);
+
+    // Deallocate a frame
+    static void   ReleaseFrame(paddr frame);
   
   private:
-    static void SetBit(intptr frame);
-    static void ClearBit(intptr frame);
-    static intptr FindFirst();
+    static intptr FindFreeFrame();
   };
 }

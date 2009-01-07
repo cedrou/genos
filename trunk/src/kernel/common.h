@@ -39,6 +39,9 @@ typedef          char  int8;
 typedef unsigned int   size_t;
 typedef          void* intptr;
 
+typedef          void* paddr;
+typedef          void* vaddr;
+
 void memcpy(const intptr src, intptr dst, size_t count);
 void memset(intptr dst, uint8 value, size_t count);
 void memset(intptr dst, uint16 value, size_t count);

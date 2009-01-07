@@ -93,7 +93,7 @@ void __declspec(naked) __multiboot_header__(void)
     dd(KERNEL_START)             ; load_addr
     dd(KERNEL_END)               ; load_end_addr
     dd(0x00000000)               ; bss_end_addr
-    dd(0x00101030)               ; entry_addr
+    dd(0x00101050)               ; entry_addr
     dd(0x00000000)               ; mode_type
     dd(0x00000000)               ; width
     dd(0x00000000)               ; height
@@ -181,7 +181,41 @@ valid_grub_id:
   pageDirectory[1023] = (uint32)pageDirectory | 3;
 
 
-  physicalSize = mbi->MemoryUpper - (physicalBase - 0x00100000);
+
+  physicalSize = mbi->MemoryUpper * 1024 - (physicalBase - 0x00100000);
+
+
+
+  // Prepare frame manager
+  //----------------------------------------------
+
+  // Compute the total number of frames and the size (in 32 bits words)
+  // of the bitset
+  uint32 frames = physicalSize / 0x1000;
+  uint32 bitset_items = frames / 32;
+
+  // Place the size of the bitset at the start of the free memory block
+  ((uint32*)physicalBase)[0] = frames / 32;
+
+  // The bitset immediately follows this value
+  uint32* bitset = &((uint32*)physicalBase)[1];
+
+  // Initialize the bitset to 1 (all frames are available)
+  memset(bitset, 0xFFFFFFFF, bitset_items);
+
+  // Compute the number of frames used by the bitset
+  uint32 bitset_size = bitset_items * 8;
+  uint32 bitset_frames = (bitset_size + 0x0FFF) / 0x1000;
+
+  // Clear the corresponding bits in the bitset
+  for(uint32 index=0; index<bitset_frames; index++)
+  {
+    uint32 item = (index >> 5);    // frame_index / 32;
+    uint32 bit = (index & 0x1F);   // frame_index % 32
+    bitset[item] &= ~(1 << bit);
+  }
+
+  physicalSize -= bitset_frames * 0x1000;
 
   __asm
   {
