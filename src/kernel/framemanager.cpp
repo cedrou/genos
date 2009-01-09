@@ -33,27 +33,30 @@
 
 using namespace GenOS;
 
+paddr   FrameManager::_base = NULL;
 uint32* FrameManager::_bitset = NULL;
-uint32* FrameManager::_bitset_items = NULL;
+uint32  FrameManager::_bitset_items = 0;
 
-void FrameManager::Initialize(paddr start, uint32 size)
+void FrameManager::Initialize(paddr base, vaddr bitset)
 {
+  _base = base;
+
   // Place the size of the bitset at the start of the free memory block
-  _bitset_items = (uint32*)start;
+  _bitset_items = ((uint32*)bitset)[0];
 
   // The bitset immediately follows this value
-  _bitset = &((uint32*)start)[1];
+  _bitset = &((uint32*)bitset)[1];
 }
 
-intptr FrameManager::FindFreeFrame()
+paddr FrameManager::FindFreeFrame()
 {
-  for (uint32 item=0; item<*_bitset_items; item++)
+  for (uint32 item=0; item<_bitset_items; item++)
   {
     uint32 current = _bitset[item];
     if (current != 0)
     {
-      uint32 bit = BitManip::Log2(current);
-      return (intptr)((bit + (item << 5)) << 12);
+      uint32 bit = BitManip::TrailingZeros(current);//BitManip::Log2(current);
+      return (paddr)((uint32)_base + ((bit + (item << 5)) << 12));
     }
   }
 
@@ -62,14 +65,11 @@ intptr FrameManager::FindFreeFrame()
 
 
 // Function to allocate a frame.
-paddr FrameManager::GetFrame(bool zeroFrame)
+paddr FrameManager::GetFrame()
 {
   paddr frame = FindFreeFrame();
   
-  if(zeroFrame)
-    memset(frame, (uint8)0, 0x1000);
-
-  const uint32 index = ((uint32)frame >> 12);  // frame / 0x1000;
+  const uint32 index = (((uint32)frame - (uint32)_base) >> 12);  // frame / 0x1000;
   const uint32 item = (index >> 5);    // frame_index / 32;
   const uint32 bit = (index & 0x1F);   // frame_index % 32
 
@@ -84,7 +84,7 @@ void FrameManager::ReleaseFrame(paddr frame)
   if (frame == NULL)
     return;
   
-  const uint32 index  = ((uint32)frame >> 12); // frame / 0x1000;
+  const uint32 index  = (((uint32)frame - (uint32)_base) >> 12); // frame / 0x1000;
   const uint32 item   = (index >> 5);          // frame_index / 32;
   const uint32 bit    = (index & 0x1F);        // frame_index % 32;
 

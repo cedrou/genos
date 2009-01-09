@@ -57,7 +57,6 @@ static const char LogTable256[] =
 uint32 BitManip::Log2(uint32 value)
 {
   uint32 bit = 0;
-  //uint32 a = value >> 16;
   if (uint32 a = value >> 16)
   {
     uint32 b = a >> 8;
@@ -70,4 +69,15 @@ uint32 BitManip::Log2(uint32 value)
   }
 
   return bit;
+}
+
+uint32 BitManip::TrailingZeros(uint32 value)
+{
+  uint32 count = 0;
+  value = (value ^ (value - 1)) >> 1;  // Set value's trailing 0s to 1s and zero rest
+  for (count = 0; value; count++)
+  {
+    value >>= 1;
+  }
+  return count;
 }

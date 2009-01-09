@@ -36,20 +36,21 @@ namespace GenOS
   class FrameManager
   {
   private:
-    static uint32* _bitset;
-    static uint32* _bitset_items;
+    static paddr    _base;
+    static uint32*  _bitset;
+    static uint32   _bitset_items;
   
   public:
     // Initialization of tha manager
-    static void   Initialize(paddr start, uint32 size);
+    static void   Initialize(paddr base, vaddr bitset);
     
     // Allocate a frame
-    static paddr  GetFrame(bool zeroFrame = true);
+    static paddr  GetFrame();
 
     // Deallocate a frame
     static void   ReleaseFrame(paddr frame);
   
   private:
-    static intptr FindFreeFrame();
+    static paddr FindFreeFrame();
   };
 }

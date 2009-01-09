@@ -46,7 +46,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="3"
+				Optimization="0"
 				IgnoreStandardIncludePath="true"
 				MinimalRebuild="false"
 				ExceptionHandling="0"
