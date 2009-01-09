@@ -30,8 +30,8 @@
 
 #include "kernel.h"
 
-void kmain(uint32 kernel_size, intptr physical_base, uint32 physical_size)
+void kmain(paddr physical_base, vaddr bitset)
 {
-  GenOS::Kernel kernel(kernel_size, physical_base, physical_size);
+  GenOS::Kernel kernel(physical_base, bitset);
   kernel.Run();
 }

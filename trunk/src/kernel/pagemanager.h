@@ -35,39 +35,11 @@ namespace GenOS
 {
   class PageManager
   {
-  private:
-    class PageTableEntry
+  public:
+    class Page
     {
-    private:
-      uint32 data;
-
     public:
-      enum Flags
-      {
-        Present        = 0x00000001,  // If set, the page is in physical memory. Otherwise, the page is swapped. 
-        Writable       = 0x00000002,  // If set, the page is read/write. Otherwise the page is read-only. 
-        User           = 0x00000004,  // If set, the page may be accessed by all. Otherwise, only the supervisor can access it. 
-        Accessed       = 0x00000020,  // If set, the page has been read or written to. This bit is set by the CPU. 
-        Dirty          = 0x00000040,  // (PageTable only) If set, the page table has been written to. This flag set by the CPU. 
-        Frame          = 0xFFFFF000,  // (PageTable only) If set, prevents the TLB from updating the address in it's cache if CR3 is reset. Note, that the page global enable bit in CR4 must be set to enable this feature. 
-      };
-
-    public:
-      void  SetFrame(paddr frame);
-      paddr GetFrame();
-
-      bool  IsPresent();
-      bool  IsWritable();
-      bool  IsUser();
-    };
-
-    class PageDirectoryEntry
-    {
-    private:
-      uint32 data;
-
-    public:
-      enum Flags
+      enum Attributes
       {
         Present        = 0x00000001,  // If set, the page is in physical memory. Otherwise, the page is swapped. 
         Writable       = 0x00000002,  // If set, the page is read/write. Otherwise the page is read-only. 
@@ -75,43 +47,68 @@ namespace GenOS
         WriteThrough   = 0x00000008,  // If set, write-through caching is enabled. If not, write-back is enabled. 
         CacheDisabled  = 0x00000010,  // If set, the page will not be cached. 
         Accessed       = 0x00000020,  // If set, the page has been read or written to. This bit is set by the CPU. 
-        //Dirty          = 0x00000040,  // (PageTable only) If set, the page table has been written to. This flag set by the CPU. 
+        Dirty          = 0x00000040,  // (PageTable only) If set, the page table has been written to. This flag set by the CPU. 
         LargePage      = 0x00000080,  // If set, pages are 4 MiB in size. Otherwise, they are 4 KiB. 
         Global         = 0x00000100,  // If set, prevents the TLB from updating the address in it's cache if CR3 is reset. Note, that the page global enable bit in CR4 must be set to enable this feature. 
-        Frame          = 0xFFFFF000,
+        Frame          = 0xFFFFF000,  // (PageTable only) If set, prevents the TLB from updating the address in it's cache if CR3 is reset. Note, that the page global enable bit in CR4 must be set to enable this feature. 
       };
+    };
+
+  private:
+
+    class Entry
+    {
+    private:
+      uint32 data;
 
     public:
+      bool Allocate(Page::Attributes flags);
+      paddr Free();
+
       void  SetFrame(paddr frame);
       paddr GetFrame();
 
-      bool  IsPresent();
-      bool  IsWritable();
-      bool  IsUser();
-      bool  IsLargePage();
+      void  SetFlag(Page::Attributes flag);
+      void  UnsetFlag(Page::Attributes flag);
+      bool  TestFlag(Page::Attributes flag);
     };
 
-    typedef PageTableEntry PageTable[1024];
-    typedef PageDirectoryEntry PageDirectory[1024];
+    typedef Entry PageTableEntry;
+    typedef Entry PageDirectoryEntry;
 
-  private:
-    PageDirectory dir;
+    class PageTable
+    {
+    public:
+      PageTableEntry Entries[1024];
+
+      void Clear();
+      uint32 GetIndex(vaddr virtualAddress);
+      PageTableEntry* FindEntry(vaddr virtualAddress);
+    };
+
+    class PageDirectory
+    {
+    public:
+      PageDirectoryEntry Entries[1024];
+
+      void Clear();
+      uint32 GetIndex(vaddr virtualAddress);
+      PageDirectoryEntry* FindEntry(vaddr virtualAddress);
+    };
 
   public:
-    static PageManager* Current;
+    static PageDirectory* Current;
 
   public:
-    static void Initialize();
+    static void   Initialize();
   
-    //void Map(uint32 physicalAddress, uint32 virtualAddress, uint32 flags);
-    //void Unmap(uint32 virtualAddress);
-
-    //void Switch();
+    static bool   Map(paddr physicalAddress, vaddr virtualAddress, Page::Attributes flags);
+    static bool   Unmap(vaddr virtualAddress);
+    static paddr  GetPhysicalAddress(vaddr virtualAddress);
 
   private:
-    //void PreMap(uint32 physicalAddress, uint32 virtualAddress);
-    //intptr GetPhysicalAddress(intptr virtualAddress);
-
+    bool Switch(PageDirectory* dir);
+    static void FlushTLBEntry(vaddr virtualAddress);
 
     static void __stdcall PageFaultHandler(Registers reg);
   };

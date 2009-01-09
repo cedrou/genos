@@ -40,5 +40,9 @@ namespace GenOS {
   public:
     // Find integer log base 2 of an integer (aka the position of the highest bit set) 
     static uint32 Log2(uint32 value);
+
+    // Count the consecutive zero bits (trailing) on the right
+    static uint32 TrailingZeros(uint32 value);
+
   };
 }

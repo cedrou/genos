@@ -93,7 +93,7 @@ void __declspec(naked) __multiboot_header__(void)
     dd(KERNEL_START)             ; load_addr
     dd(KERNEL_END)               ; load_end_addr
     dd(0x00000000)               ; bss_end_addr
-    dd(0x00101050)               ; entry_addr
+    dd(0x00101030)               ; entry_addr
     dd(0x00000000)               ; mode_type
     dd(0x00000000)               ; width
     dd(0x00000000)               ; height
@@ -109,19 +109,30 @@ void __declspec(naked) __entry_point__(void)
 
   uint32 kernelPhysicalStart;
   uint32 kernelPhysicalEnd;
-  uint32 kernelPhysicalStack;
   uint32 kernelVirtualStart;
-  uint32 kernelVirtualEnd;
-  uint32 kernelVirtualStack;
-  
-  uint32 physicalBase;
-  uint32 physicalSize;
 
-  uint32 kernelSize;
+  uint32 stackPhysicalStart;
+  uint32 stackPhysicalEnd;
+  uint32 stackVirtualStart;
+  uint32 stackVirtualEnd;
+  
+  uint32 availableMemoryPhysicalBase;
+  uint32 availableMemorySize;
 
   uint32* pageDirectory;
   uint32* pageTable0;
   uint32* pageTable768;
+
+  uint32 frameManagerPhysicalStart;
+  uint32 frameManagerPhysicalEnd;
+
+  uint32 frameManagerVirtualStart;
+  uint32 frameManagerVirtualEnd;
+
+  uint32* bitset;
+  
+  uint32 bitsetItems;
+  uint32 bitsetFrames;
 
   __asm
   {
@@ -133,89 +144,115 @@ valid_grub_id:
     mov mbi, ebx;
   }
 
-  kernelPhysicalStart = mbi->Modules[0].Start;
-  kernelPhysicalEnd   = mbi->Modules[0].End;
-  kernelPhysicalStack = kernelPhysicalEnd + 0x1000;
+  // The kernel was already loaded by Grub
+  kernelPhysicalStart         = mbi->Modules[0].Start;
+  kernelPhysicalEnd           = mbi->Modules[0].End;
+  kernelVirtualStart          = 0xC0000000;
 
-  kernelVirtualStart  = 0xC0000000;
-  kernelVirtualEnd    = kernelVirtualStart - kernelPhysicalStart + kernelPhysicalEnd;
-  kernelVirtualStack  = kernelVirtualStart - kernelPhysicalStart + kernelPhysicalStack;
+  // Place the kernel stack after the kernel.
+  // Skip the first page which is a page guard
+  stackPhysicalStart          = kernelPhysicalEnd + 0x1000;   // PageGuard placeholder
+  stackPhysicalEnd            = stackPhysicalStart + 0x10000; // 64k stack
+  stackVirtualStart           = kernelVirtualStart + (stackPhysicalStart - kernelPhysicalStart);
+  stackVirtualEnd             = kernelVirtualStart + (stackPhysicalEnd - kernelPhysicalStart);
   
-  kernelSize          = kernelVirtualStack - kernelVirtualStart;
-  
-  physicalBase        = kernelPhysicalStack;
+  // Compute the current available memory base and size
+  availableMemoryPhysicalBase = stackPhysicalEnd;
+  availableMemorySize         = mbi->MemoryUpper * 1024 - (availableMemoryPhysicalBase - 0x00100000);
+
+
+  // Prepare frame manager
+  //----------------------------------------------
+
+  // The frame manager starts just after the kernel stack
+  frameManagerPhysicalStart = availableMemoryPhysicalBase;
+
+  // Compute the the size (in 32 bits words) of the bitset
+  bitsetItems = (availableMemorySize / 0x1000) / 32;
+
+  // Place this value at the start of the data block
+  ((uint32*)frameManagerPhysicalStart)[0] = bitsetItems;
+
+  // The bitset immediately follows this value
+  bitset = &((uint32*)frameManagerPhysicalStart)[1];
+
+  // Initialize the bitset to 1 (all frames are available)
+  memset(bitset, 0xFFFFFFFF, bitsetItems);
+
+  // Compute the number of frames used by the bitset
+  bitsetFrames = ((bitsetItems + 1) * 32 + 0x0FFF) / 0x1000;
+  frameManagerPhysicalEnd = frameManagerPhysicalStart + bitsetFrames * 0x1000;
+
+  // Compute virtual addresses
+  frameManagerVirtualStart = kernelVirtualStart + (frameManagerPhysicalEnd - kernelPhysicalStart);
+  frameManagerVirtualEnd = kernelVirtualStart + (frameManagerPhysicalEnd - kernelPhysicalStart);
+
+  // Move the available memory pointer
+  availableMemoryPhysicalBase = frameManagerPhysicalEnd;
+
 
   // Prepare paging
   //----------------------------------------------
 
   // Allocate a frame to store the page directory
-  pageDirectory = (uint32*)physicalBase;
-  physicalBase += 0x1000;
+  pageDirectory = (uint32*)availableMemoryPhysicalBase;
+  availableMemoryPhysicalBase += 0x1000;
   memset((intptr)pageDirectory, (uint32)0, 1024);
 
   // Allocate a frame for a page table.
-  // Identity map: lower memory + kldr (0 -> kernelStart)
-  pageTable0 = (uint32*)physicalBase;
-  physicalBase += 0x1000;
+  pageTable0 = (uint32*)availableMemoryPhysicalBase;
+  availableMemoryPhysicalBase += 0x1000;
   memset((intptr)pageTable0, (uint32)0, 1024);
   pageDirectory[0] = (uint32)pageTable0 | 3;
+
+  // Identity map: lower memory + kldr (0 -> kernelStart)
   for( uint32 address = 0x00000000; address < kernelPhysicalStart; address += 0x1000)
   {
     pageTable0[address >> 12] = address | 3;
   }
 
   // Allocate a frame for a page table.
-  // Map the kernel at 3GiB
-  pageTable768 = (uint32*)physicalBase;
-  physicalBase += 0x1000;
+  pageTable768 = (uint32*)availableMemoryPhysicalBase;
+  availableMemoryPhysicalBase += 0x1000;
   memset((intptr)pageTable768, (uint32)0, 1024);
   pageDirectory[768] = (uint32)pageTable768 | 3;
-  for( uint32 address = kernelPhysicalStart; address < kernelPhysicalStack; address += 0x1000)
+
+  // Map the kernel at 3GiB
+  for( uint32 address = kernelPhysicalStart; address < kernelPhysicalEnd; address += 0x1000)
   {
-    const uint32 virtualAddress = 0xC0000000 - kernelPhysicalStart + address;
+    const uint32 virtualAddress = kernelVirtualStart + (address - kernelPhysicalStart);
     const uint32 pageIndex = (virtualAddress >> 12) & 0x03FF;
     pageTable768[pageIndex] = address | 3;
   }
+
+  for( uint32 address = stackPhysicalStart; address < stackPhysicalEnd; address += 0x1000)
+  {
+    const uint32 virtualAddress = stackVirtualStart + (address - stackPhysicalStart);
+    const uint32 pageIndex = (virtualAddress >> 12) & 0x03FF;
+    pageTable768[pageIndex] = address | 3;
+  }
+
+  for( uint32 address = frameManagerPhysicalStart; address < frameManagerPhysicalEnd; address += 0x1000)
+  {
+    const uint32 virtualAddress = frameManagerVirtualStart + (address - frameManagerPhysicalStart);
+    const uint32 pageIndex = (virtualAddress >> 12) & 0x03FF;
+    pageTable768[pageIndex] = address | 3;
+  }
+
 
   // Recursive map of the page directory
   pageDirectory[1023] = (uint32)pageDirectory | 3;
 
 
 
-  physicalSize = mbi->MemoryUpper * 1024 - (physicalBase - 0x00100000);
-
-
-
-  // Prepare frame manager
-  //----------------------------------------------
-
-  // Compute the total number of frames and the size (in 32 bits words)
-  // of the bitset
-  uint32 frames = physicalSize / 0x1000;
-  uint32 bitset_items = frames / 32;
-
-  // Place the size of the bitset at the start of the free memory block
-  ((uint32*)physicalBase)[0] = frames / 32;
-
-  // The bitset immediately follows this value
-  uint32* bitset = &((uint32*)physicalBase)[1];
-
-  // Initialize the bitset to 1 (all frames are available)
-  memset(bitset, 0xFFFFFFFF, bitset_items);
-
-  // Compute the number of frames used by the bitset
-  uint32 bitset_size = bitset_items * 8;
-  uint32 bitset_frames = (bitset_size + 0x0FFF) / 0x1000;
-
-  // Clear the corresponding bits in the bitset
-  for(uint32 index=0; index<bitset_frames; index++)
+  // Clear in the bitset the corresponding bits of the used frames 
+  for(uint32 index=0; index<(availableMemoryPhysicalBase-frameManagerPhysicalStart) / 0x1000; index++)
   {
     uint32 item = (index >> 5);    // frame_index / 32;
     uint32 bit = (index & 0x1F);   // frame_index % 32
     bitset[item] &= ~(1 << bit);
   }
 
-  physicalSize -= bitset_frames * 0x1000;
 
   __asm
   {
@@ -228,19 +265,18 @@ valid_grub_id:
     mov cr0, eax
 
 ; set up the stack for our kernel
-    mov esp, kernelVirtualStack
+    mov esp, stackVirtualEnd
 
 ; call kernel
-    push physicalSize;
-    push physicalBase;
-    push kernelSize;
+    push frameManagerVirtualStart;
+    push availableMemoryPhysicalBase;
 
     mov eax, 0xC0001000
     call eax;
-  }
 
-  // This should never be reached
-  __asm hlt
+; this should never be reached
+    hlt
+  }
 }
 
 void memset(intptr dst, uint32 value, size_t count)

@@ -35,59 +35,68 @@
 
 using namespace GenOS;
 
+
+// PageManager::PageTableEntry
+//------------------------------------------
+
+void PageManager::Entry::SetFrame(paddr frame)
+{
+  data = ((uint32)frame & Page::Frame) | Page::Present;
+}
+
+paddr PageManager::Entry::GetFrame()
+{
+  return (paddr)(data & Page::Frame);
+}
+
+void PageManager::Entry::SetFlag(Page::Attributes flags)
+{
+  data |= flags;
+}
+
+void PageManager::Entry::UnsetFlag(Page::Attributes flags)
+{
+  data &= ~flags;
+}
+
+bool PageManager::Entry::TestFlag(Page::Attributes flag)
+{
+  return ((data & (uint32)flag) == (uint32)flag);
+}
+
+bool PageManager::Entry::Allocate(Page::Attributes flags)
+{
+  // Allocate a frame
+  paddr frame = FrameManager::GetFrame();
+  if(frame==NULL) return false;
+
+  // Map it to the page
+  SetFrame(frame);
+  SetFlag(flags);
+
+  return true;
+}
+
+paddr PageManager::Entry::Free()
+{
+  UnsetFlag(Page::Present);
+
+  return GetFrame();
+}
+
+
+
+// PageManager
+//------------------------------------------
+
+PageManager::PageDirectory* PageManager::Current = NULL;
+
 void PageManager::Initialize()
 {
   // Register the timer interrupt handler.
   InterruptManager::RegisterInterrupt(InterruptManager::PageFault, &PageFaultHandler);
 }
 
-//void PageManager::MapCurrent(uint32 physicalAddress, uint32 virtualAddress, uint32 flags)
-//{
-//  const uint32 tableIndex = (uint32)virtualAddress >> 22; // (address / 4096) / 1024
-//  const uint32 pageIndex = ((uint32)virtualAddress >> 12) & 0x03FF; // (address / 4096) % 1024
-//
-//  // Paging is enabled, so this = dir = 0xFFFFF000;
-//  if(!dir.Tables[tableIndex] & Present)
-//  {
-//    // doesn't exist, so alloc a page and add into pdir
-//    dir.Tables[tableIndex] = (uint32)FrameManager::Get() | Present | RW;
-//  }
-//
-//  PageManager::PageTable* table = (PageManager::PageTable*)(0xFFC00000 + (tableIndex * 0x1000)); // virt addr of page table
-//  if(!table->Pages[pageIndex] & Present)
-//  {
-//    // page isn't mapped
-//    table->Pages[pageIndex] = physicalAddress | (flags & 0x0FFF) | Present;
-//  }
-//}
-//
-//void PageManager::Switch()
-//{
-//  intptr physicalAddress = GetPhysicalAddress((intptr)0xFFFFF000);
-//  __asm
-//  {
-//    mov eax, [physicalAddress]
-//    mov cr3, eax
-//
-//    mov eax, cr0
-//    or eax, 0x80000000
-//    mov cr0, eax
-//  }
-//}
-//
-//intptr PageManager::GetPhysicalAddress(intptr virtualAddress)
-//{
-//  uint32 tableIndex = (uint32)virtualAddress >> 22;           // (address / 4096) / 1024
-//  uint32 pageIndex = ((uint32)virtualAddress >> 12) & 0x03FF; // (address / 4096) % 1024
-//
-//  PageDirectory* pageDirectory = (PageDirectory*)0xFFFFF000;
-//  if(!dir.Tables[tableIndex] & Present) return NULL;
-//
-//  PageTable* table = (PageTable*)(0xFFC00000 + (tableIndex * 0x1000)); // virt addr of page table
-//  if(!table->Pages[pageIndex] & Present) return NULL;
-//
-//  return (intptr)((table->Pages[pageIndex] & ~0xFFF) + ((uint32)virtualAddress & 0xFFF));
-//}
 
 void PageManager::PageFaultHandler(Registers regs)
 {
@@ -98,17 +107,159 @@ void PageManager::PageFaultHandler(Registers regs)
    __asm mov faulting_address, eax;
 
    // The error code gives us details of what happened.
-   int present  = !(regs.err_code & 0x1); // Page not present
+   int present  = regs.err_code & 0x1; // Page not present
    int rw       = regs.err_code & 0x2;    // Write operation?
    int us       = regs.err_code & 0x4;    // Processor was in user-mode?
 
    // Output an error message.
-   Screen::cout << "***PAGE FAULT (";
-   if (present) Screen::cout << "present ";
-   if (rw) Screen::cout << "read-only ";
-   if (us) Screen::cout << "user-mode ";
-
-   Screen::cout << ") at 0x" << faulting_address << Screen::endl;
+   Screen::cout << "*** PAGE FAULT ***" << Screen::endl;
+   Screen::cout << (us ? "User " : "Kernel ")
+                << "process tried to "
+                << (rw ? "write " : "read ")
+                << (present ? "a page and caused a protection fault " : "a non-present page entry ")
+                << "at address 0x" << faulting_address << Screen::endl;
+   Screen::cout << "EIP 0x" << regs.eip << Screen::endl;
 
    PANIC("Page fault");
 }
+
+
+void PageManager::PageTable::Clear()
+{
+  memset(Entries, (uint32)0, 1024);
+}
+
+void PageManager::PageDirectory::Clear()
+{
+  memset(Entries, (uint32)0, 1024);
+}
+
+uint32 PageManager::PageTable::GetIndex(vaddr virtualAddress)
+{
+  return ((uint32)virtualAddress >> 12) & 0x03FF;
+}
+
+uint32 PageManager::PageDirectory::GetIndex(vaddr virtualAddress)
+{
+  return (uint32)virtualAddress >> 22;
+}
+
+PageManager::PageTableEntry* PageManager::PageTable::FindEntry(vaddr virtualAddress)
+{
+  return &Entries[GetIndex(virtualAddress)];
+}
+
+PageManager::PageDirectoryEntry* PageManager::PageDirectory::FindEntry(vaddr virtualAddress)
+{
+  return &Entries[GetIndex(virtualAddress)];
+}
+
+bool PageManager::Switch(PageDirectory* dir)
+{
+  if(dir==NULL) return false;
+
+  Current = dir;
+
+  __asm
+  {
+    mov eax, dir
+    mov cr3, eax
+
+    mov eax, cr0
+    or eax, 0x80000000
+    mov cr0, eax
+  }
+
+  return true;
+}
+
+void PageManager::FlushTLBEntry(vaddr virtualAddress)
+{
+  _asm 
+  {
+    cli
+    invlpg virtualAddress
+    sti
+  }
+}
+
+bool PageManager::Map(paddr physicalAddress, vaddr virtualAddress, Page::Attributes flags)
+{
+  // Paging is enabled, so this = dir = 0xFFFFF000;
+  PageDirectory* dir = (PageDirectory*)0xFFFFF000;
+  PageDirectoryEntry* pde = dir->FindEntry(virtualAddress);
+
+  PageTable* table = (PageTable*)(0xFFC00000 + (dir->GetIndex(virtualAddress) * 0x1000));
+  PageTableEntry* pte = table->FindEntry(virtualAddress);
+
+  // Check if the page table associated to this virtual address is present
+  if(!pde->TestFlag(Page::Present))
+  {
+    // doesn't exist, so alloc a page and add into pdir
+    pde->Allocate(Page::Writable);
+    //FlushTLBEntry(table);
+  }
+
+  if(pte->TestFlag(Page::Present))
+    return false;
+
+  // page isn't mapped
+  pte->SetFrame(physicalAddress);
+  pte->SetFlag(flags);
+
+  //FlushTLBEntry(virtualAddress);
+
+  return true;
+}
+
+bool PageManager::Unmap(vaddr virtualAddress)
+{
+  // Paging is enabled, so this = dir = 0xFFFFF000;
+  PageDirectory* dir = (PageDirectory*)0xFFFFF000;
+  PageDirectoryEntry* pde = dir->FindEntry(virtualAddress);
+
+  if(!pde->TestFlag(Page::Present))
+  {
+    // doesn't exist, nothing is mapped
+    return false;
+  }
+
+  PageTable* table = (PageTable*)(0xFFC00000 + (dir->GetIndex(virtualAddress) * 0x1000));
+  PageTableEntry* pte = table->FindEntry(virtualAddress);
+
+  if(!pte->TestFlag(Page::Present))
+  {
+    // page isn't mapped
+    return false;
+  }
+
+  paddr frame = pte->Free();
+  FrameManager::ReleaseFrame(frame);
+
+  return true;
+}
+
+paddr PageManager::GetPhysicalAddress(vaddr virtualAddress)
+{
+  // Paging is enabled, so this = dir = 0xFFFFF000;
+  PageDirectory* dir = (PageDirectory*)0xFFFFF000;
+  PageDirectoryEntry* pde = dir->FindEntry(virtualAddress);
+
+  if(!pde->TestFlag(Page::Present))
+  {
+    // doesn't exist, nothing is mapped
+    return NULL;
+  }
+
+  PageTable* table = (PageTable*)(0xFFC00000 + (dir->GetIndex(virtualAddress) * 0x1000));
+  PageTableEntry* pte = table->FindEntry(virtualAddress);
+
+  if(!pte->TestFlag(Page::Present))
+  {
+    // page isn't mapped
+    return NULL;
+  }
+
+  return pte->GetFrame();
+}
+

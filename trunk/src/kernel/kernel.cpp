@@ -69,8 +69,8 @@ struct MultibootInfo
 #pragma pack(pop)
 
 
-Kernel::Kernel(uint32 kernel_size, paddr physical_base, uint32 physical_size)
-: _size(kernel_size), _physical_base(physical_base), _physical_size(physical_size)
+Kernel::Kernel(paddr physical_base, vaddr bitset)
+: _physical_base(physical_base), _bitset(bitset)
 {
 }
 
@@ -87,7 +87,7 @@ void Kernel::Run()
   InterruptManager::Initialize();
 
   Screen::cout << "  - Initializing frame manager..." << Screen::endl; 
-  FrameManager::Initialize(_physical_base, _physical_size);
+  FrameManager::Initialize(_physical_base, _bitset);
 
   Screen::cout << "  - Initializing page manager..." << Screen::endl; 
   PageManager::Initialize();
@@ -97,6 +97,15 @@ void Kernel::Run()
 
   Screen::cout << "  - Initializing timer..." << Screen::endl; 
 	Timer::Initialize(50); 
+
+  //paddr physicalAddress = FrameManager::GetFrame();
+  //vaddr virtualAddress = (vaddr)0x10000000;
+  //PageManager::Map(physicalAddress, virtualAddress, PageManager::Page::Writable);
+
+  //((uint32*)virtualAddress)[0] = 0xBAADF00D;
+  //Screen::cout.DumpMemory((intptr)virtualAddress, 256);
+
+  //PageManager::Unmap(virtualAddress);
 
   __asm sti;
 
