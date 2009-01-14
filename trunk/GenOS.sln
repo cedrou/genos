@@ -16,6 +16,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kernel", "src\kernel\kernel
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kldr", "src\kernel\kldr.vcproj", "{2ACA7262-EFF5-4399-8D5C-51CAE38F44FF}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Wiki", "Wiki", "{096CA279-C658-4692-854F-16D0FB0FD8E3}"
+	ProjectSection(SolutionItems) = preProject
+		..\wiki\MemoryMap.wiki = ..\wiki\MemoryMap.wiki
+		..\wiki\Presentation.wiki = ..\wiki\Presentation.wiki
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32

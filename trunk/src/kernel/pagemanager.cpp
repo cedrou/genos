@@ -204,6 +204,10 @@ bool PageManager::Map(paddr physicalAddress, vaddr virtualAddress, Page::Attribu
     return false;
 
   // page isn't mapped
+  if(physicalAddress==0)
+  {
+    physicalAddress = FrameManager::GetFrame();
+  }
   pte->SetFrame(physicalAddress);
   pte->SetFlag(flags);
 

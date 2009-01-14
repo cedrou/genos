@@ -76,6 +76,7 @@
 				IgnoreAllDefaultLibraries="true"
 				GenerateDebugInformation="true"
 				GenerateMapFile="true"
+				MapExports="true"
 				SubSystem="1"
 				Driver="1"
 				EntryPointSymbol="kmain"
@@ -232,6 +233,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\kheap.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MemoryManager.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\pagemanager.cpp"
 				>
 			</File>
@@ -286,6 +295,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\kheap.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MemoryManager.h"
+				>
+			</File>
+			<File
 				RelativePath=".\pagemanager.h"
 				>
 			</File>
@@ -302,6 +319,10 @@
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath="..\..\bin\kernel.map"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

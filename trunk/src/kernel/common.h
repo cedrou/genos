@@ -47,6 +47,16 @@ void memset(intptr dst, uint8 value, size_t count);
 void memset(intptr dst, uint16 value, size_t count);
 void memset(intptr dst, uint32 value, size_t count);
 
+// construct array with placement at _Where
+inline void* __cdecl operator new(size_t, void* placement) { return placement; }
+// delete if placement new fails
+inline void __cdecl operator delete(void*, void*) { }
+
+// construct array with placement at _Where
+inline void* __cdecl operator new[](size_t, void* placement) { return placement; }
+// delete if placement new fails
+inline void __cdecl operator delete[](void*, void*) { }
+
 #include "registers.h"
 
 #define NULL 0

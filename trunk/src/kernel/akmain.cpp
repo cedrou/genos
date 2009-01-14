@@ -30,8 +30,8 @@
 
 #include "kernel.h"
 
-void kmain(paddr physical_base, vaddr bitset)
+void kmain(GenOS::KernelBootInfo* kernelBootinfo)
 {
-  GenOS::Kernel kernel(physical_base, bitset);
+  GenOS::Kernel kernel(kernelBootinfo);
   kernel.Run();
 }
