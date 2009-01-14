@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// screen.h
-//	Definition of the Screen class
+// pagemanager.h
+//	Class which manages virtual memory space of a process
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -31,49 +31,26 @@
 
 #include "common.h"
 
-namespace GenOS {
-
-  class Screen
+namespace GenOS
+{
+  class MemoryManager
   {
   public:
-    static Screen cout;
-    static const char* endl;
-  private:
-	  uint16  cursor_x;
-	  uint16  cursor_y;
-	  uint16* video_memory;
-    uint16  video_length;
+    enum State
+    {
+      Free      = 0x00,
+      Reserved  = 0x01,
+      Commited  = 0x02
+    };
+
+    enum Type
+    {
+      Read  = 0x01,
+      Write = 0x02,
+    };
 
   public:
-    static void Initialize();
-
-	  // Clears the screen and puts the cursor in top left
-	  void Clear();
-
-    void DumpMemory(intptr start, uint32 size);
-
-    Screen& operator <<(uint8 n);
-    Screen& operator <<(uint16 n);
-    Screen& operator <<(uint32 n);
-    Screen& operator <<(intptr n);
-    Screen& operator <<(const char* s);
-
-  private:
-	  // Outputs a single character to the screen.
-    void WriteChar(char c);
-    
-    // Outputs a null-terminated ASCII string to the screen.
-	  void WriteString(const char* string);
-	  
-    // Outputs a hexadecimal number to the screen.
-	  void WriteHex(uint32 value, uint8 bits = 32);
-    void WriteHex(intptr value) { WriteHex((uint32)value, 32); }
-
-	  // Outputs a decimal number to the screen.
-	  void WriteInt(uint32 value);
-
-	  void Scroll();
-	  void SetCursor();
+    MemoryManager(void);
+    ~MemoryManager(void);
   };
-
 }

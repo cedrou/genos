@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
 // pagemanager.h
-//	
+//	Class which manages the physical<->virtual memory translation
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.

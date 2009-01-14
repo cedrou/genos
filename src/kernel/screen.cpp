@@ -40,6 +40,7 @@ void Screen::Initialize()
   cout.cursor_x = 0;
   cout.cursor_y = 0;
   cout.video_memory = ((uint16*)0xB8000);
+  cout.video_length = 0x4000;
 
   cout.Clear();
 }

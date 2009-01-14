@@ -38,16 +38,7 @@
 #define MULTIBOOT_CKSUM     (-(MULTIBOOT_MAGIC+MULTIBOOT_FLAGS))
 #define MULTIBOOT_KEY       0x2BADB002
 
-#define KERNEL_BASE         0x00100000
-#define KERNEL_START        0x00101000
-#define KERNEL_TEXT_LEN     0x00001000
-#define KERNEL_DATA_LEN     0x00000000
-#define KERNEL_LENGTH       (KERNEL_TEXT_LEN + KERNEL_DATA_LEN)
-#define KERNEL_END          (KERNEL_START + KERNEL_LENGTH)
-
-typedef unsigned int   uint32;
-typedef unsigned char  uint8;
-typedef          void* intptr;
+#include "kernel.h"
 
 struct MBModule
 {
@@ -89,9 +80,9 @@ void __declspec(naked) __multiboot_header__(void)
     dd(MULTIBOOT_FLAGS)          ; flags
     dd(MULTIBOOT_CKSUM)          ; checksum
 
-    dd(KERNEL_START)             ; header_addr
-    dd(KERNEL_START)             ; load_addr
-    dd(KERNEL_END)               ; load_end_addr
+    dd(0x00101000)               ; header_addr
+    dd(0x00101000)               ; load_addr
+    dd(0x00102000)               ; load_end_addr
     dd(0x00000000)               ; bss_end_addr
     dd(0x00101030)               ; entry_addr
     dd(0x00000000)               ; mode_type
@@ -106,33 +97,11 @@ void memset(intptr dst, uint32 value, size_t count);
 void __declspec(naked) __entry_point__(void)
 {
   MBInfo* mbi;
+  GenOS::KernelBootInfo kbi;
 
-  uint32 kernelPhysicalStart;
-  uint32 kernelPhysicalEnd;
-  uint32 kernelVirtualStart;
-
-  uint32 stackPhysicalStart;
-  uint32 stackPhysicalEnd;
-  uint32 stackVirtualStart;
-  uint32 stackVirtualEnd;
-  
-  uint32 availableMemoryPhysicalBase;
-  uint32 availableMemorySize;
-
-  uint32* pageDirectory;
-  uint32* pageTable0;
-  uint32* pageTable768;
-
-  uint32 frameManagerPhysicalStart;
-  uint32 frameManagerPhysicalEnd;
-
-  uint32 frameManagerVirtualStart;
-  uint32 frameManagerVirtualEnd;
-
+  uint32 bitsetItems;
   uint32* bitset;
   
-  uint32 bitsetItems;
-  uint32 bitsetFrames;
 
   __asm
   {
@@ -145,119 +114,123 @@ valid_grub_id:
   }
 
   // The kernel was already loaded by Grub
-  kernelPhysicalStart         = mbi->Modules[0].Start;
-  kernelPhysicalEnd           = mbi->Modules[0].End;
-  kernelVirtualStart          = 0xC0000000;
+  kbi.kernelSize                  = mbi->Modules[0].End - mbi->Modules[0].Start;
+  kbi.kernelPhysicalStart         = mbi->Modules[0].Start;
+  kbi.kernelPhysicalEnd           = mbi->Modules[0].End;
+  kbi.kernelVirtualStart          = 0xC0000000;
 
   // Place the kernel stack after the kernel.
   // Skip the first page which is a page guard
-  stackPhysicalStart          = kernelPhysicalEnd + 0x1000;   // PageGuard placeholder
-  stackPhysicalEnd            = stackPhysicalStart + 0x10000; // 64k stack
-  stackVirtualStart           = kernelVirtualStart + (stackPhysicalStart - kernelPhysicalStart);
-  stackVirtualEnd             = kernelVirtualStart + (stackPhysicalEnd - kernelPhysicalStart);
+  kbi.stackSize                   = 0x00010000; // 64k stack
+  kbi.stackPhysicalStart          = kbi.kernelPhysicalEnd;
+  kbi.stackPhysicalEnd            = kbi.stackPhysicalStart + kbi.stackSize;
+  kbi.stackVirtualStart           = kbi.kernelVirtualStart + kbi.kernelSize + 0x1000;   // PageGuard placeholder
+  kbi.stackVirtualEnd             = kbi.stackVirtualStart + kbi.stackSize;
   
   // Compute the current available memory base and size
-  availableMemoryPhysicalBase = stackPhysicalEnd;
-  availableMemorySize         = mbi->MemoryUpper * 1024 - (availableMemoryPhysicalBase - 0x00100000);
+  kbi.availableMemoryPhysicalBase = kbi.stackPhysicalEnd;
+  kbi.availableMemorySize         = mbi->MemoryUpper * 1024 - (kbi.availableMemoryPhysicalBase - 0x00100000);
 
 
   // Prepare frame manager
   //----------------------------------------------
 
   // The frame manager starts just after the kernel stack
-  frameManagerPhysicalStart = availableMemoryPhysicalBase;
+  kbi.frameManagerPhysicalStart = kbi.availableMemoryPhysicalBase;
 
   // Compute the the size (in 32 bits words) of the bitset
-  bitsetItems = (availableMemorySize / 0x1000) / 32;
+  bitsetItems = (kbi.availableMemorySize / 0x1000) / 32; // 128MiB = (134217728 / 4096) / 32 = 1024 items
 
   // Place this value at the start of the data block
-  ((uint32*)frameManagerPhysicalStart)[0] = bitsetItems;
+  ((uint32*)kbi.frameManagerPhysicalStart)[0] = bitsetItems;
 
   // The bitset immediately follows this value
-  bitset = &((uint32*)frameManagerPhysicalStart)[1];
+  bitset = &((uint32*)kbi.frameManagerPhysicalStart)[1];
 
   // Initialize the bitset to 1 (all frames are available)
   memset(bitset, 0xFFFFFFFF, bitsetItems);
 
-  // Compute the number of frames used by the bitset
-  bitsetFrames = ((bitsetItems + 1) * 32 + 0x0FFF) / 0x1000;
-  frameManagerPhysicalEnd = frameManagerPhysicalStart + bitsetFrames * 0x1000;
+  // Compute the number of bytes (aligned on 4kiB frames) used by the bitset
+  kbi.frameManagerSize = 0x1000 * (((bitsetItems + 1) * 4 + 0x0FFF) / 0x1000);
+  kbi.frameManagerPhysicalEnd = kbi.frameManagerPhysicalStart + kbi.frameManagerSize;
 
   // Compute virtual addresses
-  frameManagerVirtualStart = kernelVirtualStart + (frameManagerPhysicalEnd - kernelPhysicalStart);
-  frameManagerVirtualEnd = kernelVirtualStart + (frameManagerPhysicalEnd - kernelPhysicalStart);
+  kbi.frameManagerVirtualStart = kbi.stackVirtualStart + kbi.stackSize;
+  kbi.frameManagerVirtualEnd = kbi.frameManagerVirtualStart + kbi.frameManagerSize;
 
   // Move the available memory pointer
-  availableMemoryPhysicalBase = frameManagerPhysicalEnd;
+  kbi.availableMemoryPhysicalBase = kbi.frameManagerPhysicalEnd;
 
 
   // Prepare paging
   //----------------------------------------------
 
   // Allocate a frame to store the page directory
-  pageDirectory = (uint32*)availableMemoryPhysicalBase;
-  availableMemoryPhysicalBase += 0x1000;
-  memset((intptr)pageDirectory, (uint32)0, 1024);
+  kbi.pageDirectory = (uint32*)kbi.availableMemoryPhysicalBase;
+  kbi.availableMemoryPhysicalBase += 0x1000;
+  memset((intptr)kbi.pageDirectory, (uint32)0, 1024);
 
   // Allocate a frame for a page table.
-  pageTable0 = (uint32*)availableMemoryPhysicalBase;
-  availableMemoryPhysicalBase += 0x1000;
-  memset((intptr)pageTable0, (uint32)0, 1024);
-  pageDirectory[0] = (uint32)pageTable0 | 3;
+  kbi.pageTable0 = (uint32*)kbi.availableMemoryPhysicalBase;
+  kbi.availableMemoryPhysicalBase += 0x1000;
+  memset((intptr)kbi.pageTable0, (uint32)0, 1024);
+  kbi.pageDirectory[0] = (uint32)kbi.pageTable0 | 3;
 
   // Identity map: lower memory + kldr (0 -> kernelStart)
-  for( uint32 address = 0x00000000; address < kernelPhysicalStart; address += 0x1000)
+  for( uint32 address = 0x00000000; address < kbi.kernelPhysicalStart; address += 0x1000)
   {
-    pageTable0[address >> 12] = address | 3;
+    kbi.pageTable0[address >> 12] = address | 3;
   }
 
   // Allocate a frame for a page table.
-  pageTable768 = (uint32*)availableMemoryPhysicalBase;
-  availableMemoryPhysicalBase += 0x1000;
-  memset((intptr)pageTable768, (uint32)0, 1024);
-  pageDirectory[768] = (uint32)pageTable768 | 3;
+  kbi.pageTable768 = (uint32*)kbi.availableMemoryPhysicalBase;
+  kbi.availableMemoryPhysicalBase += 0x1000;
+  memset((intptr)kbi.pageTable768, (uint32)0, 1024);
+  kbi.pageDirectory[768] = (uint32)kbi.pageTable768 | 3;
 
   // Map the kernel at 3GiB
-  for( uint32 address = kernelPhysicalStart; address < kernelPhysicalEnd; address += 0x1000)
+  for( uint32 address = kbi.kernelPhysicalStart; address < kbi.kernelPhysicalEnd; address += 0x1000)
   {
-    const uint32 virtualAddress = kernelVirtualStart + (address - kernelPhysicalStart);
+    const uint32 virtualAddress = kbi.kernelVirtualStart + (address - kbi.kernelPhysicalStart);
     const uint32 pageIndex = (virtualAddress >> 12) & 0x03FF;
-    pageTable768[pageIndex] = address | 3;
+    kbi.pageTable768[pageIndex] = address | 3;
   }
 
-  for( uint32 address = stackPhysicalStart; address < stackPhysicalEnd; address += 0x1000)
+  for( uint32 address = kbi.stackPhysicalStart; address < kbi.stackPhysicalEnd; address += 0x1000)
   {
-    const uint32 virtualAddress = stackVirtualStart + (address - stackPhysicalStart);
+    const uint32 virtualAddress = kbi.stackVirtualStart + (address - kbi.stackPhysicalStart);
     const uint32 pageIndex = (virtualAddress >> 12) & 0x03FF;
-    pageTable768[pageIndex] = address | 3;
+    kbi.pageTable768[pageIndex] = address | 3;
   }
 
-  for( uint32 address = frameManagerPhysicalStart; address < frameManagerPhysicalEnd; address += 0x1000)
+  for( uint32 address = kbi.frameManagerPhysicalStart; address < kbi.frameManagerPhysicalEnd; address += 0x1000)
   {
-    const uint32 virtualAddress = frameManagerVirtualStart + (address - frameManagerPhysicalStart);
+    const uint32 virtualAddress = kbi.frameManagerVirtualStart + (address - kbi.frameManagerPhysicalStart);
     const uint32 pageIndex = (virtualAddress >> 12) & 0x03FF;
-    pageTable768[pageIndex] = address | 3;
+    kbi.pageTable768[pageIndex] = address | 3;
   }
 
 
   // Recursive map of the page directory
-  pageDirectory[1023] = (uint32)pageDirectory | 3;
+  kbi.pageDirectory[1023] = (uint32)kbi.pageDirectory | 3;
 
 
 
   // Clear in the bitset the corresponding bits of the used frames 
-  for(uint32 index=0; index<(availableMemoryPhysicalBase-frameManagerPhysicalStart) / 0x1000; index++)
+  for(uint32 index=0; index<(kbi.availableMemoryPhysicalBase-kbi.frameManagerPhysicalStart) / 0x1000; index++)
   {
     uint32 item = (index >> 5);    // frame_index / 32;
     uint32 bit = (index & 0x1F);   // frame_index % 32
     bitset[item] &= ~(1 << bit);
   }
 
+  kbi.availableMemorySize         = mbi->MemoryUpper * 1024 - (kbi.availableMemoryPhysicalBase - 0x00100000);
+
 
   __asm
   {
 ; Enable paging
-    mov eax, [pageDirectory]
+    mov eax, kbi.pageDirectory
     mov cr3, eax
 
     mov eax, cr0
@@ -265,12 +238,13 @@ valid_grub_id:
     mov cr0, eax
 
 ; set up the stack for our kernel
-    mov esp, stackVirtualEnd
+    mov esp, kbi.stackVirtualEnd
 
 ; call kernel
-    push frameManagerVirtualStart;
-    push availableMemoryPhysicalBase;
+    lea eax, kbi
+    push eax
 
+; TODO: dynamically read entry point
     mov eax, 0xC0001000
     call eax;
 
