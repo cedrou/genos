@@ -31,100 +31,10 @@
 
 #include "common.h"
 #include "kernel.h"
+#include "sortedarray.h"
 
 namespace GenOS
 {
-  template <typename T>
-  class SortedArray
-  {
-  public:
-    typedef int32 (*compareMethod)(const T&, const T&);
-  private:
-    T*            _buffer;
-    size_t        _size;
-    size_t        _capacity;
-    compareMethod _compare;
-
-  public:
-    SortedArray(T* buffer, size_t capacity, compareMethod compare)
-      : _buffer(buffer), _capacity(capacity), _compare(compare)
-    {
-      _size = 0;
-    }
-
-    size_t Size() 
-    {
-      return _size;
-    }
-
-    uint32 Find(const T& item)
-    {
-      uint32 index = 0;
-      while(index < _size && _compare(item, _buffer[index])>0) index++;
-      return index;
-    }
-
-    T& At(uint32 index)
-    {
-      ASSERT(index<_size);
-      return _buffer[index];
-    }
-    const T& At(uint32 index) const { return At(index); }
-    T& operator[](uint32 index) { return At(index); }
-    const T& operator[](uint32 index) const { return At(index); }
-
-    void Insert(const T& item)
-    {
-      uint32 index;
-      if(_size==_capacity)
-      {
-        _capacity *= 2;
-        T* buffer = new T[_capacity];
-
-        index = Find(item);
-        for(uint32 i=0; i<index; i++)
-        {
-          buffer[i] = _buffer[i];
-        }
-
-        for(uint32 i=index; i<_size; i++)
-        {
-          buffer[i+1] = _buffer[i];
-        }
-
-        delete[] _buffer;
-        index = Find(item);
-
-        _buffer = buffer;
-      }
-      else
-      {
-        index = Find(item);
-        for(uint32 i=_size; i>index; i--)
-        {
-          _buffer[i] = _buffer[i-1];
-        }
-      }
-      _buffer[index] = item;
-      _size++;
-    }
-
-    void Remove(size_t index)
-    {
-      for(uint32 i=index; i<_size-1; i++)
-      {
-        _buffer[i] = _buffer[i+1];
-      }
-      _size--;
-    }
-
-    void Remove(const T& item)
-    {
-      Remove(Find(item));
-    }
-  };
-
-
 
 #define KHEAP_HEAD_USED 'KHHU'
 #define KHEAP_FOOT_USED 'KHFU'

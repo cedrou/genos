@@ -180,7 +180,7 @@ void Screen::Scroll()
 
 	// Move the current text chunk that makes up the screen
 	// back in the buffer by a line
-	memcpy((intptr)(video_memory + 80), (intptr)video_memory, 24*2*80);
+	memcpy((intptr)video_memory, (intptr)(video_memory + 80), 24*2*80);
 
 	// The last line should now be blank. Do this by writing
 	// 80 spaces to it.
