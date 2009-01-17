@@ -1,8 +1,7 @@
-// pdbparse.cpp : Defines the entry point for the console application.
-//
+#include "../../src/kernel/pdbparser.h"
 
-#include "stdafx.h"
-#include "PdbParser.h"
+#include <iostream>
+#include <tchar.h>
 
 using namespace std;
 
@@ -28,7 +27,7 @@ int _tmain(int argc, _TCHAR* argv[])
   fread(pBuffer,1,size,f);
   fclose(f);
 
-  PdbParser pdb(pBuffer,size);
+  GenOS::PdbParser pdb(pBuffer,size);
   
   // Extract each stream in file "stream.###"
   for(uint32 sid = 0; sid < pdb.NbStreams(); sid++ )
@@ -66,6 +65,48 @@ int _tmain(int argc, _TCHAR* argv[])
       _ftprintf(f, _T("%02x "), i);
   }
   fclose(f);
+
+
+  // Parse and dump public symbols
+  pdb.ParseDebugInfo();
+  GenOS::SortedArray<GenOS::PdbParser::PublicSymbolEntry*> syms = pdb.Symbols();
+  f = _tfopen(_T("symbols"), _T("wt"));
+  for(uint32 i = 0; i < syms.Size(); i++ )
+  {
+    _ftprintf(f, _T("%04x %08x %04x:%08x "),
+      syms[i]->Type,
+      syms[i]->Flags, 
+      syms[i]->Segment,
+      syms[i]->Offset);
+    fputs((const char*)syms[i]->Name, f); 
+    _ftprintf(f, _T("\n")); 
+  }
+  fclose(f);
+
+  // Find a symbol
+  const GenOS::PdbParser::PublicSymbolEntry* symbol = NULL;
+  uint16 seg;
+  uint32 off;
+  
+  seg = 0x0001;
+  off = 0x00000000;
+  symbol = pdb.GetSymbol(seg, off);
+  printf("%04x:%08x = %s + %#02x\n", seg, off, symbol->Name, off - symbol->Offset);
+  
+  seg = 0x0001;
+  off = 0x00000290;
+  symbol = pdb.GetSymbol(seg, off);
+  printf("%04x:%08x = %s + %#02x\n", seg, off, symbol->Name, off - symbol->Offset);
+  
+  seg = 0x0001;
+  off = 0x00000490;
+  symbol = pdb.GetSymbol(seg, off);
+  printf("%04x:%08x = %s + %#02x\n", seg, off, symbol->Name, off - symbol->Offset);
+  
+  seg = 0x0001;
+  off = 0x00003000;
+  symbol = pdb.GetSymbol(seg, off);
+  printf("%04x:%08x = %s + %#02x\n", seg, off, symbol->Name, off - symbol->Offset);
 
 	return 0;
 }

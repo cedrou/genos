@@ -30,27 +30,41 @@
 #include "common.h"
 
 
-void memcpy(const intptr src, intptr dst, size_t count)
+intptr memcpy(intptr dst, const intptr src, size_t count)
 {
-	const char* s = (const char*)src;
-	char* d = (char*)dst;
-	while(count--) { *d++ = *s++; }
+  const char* s = (const char*)src;
+  char* d = (char*)dst;
+  while(count--) { *d++ = *s++; }
+  return dst;
 }
 
 void memset(intptr dst, uint8 value, size_t count)
 {
-	uint8* d = (uint8*)dst;
-	while(count--) { *d++ = value; }
+  uint8* d = (uint8*)dst;
+  while(count--) { *d++ = value; }
 }
 
 void memset(intptr dst, uint16 value, size_t count)
 {
-	uint16* d = (uint16*)dst;
-	while(count--) { *d++ = value; }
+  uint16* d = (uint16*)dst;
+  while(count--) { *d++ = value; }
 }
 
 void memset(intptr dst, uint32 value, size_t count)
 {
-	uint32* d = (uint32*)dst;
-	while(count--) { *d++ = value; }
+  uint32* d = (uint32*)dst;
+  while(count--) { *d++ = value; }
+}
+
+int memcmp(const intptr a, const intptr b, size_t size)
+{
+  uint8* ua = (uint8*) a;
+  uint8* ub = (uint8*) b;
+  while (size--) {
+    if (*ua != *ub)
+      return (*ua < *ub) ? -1 : +1;
+    ua++;
+    ub++;
+  }
+  return 0;
 }

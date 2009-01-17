@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// common.h
-//	Declare some global constants and functions
+// pdbparser.h
+//	Debug info
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -29,47 +29,78 @@
 
 #pragma once
 
-// These typedefs are written for 32-bit X86.
-typedef unsigned int   uint32;
-typedef          int   int32;
-typedef unsigned short uint16;
-typedef          short int16;
-typedef unsigned char  uint8;
-typedef          char  int8;
-typedef unsigned int   size_t;
-typedef          void* intptr;
+#include "common.h"
+#include "sortedarray.h"
 
-typedef          void* paddr;
-typedef          void* vaddr;
+namespace GenOS
+{
+  class PdbParser
+  {
+  private:
+    struct Header
+    {
+      uint32 PageSize;
+      uint32 BitmapPage;
+      uint32 MaxPages;
+      uint32 RootSize;
+      uint32 Reserved;
+      uint32 RootPage;
+    };
 
-intptr memcpy(intptr dst, const intptr src, size_t count);
+  public:
+    struct Record
+    {
+      uint16 Size;
+      uint16 Type;
+    };
 
-void memset(intptr dst, uint8 value, size_t count);
-void memset(intptr dst, uint16 value, size_t count);
-void memset(intptr dst, uint32 value, size_t count);
+    // Public Symbol - type=110E
+    struct PublicSymbolEntry : public Record
+    {
+      uint32  Flags;
+      uint32  Offset;
+      uint16  Segment;
+      uint8   Name[1];
+    };
 
-int32 memcmp(const intptr a, const intptr b, size_t size);
+  private:
+    const uint8*  _pdb;
+    const size_t  _size;
+    const Header* _header;
 
-#ifndef WIN32
+    const uint32* _root;
+    uint32        _nbStreams;
+    const uint32* _streamSizes;
+    const uint32* _streamPages;
 
-// construct array with placement at _Where
-inline void* __cdecl operator new(size_t, void* placement) { return placement; }
-// delete if placement new fails
-inline void __cdecl operator delete(void*, void*) { }
+    uint8**       _streamsCache;
+    SortedArray<PublicSymbolEntry*> _symbols;
 
-// construct array with placement at _Where
-inline void* __cdecl operator new[](size_t, void* placement) { return placement; }
-// delete if placement new fails
-inline void __cdecl operator delete[](void*, void*) { }
+  public:
+    PdbParser(const uint8* pdb, const size_t& size);
 
-#include "registers.h"
-#include "kernel.h"
+          uint32  PdbByteSize() const;
+          uint32  PdbPageSize() const;
 
-#else
+    const uint8*  Stream(uint32 sid) const;
+          uint32  StreamByteSize(uint32 sid) const;
+          uint32  StreamPageSize(uint32 sid) const;
+    const uint32* StreamPages(uint32 sid) const;
+          uint32  NbStreams() const;
 
-#include <assert.h>
-#define ASSERT(x) assert(x)
+          void    ParseTypes();
+          void    ParseDebugInfo();
 
-#endif
+    const SortedArray<PublicSymbolEntry*>& Symbols() const;
 
-#define NULL 0
+    const PublicSymbolEntry* GetSymbol(uint16 seg, uint32 off) const;
+
+  private:
+    void Initialize();
+    static int32 CompareEntries(PublicSymbolEntry* const & a, PublicSymbolEntry* const & b);
+
+          uint32  PageToOffset(uint32 page) const;
+          uint32  BytesToPages(uint32 bytes) const;
+
+  };
+}
