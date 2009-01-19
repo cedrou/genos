@@ -36,6 +36,7 @@
 #include "pagemanager.h"
 #include "keyboard.h"
 #include "kheap.h"
+#include "pdbparser.h"
 
 using namespace GenOS;
 
@@ -86,6 +87,10 @@ void Kernel::Run()
   Screen::cout << "kernelPhysicalStart: 0x" <<         _bootinfo->kernelPhysicalStart << Screen::endl;
   Screen::cout << "kernelPhysicalEnd: 0x" <<           _bootinfo->kernelPhysicalEnd << Screen::endl;
   Screen::cout << "kernelVirtualStart: 0x" <<          _bootinfo->kernelVirtualStart << Screen::endl;
+  Screen::cout << "pdbSize: 0x" <<                     _bootinfo->pdbSize << Screen::endl;
+  Screen::cout << "pdbPhysicalStart: 0x" <<            _bootinfo->pdbPhysicalStart << Screen::endl;
+  Screen::cout << "pdbPhysicalEnd: 0x" <<              _bootinfo->pdbPhysicalEnd << Screen::endl;
+  Screen::cout << "pdbVirtualStart: 0x" <<             _bootinfo->pdbVirtualStart << Screen::endl;
   Screen::cout << "stackSize: 0x" <<                   _bootinfo->stackSize << Screen::endl;
   Screen::cout << "stackPhysicalStart: 0x" <<          _bootinfo->stackPhysicalStart << Screen::endl;
   Screen::cout << "stackPhysicalEnd: 0x" <<            _bootinfo->stackPhysicalEnd << Screen::endl;
@@ -118,6 +123,9 @@ void Kernel::Run()
 
   Screen::cout << "  - Initializing kernel heap (" <<_bootinfo->frameManagerVirtualEnd << ", 0x01000000) ..." << Screen::endl; 
   Kheap::Initialize((vaddr)_bootinfo->frameManagerVirtualEnd, 0x01000000); // 16 MiB
+
+  Screen::cout << "  - Initializing debugging features (" << _bootinfo->pdbVirtualStart << "," << _bootinfo->pdbSize << ")..." << Screen::endl;
+  PdbParser::Initialize((uint8*)_bootinfo->pdbVirtualStart, _bootinfo->pdbSize);
 
   Screen::cout << "  - Initializing keyboard..." << Screen::endl; 
 	Keyboard::Initialize(); 
@@ -157,6 +165,11 @@ void Kernel::Run()
 
   //Screen::cout.DumpMemory((intptr)((uint32)Kheap::Instance - 8), 256);
 
+
+  // PDB tests
+  //---------------------------------
+  //const PdbParser::PublicSymbolEntry* sym = PdbParser::Instance->GetSymbol(Registers::CurrentEIP());
+  //Screen::cout << (const char*)&sym->Name << Screen::endl;
 
   __asm sti;
 

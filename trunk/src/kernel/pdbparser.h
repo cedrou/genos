@@ -63,9 +63,12 @@ namespace GenOS
       uint8   Name[1];
     };
 
+  public:
+    static PdbParser* Instance;
+
   private:
     const uint8*  _pdb;
-    const size_t  _size;
+    size_t        _size;
     const Header* _header;
 
     const uint32* _root;
@@ -78,6 +81,7 @@ namespace GenOS
 
   public:
     PdbParser(const uint8* pdb, const size_t& size);
+    static void Initialize(const uint8* pdb, const size_t& size);
 
           uint32  PdbByteSize() const;
           uint32  PdbPageSize() const;
@@ -94,13 +98,16 @@ namespace GenOS
     const SortedArray<PublicSymbolEntry*>& Symbols() const;
 
     const PublicSymbolEntry* GetSymbol(uint16 seg, uint32 off) const;
+    const PublicSymbolEntry* GetSymbol(uint32 eip) const;
 
   private:
-    void Initialize();
     static int32 CompareEntries(PublicSymbolEntry* const & a, PublicSymbolEntry* const & b);
 
           uint32  PageToOffset(uint32 page) const;
           uint32  BytesToPages(uint32 bytes) const;
 
+  private:
+    PdbParser(const PdbParser&);
+    PdbParser& operator=(const PdbParser&);
   };
 }

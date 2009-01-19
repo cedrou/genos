@@ -5,12 +5,13 @@
 ||  *start*   ||    *end*   ||   *size*   ||                                        ||
 || 0x00000000 || 0x00100000 || 0x00100000 || BIOS                                   ||
 || 0x00100000 || 0x00101000 || 0x00001000 || Loader (kldr.exe)                      ||
-|| 0x00102000 || 0x00108000 || 0x00006000 || Kernel (kernel.exe)                    ||
-|| 0x00108000 || 0x00118000 || 0X00010000 || Kernel stack                           ||
-|| 0x00118000 || 0x00119000 || 0x00001000 || Frame manager bitset (1 frame / 128 MiB of available memory)  ||
-|| 0x00119000 || 0x0011A000 || 0x00001000 || Kernel page directory                  ||
-|| 0x0011A000 || 0x0011B000 || 0x00001000 || Kernel page table 0 (identity)         ||
-|| 0x0011B000 || 0x0011C000 || 0x00001000 || Kernel page table 756 (3GiB kernel)    ||
+|| 0x00102000 || 0x00109000 || 0x00007000 || Kernel (kernel.exe)                    ||
+|| 0x00109000 || 0x0012C000 || 0x00023000 || PDB (kernel.pdb)                       ||
+|| 0x0012C000 || 0x0013C000 || 0X00010000 || Kernel stack                           ||
+|| 0x0013C000 || 0x0013D000 || 0x00001000 || Frame manager bitset (1 frame / 128 MiB of available memory)  ||
+|| 0x0013D000 || 0x0013E000 || 0x00001000 || Kernel page directory                  ||
+|| 0x0013E000 || 0x0013F000 || 0x00001000 || Kernel page table 0 (identity)         ||
+|| 0x0013F000 || 0x00140000 || 0x00001000 || Kernel page table 756 (3GiB kernel)    ||
 ||    ....    ||    ....    ||    ....    || Available                              ||
 
 == Kernel virtual memory ==
@@ -19,10 +20,11 @@
 || 0x00000000 || 0x00100000 || 0x00100000 || BIOS                                   ||
 || 0x00100000 || 0x00101000 || 0x00001000 || Loader (kldr.exe)                      ||
 ||    ....    ||    ....    ||    ....    || Available                              ||
-|| 0xC0000000 || 0xC0006000 || 0x00006000 || Kernel (kernel.exe)                    ||
-|| 0xC0006000 || 0xC0007000 || 0X00001000 || Kernel stack page guard                ||
-|| 0xC0007000 || 0xC0017000 || 0X00010000 || Kernel stack                           ||
-|| 0xC0017000 || 0xC0018000 || 0x00001000 || Frame manager bitset                   ||
+|| 0xC0000000 || 0xC0007000 || 0x00007000 || Kernel (kernel.exe)                    ||
+|| 0xC0007000 || 0xC002A000 || 0x00023000 || PDB (kernel.pdb)                       ||
+|| 0xC002A000 || 0xC002B000 || 0X00001000 || Kernel stack page guard                ||
+|| 0xC002B000 || 0xC003B000 || 0X00010000 || Kernel stack                           ||
+|| 0xC003B000 || 0xC003C000 || 0x00001000 || Frame manager bitset                   ||
 ||    ....    ||    ....    ||    ....    || Available                              ||
 || 0xFFC00000 || 0xFFFFFFFF || 0x00400000 || Kernel page directory                  ||
 

@@ -93,3 +93,10 @@ void Registers::PrintRegs()
   Screen::cout << " GS " << regs.gs << "\n";
 }
 
+uint32 Registers::CurrentEIP()
+{
+  _asm
+  {
+    mov eax, dword ptr [ebp+4];
+  }
+}
