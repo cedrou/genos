@@ -43,6 +43,11 @@ namespace GenOS {
     uint32 kernelPhysicalEnd;
     uint32 kernelVirtualStart;
 
+    uint32 pdbSize;
+    uint32 pdbPhysicalStart;
+    uint32 pdbPhysicalEnd;
+    uint32 pdbVirtualStart;
+
     uint32 stackSize;
     uint32 stackPhysicalStart;
     uint32 stackPhysicalEnd;

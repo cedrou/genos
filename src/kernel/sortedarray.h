@@ -45,20 +45,30 @@ namespace GenOS
     size_t        _size;
     size_t        _capacity;
     compareMethod _compare;
+    bool          _owned;
 
   public:
     SortedArray(compareMethod compare)
-      : _compare(compare)
     {
+      _compare = compare;
       _capacity = 4;
       _buffer = new T[_capacity];
       _size = 0;
+      _owned = true;
     }
 
     SortedArray(T* buffer, size_t capacity, compareMethod compare)
-      : _buffer(buffer), _capacity(capacity), _compare(compare)
     {
+      _compare = compare;
+      _capacity = capacity;
+      _buffer = buffer;
       _size = 0;
+      _owned = false;
+    }
+
+    ~SortedArray()
+    {
+      if(_owned) delete[] _buffer;
     }
 
     size_t Size() const
@@ -75,16 +85,12 @@ namespace GenOS
 
     T& At(uint32 index)
     {
-//#ifndef WIN32
       ASSERT(index<_size);
-//#endif
       return _buffer[index];
     }
     const T& At(uint32 index) const
     {
-//#ifndef WIN32
       ASSERT(index<_size);
-//#endif
       return _buffer[index];
     }
     T& operator[](uint32 index) { return At(index); }
@@ -95,7 +101,12 @@ namespace GenOS
       uint32 index;
       if(_size==_capacity)
       {
-        _capacity *= 2;
+        // Double the capacity of the buffer
+        if(_capacity==0) 
+          _capacity = 4;
+        else 
+          _capacity *= 2;
+
         T* buffer = new T[_capacity];
 
         // get the index of the item before resize
@@ -107,16 +118,15 @@ namespace GenOS
           buffer[i] = _buffer[i];
         }
 
-
+        // save room for on item then copy the following ones
         for(uint32 i=index; i<_size; i++)
         {
           buffer[i+1] = _buffer[i];
         }
 
-        delete[] _buffer;
+        // switch buffers
+        if(_buffer) delete[] _buffer;
         _buffer = buffer;
-
-        //index = Find(item);
       }
       else
       {
@@ -137,6 +147,7 @@ namespace GenOS
         _buffer[i] = _buffer[i+1];
       }
       _size--;
+      //TODO: Resize the buffer
     }
 
     void Remove(const T& item)

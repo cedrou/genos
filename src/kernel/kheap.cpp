@@ -33,7 +33,41 @@
 
 using namespace GenOS;
 
-Kheap* Kheap::Instance = NULL;
+static Kheap* g_heap = NULL;
+
+static intptr __cdecl _new(uint32 size)
+{
+  return g_heap->Allocate(size, 0);
+}
+
+static void __cdecl _delete(intptr p)
+{
+  return g_heap->Free(p);
+}
+
+static intptr __cdecl panic_new(uint32)
+{
+  PANIC("Cannot use operator_new because KHeap is not initialized");
+  return NULL;
+}
+
+static void __cdecl panic_delete(intptr)
+{
+  PANIC("Cannot use operator_new because KHeap is not initialized");
+}
+
+
+static intptr (__cdecl *bridge_new)(uint32 size) = panic_new;
+static void (__cdecl *bridge_delete)(intptr p) = panic_delete;
+
+intptr __cdecl operator new(uint32 size)
+{
+  return bridge_new(size);
+}
+void __cdecl operator delete(intptr p)
+{
+  return bridge_delete(p);
+}
 
 
 vaddr Kheap::CreateEntryPlacement(vaddr& placement, size_t size, bool free)
@@ -73,19 +107,19 @@ void Kheap::Initialize(vaddr heapStart, size_t heapMaxSize)
   vaddr placement = heapStart;
 
   // Allocate a new entry for the kheap object instance
-  Screen::cout << "  create Kheap into " << placement << Screen::endl;
+  //Screen::cout << "  create Kheap into " << placement << Screen::endl;
   Kheap* kheap = (Kheap*)CreateEntryPlacement(placement, sizeof(Kheap), false);
-  Screen::cout << "    =>  " << kheap << Screen::endl;
+  //Screen::cout << "    =>  " << kheap << Screen::endl;
 
-  Screen::cout << "  create freeList into " << placement << Screen::endl;
+  //Screen::cout << "  create freeList into " << placement << Screen::endl;
   SortedArray<intptr>* freeList = (SortedArray<intptr>*)CreateEntryPlacement(placement, sizeof(SortedArray<intptr>), false);
-  Screen::cout << "    =>  " << freeList << Screen::endl;
+  //Screen::cout << "    =>  " << freeList << Screen::endl;
 
-  Screen::cout << "  create freeList buffer into " << placement << Screen::endl;
+  //Screen::cout << "  create freeList buffer into " << placement << Screen::endl;
   intptr* freeListBuffer = (intptr*)CreateEntryPlacement(placement, 4*sizeof(intptr), false);
-  Screen::cout << "    =>  " << freeListBuffer << Screen::endl;
+  //Screen::cout << "    =>  " << freeListBuffer << Screen::endl;
 
-  Screen::cout << "  construct freeList" << Screen::endl;
+  //Screen::cout << "  construct freeList" << Screen::endl;
   freeList = new (freeList) SortedArray<intptr>(freeListBuffer, 4, CompareEntries);
   
   intptr freeEntry = placement;
@@ -93,18 +127,21 @@ void Kheap::Initialize(vaddr heapStart, size_t heapMaxSize)
   const size_t initialMemory = 0x1000;
   const size_t freeMemory = initialMemory - 4*(sizeof(EntryHead)+sizeof(EntryFoot)) - sizeof(Kheap) - sizeof(SortedArray<intptr>) - 4*sizeof(intptr);
 
-  Screen::cout << "  create free block into " << placement << ", size " << freeMemory << Screen::endl;
-  intptr freeBlock = CreateEntryPlacement(placement, freeMemory, true);
-  Screen::cout << "    =>  " << freeBlock << Screen::endl;
+  //Screen::cout << "  create free block into " << placement << ", size " << freeMemory << Screen::endl;
+  /*intptr freeBlock = */CreateEntryPlacement(placement, freeMemory, true);
+  //Screen::cout << "    =>  " << freeBlock << Screen::endl;
 
-  Screen::cout << "  insert free block " << freeEntry << Screen::endl;
+  //Screen::cout << "  insert free block " << freeEntry << Screen::endl;
   freeList->Insert(freeEntry);
 
   // Create the kheap instance in the previous reserved place
-  Screen::cout << "  construct kheap" << Screen::endl;
+  //Screen::cout << "  construct kheap" << Screen::endl;
   kheap = new (kheap) Kheap(heapStart, 0x1000, heapMaxSize, freeList);
 
-  Instance = kheap;
+  g_heap = kheap;
+
+  bridge_new = _new;
+  bridge_delete = _delete;
 }
 
 Kheap::Kheap(vaddr heapStart, size_t heapSize, size_t heapMaxSize, SortedArray<intptr>* freeList)
@@ -115,39 +152,31 @@ Kheap::Kheap(vaddr heapStart, size_t heapSize, size_t heapMaxSize, SortedArray<i
 {
 }
 
-intptr __cdecl operator new(uint32 size)
-{
-  return Kheap::Instance->Allocate(size, 0);
-}
-void __cdecl operator delete(intptr p)
-{
-  return Kheap::Instance->Free(p);
-}
 
 intptr Kheap::Allocate(size_t size, uint32 alignment)
 {
   // Must be a power of two
   ASSERT( !alignment || (alignment & (alignment-1))==0 );
 
-  Screen::cout << "initial size: " << size;
+  //Screen::cout << "initial size: " << size;
 
   size += sizeof(EntryHead) + sizeof(EntryFoot);
-  Screen::cout << " - allocated size: " << size;
+  //Screen::cout << " - allocated size: " << size;
 
 
   // Find the first free zone that fits the request
-  Screen::cout << " - freeList size: " << _freeList->Size();
+  //Screen::cout << " - freeList size: " << _freeList->Size();
   for(size_t index=0; index<_freeList->Size(); index++)
   {
     EntryHead* head = (EntryHead*)_freeList->At(index);
-    Screen::cout << " - currentHead: " << head;
+    //Screen::cout << " - currentHead: " << head;
     if(alignment)
     {
       // TODO
     }
     else if(head->Size >= size)
     {
-      Screen::cout << " - index: " << index;
+      //Screen::cout << " - index: " << index;
       _freeList->Remove(index);
 
       // Check that there is enough room after this entry to create another one.
@@ -155,7 +184,7 @@ intptr Kheap::Allocate(size_t size, uint32 alignment)
       if (head->Size - size < sizeof(EntryHead) + sizeof(EntryFoot))
       {
         size = head->Size;
-        Screen::cout << " - new size: " << size;
+        //Screen::cout << " - new size: " << size;
       }
       else
       {
@@ -178,7 +207,7 @@ intptr Kheap::Allocate(size_t size, uint32 alignment)
       newBlockFoot->Magic = KHEAP_FOOT_USED;
       newBlockFoot->Size = size;
 
-      Screen::cout << Screen::endl;
+      //Screen::cout << Screen::endl;
 
       return (intptr)((uint32)head + sizeof(EntryHead));
     }
@@ -198,7 +227,7 @@ void Kheap::Free(intptr data)
   head->Magic = KHEAP_HEAD_FREE;
   foot->Magic = KHEAP_FOOT_FREE;
 
-  Screen::cout << "  head " << head << ", foot " << foot << Screen::endl;
+  //Screen::cout << "  head " << head << ", foot " << foot << Screen::endl;
 
   // Merge previous entry
   EntryHead* previousHead = NULL;
@@ -208,7 +237,7 @@ void Kheap::Free(intptr data)
     previousHead = (EntryHead*)((uint32)head - previousFoot->Size);
     ASSERT(previousHead->Magic == KHEAP_HEAD_FREE);
 
-    Screen::cout << "  previousHead " << previousHead << ", previousFoot " << previousFoot << Screen::endl;
+    //Screen::cout << "  previousHead " << previousHead << ", previousFoot " << previousFoot << Screen::endl;
 
     // Save index
     uint32 index = _freeList->Find(previousHead);
@@ -232,7 +261,7 @@ void Kheap::Free(intptr data)
     EntryFoot* nextFoot = (EntryFoot*)((uint32)nextHead + nextHead->Size - sizeof(EntryFoot));
     ASSERT(nextFoot->Magic == KHEAP_FOOT_FREE);
 
-    Screen::cout << "  nextHead " << nextHead << ", nextFoot " << nextFoot << Screen::endl;
+    //Screen::cout << "  nextHead " << nextHead << ", nextFoot " << nextFoot << Screen::endl;
 
     // Change the size in header and footer
     head->Size += nextHead->Size;

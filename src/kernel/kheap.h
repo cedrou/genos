@@ -44,8 +44,6 @@ namespace GenOS
   class Kheap
   {
   public:
-    static Kheap* Instance;
-
     vaddr                 _heapStart;
     size_t                _heapSize;
     size_t                _heapMaxSize;

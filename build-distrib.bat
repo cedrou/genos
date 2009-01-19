@@ -24,6 +24,7 @@ copy /b %G4D%\grldr A:\
 copy /b %SRC%\grub\menu.lst A:\
 copy /b %BIN%\kldr.exe A:\
 copy /b %BIN%\kernel.exe A:\
+copy /b %BIN%\kernel.pdb A:\
 
 rem Unmount the image
 rem ---------------------------------------

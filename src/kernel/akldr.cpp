@@ -101,7 +101,6 @@ void __declspec(naked) __entry_point__(void)
 
   uint32 bitsetItems;
   uint32* bitset;
-  
 
   __asm
   {
@@ -114,17 +113,23 @@ valid_grub_id:
   }
 
   // The kernel was already loaded by Grub
-  kbi.kernelSize                  = mbi->Modules[0].End - mbi->Modules[0].Start;
+  kbi.kernelSize                  = (mbi->Modules[0].End - mbi->Modules[0].Start + 0x0FFF) & 0xFFFFF000;
   kbi.kernelPhysicalStart         = mbi->Modules[0].Start;
   kbi.kernelPhysicalEnd           = mbi->Modules[0].End;
   kbi.kernelVirtualStart          = 0xC0000000;
 
+  // The PDB was already loaded by Grub
+  kbi.pdbSize                     = (mbi->Modules[1].End - mbi->Modules[1].Start + 0x0FFF) & 0xFFFFF000;
+  kbi.pdbPhysicalStart            = mbi->Modules[1].Start;
+  kbi.pdbPhysicalEnd              = mbi->Modules[1].Start + kbi.pdbSize;
+  kbi.pdbVirtualStart             = kbi.kernelVirtualStart + kbi.kernelSize;
+
   // Place the kernel stack after the kernel.
   // Skip the first page which is a page guard
   kbi.stackSize                   = 0x00010000; // 64k stack
-  kbi.stackPhysicalStart          = kbi.kernelPhysicalEnd;
+  kbi.stackPhysicalStart          = kbi.pdbPhysicalEnd;
   kbi.stackPhysicalEnd            = kbi.stackPhysicalStart + kbi.stackSize;
-  kbi.stackVirtualStart           = kbi.kernelVirtualStart + kbi.kernelSize + 0x1000;   // PageGuard placeholder
+  kbi.stackVirtualStart           = kbi.pdbVirtualStart + kbi.pdbSize + 0x1000;   // PageGuard placeholder
   kbi.stackVirtualEnd             = kbi.stackVirtualStart + kbi.stackSize;
   
   // Compute the current available memory base and size
@@ -188,10 +193,16 @@ valid_grub_id:
   memset((intptr)kbi.pageTable768, (uint32)0, 1024);
   kbi.pageDirectory[768] = (uint32)kbi.pageTable768 | 3;
 
-  // Map the kernel at 3GiB
+  // Map the kernel and the PDB at 3GiB
   for( uint32 address = kbi.kernelPhysicalStart; address < kbi.kernelPhysicalEnd; address += 0x1000)
   {
     const uint32 virtualAddress = kbi.kernelVirtualStart + (address - kbi.kernelPhysicalStart);
+    const uint32 pageIndex = (virtualAddress >> 12) & 0x03FF;
+    kbi.pageTable768[pageIndex] = address | 3;
+  }
+  for( uint32 address = kbi.pdbPhysicalStart; address < kbi.pdbPhysicalEnd; address += 0x1000)
+  {
+    const uint32 virtualAddress = kbi.pdbVirtualStart + (address - kbi.pdbPhysicalStart);
     const uint32 pageIndex = (virtualAddress >> 12) & 0x03FF;
     kbi.pageTable768[pageIndex] = address | 3;
   }

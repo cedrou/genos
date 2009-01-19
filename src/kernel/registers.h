@@ -42,6 +42,8 @@ struct Registers
 
   void Print();
   static void PrintRegs();
+
+  static uint32 CurrentEIP();
 }; 
 
 }

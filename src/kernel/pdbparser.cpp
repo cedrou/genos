@@ -35,16 +35,15 @@ using namespace GenOS;
 #define PDB_SIGNATURE "Microsoft C/C++ MSF 7.00\r\n\x1A" "DS\0\0\0"
 #define PDB_SIGNATURE_SIZE (0x20)
 
+
+PdbParser* PdbParser::Instance = NULL;
+
 PdbParser::PdbParser(const uint8* pdb, const size_t& size)
   : _pdb(pdb), _size(size), _symbols(CompareEntries)
 {
-  Initialize();
-}
-
-void PdbParser::Initialize()
-{
-  if(_pdb==0 || _size==0) return;
-  if( memcmp((intptr)_pdb, PDB_SIGNATURE, PDB_SIGNATURE_SIZE) ) return;
+  ASSERT( _pdb != 0 );
+  ASSERT( _size != 0 );
+  ASSERT( memcmp((intptr)_pdb, PDB_SIGNATURE, PDB_SIGNATURE_SIZE)==0 );
 
   _header = (Header*)(_pdb + PDB_SIGNATURE_SIZE);
 
@@ -55,6 +54,12 @@ void PdbParser::Initialize()
   
   _streamsCache = new uint8*[_nbStreams];
   memset(_streamsCache, (uint8)0, _nbStreams * sizeof(uint8*));
+}
+
+void PdbParser::Initialize(const uint8* pdb, const size_t& size)
+{
+  Instance = new PdbParser(pdb,size);
+  Instance->ParseDebugInfo();
 }
 
 uint32 PdbParser::PdbByteSize() const
@@ -132,7 +137,7 @@ uint32 PdbParser::BytesToPages(uint32 bytes) const
 
 void PdbParser::ParseTypes()
 {
-  const uint8* typeStream = Stream(2);
+  //const uint8* typeStream = Stream(2);
 }
 
 
@@ -191,4 +196,9 @@ const PdbParser::PublicSymbolEntry* PdbParser::GetSymbol(uint16 seg, uint32 off)
   if(index>=_symbols.Size()) return _symbols[_symbols.Size() - 1];
   if(_symbols[index]->Offset == off) return _symbols[index];
   return _symbols[index-1];
+}
+
+const PdbParser::PublicSymbolEntry* PdbParser::GetSymbol(uint32 eip) const
+{
+  return GetSymbol(0x0001, eip - 0xC0001000);
 }
