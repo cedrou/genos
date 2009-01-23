@@ -213,10 +213,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\crt.h"
-				>
-			</File>
-			<File
 				RelativePath=".\framemanager.cpp"
 				>
 			</File>
@@ -280,6 +276,10 @@
 			</File>
 			<File
 				RelativePath=".\common.h"
+				>
+			</File>
+			<File
+				RelativePath=".\crt.h"
 				>
 			</File>
 			<File
