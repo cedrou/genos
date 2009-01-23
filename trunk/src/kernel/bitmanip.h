@@ -37,12 +37,76 @@ namespace GenOS {
 
   class BitManip
   {
-  public:
-    // Find integer log base 2 of an integer (aka the position of the highest bit set) 
-    static uint32 Log2(uint32 value);
+  private:
+    static const char LogTable256[];
 
-    // Count the consecutive zero bits (trailing) on the right
-    static uint32 TrailingZeros(uint32 value);
+  public:
+    inline static void SetBit(uint32& value, uint32 bit)
+    {
+      value |= (1 << bit);
+    }
+
+    inline static void ClearBit(uint32& value, uint32 bit)
+    {
+      value &= ~(1 << bit);
+    }
+
+    // Integer log base 2 of an integer
+    // Find the position of the highest bit set
+    inline static uint32 HighestBitSet(uint32 value)
+    {
+      uint32 bit = 0;
+      if (uint32 a = value >> 16)
+      {
+        uint32 b = a >> 8;
+        bit = b ? 24 + LogTable256[b] : 16 + LogTable256[a];
+      }
+      else 
+      {
+        uint32 b = value >> 8;
+        bit = b ? 8 + LogTable256[b] : LogTable256[value];
+      }
+
+      return bit;
+    }
+
+    // Count the trailing zero bits on the right
+    // Find the position of the lowest bit set
+    inline static uint32 LowestBitSet(uint32 value)
+    {
+      uint32 count = 0;
+      value = (value ^ (value - 1)) >> 1;  // Set value's trailing 0s to 1s and zero rest
+      for (count = 0; value; count++)
+      {
+        value >>= 1;
+      }
+      return count;
+    }
+
+    // Round up to the nearest power of two
+    // Find the least power of 2 greater than or equal to an integer
+    inline static uint32 RoundUpPow2(uint32 value)
+    {
+      value = value - 1; 
+      value = value | (value >> 1); 
+      value = value | (value >> 2); 
+      value = value | (value >> 4); 
+      value = value | (value >> 8); 
+      value = value | (value >>16); 
+      return value + 1; 
+    } 
+
+    // Round down to the nearest power of two
+    // Find the greatest power of 2 less than or equal to an integer
+    inline static uint32 RoundDownPow2(uint32 value)
+    {
+      value = value | (value >> 1); 
+      value = value | (value >> 2); 
+      value = value | (value >> 4); 
+      value = value | (value >> 8); 
+      value = value | (value >>16); 
+      return value - (value >> 1); 
+    }
 
   };
 }

@@ -97,19 +97,19 @@ namespace GenOS
     };
 
   public:
-    static PageDirectory* Current;
+    /*static*/ PageDirectory* Current;
 
   public:
-    static void   Initialize();
+    /*static*/ void   Initialize();
   
-    static bool   Map(paddr physicalAddress, vaddr virtualAddress, Page::Attributes flags);
-    static bool   Unmap(vaddr virtualAddress);
-    static paddr  GetPhysicalAddress(vaddr virtualAddress);
+    /*static*/ bool   Map(paddr physicalAddress, vaddr virtualAddress, Page::Attributes flags);
+    /*static*/ bool   Unmap(vaddr virtualAddress);
+    /*static*/ paddr  GetPhysicalAddress(vaddr virtualAddress);
 
   private:
     bool Switch(PageDirectory* dir);
-    static void FlushTLBEntry(vaddr virtualAddress);
+    /*static*/ void FlushTLBEntry(vaddr virtualAddress);
 
-    static void __stdcall PageFaultHandler(Registers reg);
+    static void __stdcall PageFaultHandler(Registers reg, void* data);
   };
 }

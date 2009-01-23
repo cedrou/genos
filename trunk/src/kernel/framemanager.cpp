@@ -55,7 +55,7 @@ paddr FrameManager::FindFreeFrame()
     uint32 current = _bitset[item];
     if (current != 0)
     {
-      uint32 bit = BitManip::TrailingZeros(current);//BitManip::Log2(current);
+      uint32 bit = BitManip::LowestBitSet(current);
       return (paddr)((uint32)_base + ((bit + (item << 5)) << 12));
     }
   }
@@ -73,7 +73,7 @@ paddr FrameManager::GetFrame()
   const uint32 item = (index >> 5);    // frame_index / 32;
   const uint32 bit = (index & 0x1F);   // frame_index % 32
 
-  _bitset[item] &= ~(1 << bit);
+  BitManip::ClearBit(_bitset[item], bit);
 
   return frame;
 }
@@ -88,5 +88,5 @@ void FrameManager::ReleaseFrame(paddr frame)
   const uint32 item   = (index >> 5);          // frame_index / 32;
   const uint32 bit    = (index & 0x1F);        // frame_index % 32;
 
-  _bitset[item] |= (1 << bit);
+  BitManip::SetBit(_bitset[item], bit);
 } 

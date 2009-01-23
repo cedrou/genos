@@ -29,12 +29,19 @@
 
 #pragma once
 
+#define PANIC(msg) Kernel::Panic(msg, __FILE__, __LINE__, __FUNCSIG__);
+#define ASSERT(b) ((b) ? (void)0 : Kernel::Assert(#b,__FILE__, __LINE__, __FUNCSIG__))
+
 #include "common.h"
 
 namespace GenOS {
 
-#define PANIC(msg) Kernel::Panic(msg, __FILE__, __LINE__, __FUNCSIG__);
-#define ASSERT(b) ((b) ? (void)0 : Kernel::Assert(#b,__FILE__, __LINE__, __FUNCSIG__))
+  class FrameManager;
+  class PageManager;
+  class Kheap;
+  class PdbParser;
+  class Keyboard;
+  class Timer;
 
   struct KernelBootInfo
   {
@@ -54,6 +61,12 @@ namespace GenOS {
     uint32 stackVirtualStart;
     uint32 stackVirtualEnd;
 
+    uint32 crtSize;
+    uint32 crtPhysicalStart;
+    uint32 crtPhysicalEnd;
+    uint32 crtVirtualStart;
+    uint32 crtVirtualEnd;
+
     uint32 frameManagerSize;
     uint32 frameManagerPhysicalStart;
     uint32 frameManagerPhysicalEnd;
@@ -72,6 +85,14 @@ namespace GenOS {
   {
   private:
     const KernelBootInfo* _bootinfo;
+    static Kernel* _instance;
+
+    FrameManager* _framemgr;
+    PageManager*  _pagemgr;
+    Kheap*        _heap;
+    PdbParser*    _pdb;
+    Keyboard*     _keyboard;
+    Timer*        _timer;
 
   public:
     Kernel(KernelBootInfo* bootinfo);
@@ -81,6 +102,14 @@ namespace GenOS {
     static void Assert(const char* message, const char* file, uint32 line, const char* function);
     static void Hang();
     static void Idle();
+
+  public:
+    static FrameManager* FrameManager() { return _instance->_framemgr; }
+    static PageManager* PageManager() { return _instance->_pagemgr; }
+    static Kheap* Kheap() { return _instance->_heap; }
+    static PdbParser* PdbParser() { return _instance->_pdb; }
+    static Keyboard* Keyboard() { return _instance->_keyboard; }
+    static Timer* Timer() { return _instance->_timer; }
 
   private:
     Kernel(const Kernel&);

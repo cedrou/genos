@@ -67,7 +67,7 @@ bool PageManager::Entry::TestFlag(Page::Attributes flag)
 bool PageManager::Entry::Allocate(Page::Attributes flags)
 {
   // Allocate a frame
-  paddr frame = FrameManager::GetFrame();
+  paddr frame = Kernel::FrameManager()->GetFrame();
   if(frame==NULL) return false;
 
   // Map it to the page
@@ -89,16 +89,16 @@ paddr PageManager::Entry::Free()
 // PageManager
 //------------------------------------------
 
-PageManager::PageDirectory* PageManager::Current = NULL;
+//PageManager::PageDirectory* PageManager::Current = NULL;
 
 void PageManager::Initialize()
 {
   // Register the timer interrupt handler.
-  InterruptManager::RegisterInterrupt(InterruptManager::PageFault, &PageFaultHandler);
+  InterruptManager::RegisterInterrupt(InterruptManager::PageFault, &PageFaultHandler, NULL);
 }
 
 
-void PageManager::PageFaultHandler(Registers regs)
+void PageManager::PageFaultHandler(Registers regs, void*)
 {
    // A page fault has occurred.
    // The faulting address is stored in the CR2 register.
@@ -206,7 +206,7 @@ bool PageManager::Map(paddr physicalAddress, vaddr virtualAddress, Page::Attribu
   // page isn't mapped
   if(physicalAddress==0)
   {
-    physicalAddress = FrameManager::GetFrame();
+    physicalAddress = Kernel::FrameManager()->GetFrame();
   }
   pte->SetFrame(physicalAddress);
   pte->SetFlag(flags);
@@ -238,7 +238,7 @@ bool PageManager::Unmap(vaddr virtualAddress)
   }
 
   paddr frame = pte->Free();
-  FrameManager::ReleaseFrame(frame);
+  Kernel::FrameManager()->ReleaseFrame(frame);
 
   return true;
 }

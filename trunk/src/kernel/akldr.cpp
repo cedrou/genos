@@ -131,9 +131,16 @@ valid_grub_id:
   kbi.stackPhysicalEnd            = kbi.stackPhysicalStart + kbi.stackSize;
   kbi.stackVirtualStart           = kbi.pdbVirtualStart + kbi.pdbSize + 0x1000;   // PageGuard placeholder
   kbi.stackVirtualEnd             = kbi.stackVirtualStart + kbi.stackSize;
-  
+
+  // Reserve a frame for the CRT
+  kbi.crtSize                     = 0x1000;
+  kbi.crtPhysicalStart            = kbi.stackPhysicalEnd;
+  kbi.crtPhysicalEnd              = kbi.crtPhysicalStart + kbi.crtSize;
+  kbi.crtVirtualStart             = kbi.stackVirtualEnd;
+  kbi.crtVirtualEnd               = kbi.crtVirtualStart + kbi.crtSize;
+
   // Compute the current available memory base and size
-  kbi.availableMemoryPhysicalBase = kbi.stackPhysicalEnd;
+  kbi.availableMemoryPhysicalBase = kbi.crtPhysicalEnd;
   kbi.availableMemorySize         = mbi->MemoryUpper * 1024 - (kbi.availableMemoryPhysicalBase - 0x00100000);
 
 
@@ -160,7 +167,7 @@ valid_grub_id:
   kbi.frameManagerPhysicalEnd = kbi.frameManagerPhysicalStart + kbi.frameManagerSize;
 
   // Compute virtual addresses
-  kbi.frameManagerVirtualStart = kbi.stackVirtualStart + kbi.stackSize;
+  kbi.frameManagerVirtualStart = kbi.crtVirtualEnd;
   kbi.frameManagerVirtualEnd = kbi.frameManagerVirtualStart + kbi.frameManagerSize;
 
   // Move the available memory pointer
@@ -210,6 +217,13 @@ valid_grub_id:
   for( uint32 address = kbi.stackPhysicalStart; address < kbi.stackPhysicalEnd; address += 0x1000)
   {
     const uint32 virtualAddress = kbi.stackVirtualStart + (address - kbi.stackPhysicalStart);
+    const uint32 pageIndex = (virtualAddress >> 12) & 0x03FF;
+    kbi.pageTable768[pageIndex] = address | 3;
+  }
+
+  for( uint32 address = kbi.crtPhysicalStart; address < kbi.crtPhysicalEnd; address += 0x1000)
+  {
+    const uint32 virtualAddress = kbi.crtVirtualStart + (address - kbi.crtPhysicalStart);
     const uint32 pageIndex = (virtualAddress >> 12) & 0x03FF;
     kbi.pageTable768[pageIndex] = address | 3;
   }
