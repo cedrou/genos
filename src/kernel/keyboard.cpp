@@ -32,13 +32,13 @@
 
 using namespace GenOS;
 
-void Keyboard::Initialize()
+Keyboard::Keyboard()
 {
   // Register the keyboard interrupt handler.
-  InterruptManager::RegisterInterrupt(InterruptManager::Keyboard, &KeyHandler);
+  InterruptManager::RegisterInterrupt(InterruptManager::Keyboard, &KeyHandler, NULL);
 
 }
 
-void Keyboard::KeyHandler(Registers /*reg*/)
+void Keyboard::KeyHandler(Registers /*reg*/, void*)
 {
 }

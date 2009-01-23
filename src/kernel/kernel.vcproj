@@ -52,6 +52,7 @@
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="false"
+				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="0"
 				AssemblerOutput="2"
 				WarningLevel="4"
@@ -68,7 +69,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/safeseh:no /filealign:0x1000"
+				AdditionalOptions="/safeseh:no /filealign:0x1000 /ignore:4254"
 				ShowProgress="0"
 				LinkIncremental="1"
 				GenerateManifest="false"
@@ -205,6 +206,14 @@
 			</File>
 			<File
 				RelativePath=".\common.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\crt.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\crt.h"
 				>
 			</File>
 			<File

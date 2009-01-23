@@ -35,13 +35,8 @@
 using namespace GenOS;
 
 
-uint32 Timer::_tick = 0;
-
-void Timer::Initialize(uint32 freq)
+Timer::Timer(uint32 freq)
 {
-  // Register the timer interrupt handler.
-  InterruptManager::RegisterInterrupt(InterruptManager::SystemTimer, &TickHandler);
-
   // The value we send to the PIT is the value to divide it's input clock
   // (1193180 Hz) by, to get our required frequency. Important to note is
   // that the divisor must be small enough to fit into 16-bits.
@@ -57,13 +52,32 @@ void Timer::Initialize(uint32 freq)
   // Send the frequency divisor.
   IOPort::Out8(IOPort::PIT_0, l);
   IOPort::Out8(IOPort::PIT_0, h);
+
+  _tick = 0;
+
+  // Register the timer interrupt handler.
+  InterruptManager::RegisterInterrupt(InterruptManager::SystemTimer, &Timer::TickHandler, this);
 }
 
-void Timer::TickHandler(Registers /*reg*/)
+void Timer::RegisterHandler(TimerHandler handler, void* data)
 {
-  _tick++;
-  if(_tick%50==0)
+  TimerHandlerInfo thi = { handler, data };
+  _handlers.Push(thi);
+}
+
+void Timer::TickHandler(Registers regs, void* data)
+{
+  Timer* _this = ((Timer*)data);
+  _this->_tick++;
+
+  const size_t size = _this->_handlers.Size();
+  for( size_t i=0; i<size; i++ )
   {
-    Screen::cout << "Tick: "<< _tick << "\r";
+    _this->_handlers[i].handler(regs, _this->_handlers[i].data);
   }
+}
+
+uint32 Timer::Ticks() const
+{
+  return _tick;
 }

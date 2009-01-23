@@ -1,8 +1,6 @@
 //------------------------------------------------------------------------------
-// bitmanip.cpp
-//	Implements several optimized bit twiddling algorithms
-//
-// See http://graphics.stanford.edu/~seander/bithacks.html
+// crt.h
+//	Microsoft Visual C++ runtime (msvcrt) compatibility
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -29,26 +27,31 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#include "bitmanip.h"
+#pragma once
 
-using namespace GenOS;
+#include "common.h"
 
-const char BitManip::LogTable256[] = 
+namespace GenOS
 {
-  0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3,
-  4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-  5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-  5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-  6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-  6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-  6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-  6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7
-};
+  typedef void (__cdecl *initmethod)(void);
+
+  class Crt
+  {
+  private:
+    // Finalizers table
+    static initmethod*  finalizers;
+    static uint32       finalizers_max;
+    static uint32       finalizers_count;
+
+    // Initializers table
+    static initmethod   __xc_a[];
+    static initmethod   __xc_z[];
+
+  public:
+    static void Start(uint32 crtStart, uint32 crtSize);
+    static void Shutdown();
+
+    static int  atexit(initmethod fn);
+  };
+}
+

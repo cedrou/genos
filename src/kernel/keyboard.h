@@ -36,9 +36,9 @@ namespace GenOS {
   class Keyboard
   {
   public:
-	  static void Initialize();
+	  Keyboard();
 
   private:
-    static void __stdcall KeyHandler(Registers reg);
+    static void __stdcall KeyHandler(Registers reg, void* data);
   };
 }

@@ -1,4 +1,3 @@
-
 //------------------------------------------------------------------------------
 // kmain.cpp
 //  Entry point
@@ -29,9 +28,14 @@
 //------------------------------------------------------------------------------
 
 #include "kernel.h"
+#include "crt.h"
 
-void kmain(GenOS::KernelBootInfo* kernelBootinfo)
+void kmain(GenOS::KernelBootInfo* kbi)
 {
-  GenOS::Kernel kernel(kernelBootinfo);
+  GenOS::Crt::Start(kbi->crtVirtualStart, kbi->crtSize);
+
+  GenOS::Kernel kernel(kbi);
   kernel.Run();
+
+  GenOS::Crt::Shutdown();
 }

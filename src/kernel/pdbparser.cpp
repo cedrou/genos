@@ -28,7 +28,7 @@
 //------------------------------------------------------------------------------
 
 #include "pdbparser.h"
-
+#include "kernel.h"
 
 using namespace GenOS;
 
@@ -54,12 +54,6 @@ PdbParser::PdbParser(const uint8* pdb, const size_t& size)
   
   _streamsCache = new uint8*[_nbStreams];
   memset(_streamsCache, (uint8)0, _nbStreams * sizeof(uint8*));
-}
-
-void PdbParser::Initialize(const uint8* pdb, const size_t& size)
-{
-  Instance = new PdbParser(pdb,size);
-  Instance->ParseDebugInfo();
 }
 
 uint32 PdbParser::PdbByteSize() const

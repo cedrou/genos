@@ -37,6 +37,7 @@
 #include "keyboard.h"
 #include "kheap.h"
 #include "pdbparser.h"
+#include "timer.h"
 
 using namespace GenOS;
 
@@ -70,10 +71,29 @@ struct MultibootInfo
 
 #pragma pack(pop)
 
+static void _stdcall TimerHandler(Registers, void*)
+{
+  uint32 ticks = Kernel::Timer()->Ticks();
+  if (ticks % 50 == 0)
+  {
+    Screen::cout << "Tick: "<< ticks << "\r";
+  }
+}
+
+
+Kernel* Kernel::_instance = NULL;
+static FrameManager global_framemgr;
+static PageManager global_pagemgr;
+static Kheap global_kheap;
 
 Kernel::Kernel(KernelBootInfo* bootinfo)
 : _bootinfo(bootinfo)
 {
+  _instance = this;
+  _framemgr = &global_framemgr;
+  _pagemgr = &global_pagemgr;
+  _heap = &global_kheap;
+  _timer = NULL;
 }
 
 void Kernel::Run()
@@ -116,22 +136,25 @@ void Kernel::Run()
   InterruptManager::Initialize();
 
   Screen::cout << "  - Initializing frame manager (" << _bootinfo->availableMemoryPhysicalBase << "," << _bootinfo->frameManagerVirtualStart << ")..." << Screen::endl; 
-  FrameManager::Initialize((paddr)_bootinfo->availableMemoryPhysicalBase, (vaddr)_bootinfo->frameManagerVirtualStart);
+  _framemgr->Initialize((paddr)_bootinfo->availableMemoryPhysicalBase, (vaddr)_bootinfo->frameManagerVirtualStart);
 
   Screen::cout << "  - Initializing page manager..." << Screen::endl; 
-  PageManager::Initialize();
+  _pagemgr->Initialize();
 
   Screen::cout << "  - Initializing kernel heap (" <<_bootinfo->frameManagerVirtualEnd << ", 0x01000000) ..." << Screen::endl; 
-  Kheap::Initialize((vaddr)_bootinfo->frameManagerVirtualEnd, 0x01000000); // 16 MiB
+  _heap->Initialize((vaddr)_bootinfo->frameManagerVirtualEnd, 0x01000000); // 16 MiB
 
   Screen::cout << "  - Initializing debugging features (" << _bootinfo->pdbVirtualStart << "," << _bootinfo->pdbSize << ")..." << Screen::endl;
-  PdbParser::Initialize((uint8*)_bootinfo->pdbVirtualStart, _bootinfo->pdbSize);
+  _pdb = new GenOS::PdbParser((uint8*)_bootinfo->pdbVirtualStart, _bootinfo->pdbSize);
+  _pdb->ParseDebugInfo();
 
   Screen::cout << "  - Initializing keyboard..." << Screen::endl; 
-	Keyboard::Initialize(); 
+  _keyboard = new GenOS::Keyboard(); 
 
   Screen::cout << "  - Initializing timer..." << Screen::endl; 
-	Timer::Initialize(50); 
+  _timer = new GenOS::Timer(50);
+  _timer->RegisterHandler(TimerHandler);
+  
 
   // PageManager tests
   //---------------------------------

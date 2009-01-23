@@ -28,7 +28,9 @@
 //------------------------------------------------------------------------------
 
 #include "common.h"
+//#include "kernel.h"
 
+using namespace GenOS;
 
 intptr memcpy(intptr dst, const intptr src, size_t count)
 {
@@ -68,3 +70,16 @@ int memcmp(const intptr a, const intptr b, size_t size)
   }
   return 0;
 }
+
+
+
+int __cdecl ::_purecall() 
+{ 
+  PANIC("Pure function call");
+  return 0;
+}
+
+extern "C" int _fltused = 1;
+
+
+

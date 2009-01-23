@@ -28,21 +28,29 @@
 //------------------------------------------------------------------------------
 
 #include "kheap.h"
+#include "kernel.h"
 #include "pagemanager.h"
 #include "screen.h"
 
 using namespace GenOS;
 
-static Kheap* g_heap = NULL;
+#define KHEAP_HEAD_USED 'KHHU'
+#define KHEAP_FOOT_USED 'KHFU'
+#define KHEAP_HEAD_FREE 'KHHF'
+#define KHEAP_FOOT_FREE 'KHFF'
+
+//static Kheap* g_heap = NULL;
 
 static intptr __cdecl _new(uint32 size)
 {
-  return g_heap->Allocate(size, 0);
+  //return g_heap->Allocate(size, 0);
+  return Kernel::Kheap()->Allocate(size, 0);
 }
 
 static void __cdecl _delete(intptr p)
 {
-  return g_heap->Free(p);
+  //return g_heap->Free(p);
+  return Kernel::Kheap()->Free(p);
 }
 
 static intptr __cdecl panic_new(uint32)
@@ -60,14 +68,25 @@ static void __cdecl panic_delete(intptr)
 static intptr (__cdecl *bridge_new)(uint32 size) = panic_new;
 static void (__cdecl *bridge_delete)(intptr p) = panic_delete;
 
-intptr __cdecl operator new(uint32 size)
+
+intptr __cdecl ::operator new(uint32 size)
 {
   return bridge_new(size);
 }
-void __cdecl operator delete(intptr p)
+intptr __cdecl operator new[](uint32 size)
+{
+  return bridge_new(size);
+}
+void __cdecl ::operator delete(intptr p)
 {
   return bridge_delete(p);
 }
+void __cdecl operator delete[](intptr p)
+{
+  return bridge_delete(p);
+}
+
+
 
 
 vaddr Kheap::CreateEntryPlacement(vaddr& placement, size_t size, bool free)
@@ -96,62 +115,53 @@ int32 Kheap::CompareEntries(const intptr& a, const intptr& b)
   return 1;
 }
 
+//Kheap::Kheap(vaddr heapStart, size_t heapSize, size_t heapMaxSize, SortedArray<intptr>* freeList)
+//: _heapStart(heapStart)
+//, _heapSize(heapSize)
+//, _heapMaxSize(heapMaxSize)
+//, _freeList(freeList)
+//{
+//}
+Kheap::Kheap()
+{
+}
+
+Kheap::~Kheap()
+{
+}
+
 void Kheap::Initialize(vaddr heapStart, size_t heapMaxSize)
 {
+  _heapStart = heapStart;
+  _heapSize = 0x1000;
+  _heapMaxSize = heapMaxSize;
+
   // Allocate an initial page
-  if( !PageManager::Map(0, heapStart, PageManager::Page::Writable))
+  if( !Kernel::PageManager()->Map(0, _heapStart, PageManager::Page::Writable))
   {
     PANIC("Cannot map the first page");
   }
 
-  vaddr placement = heapStart;
+  vaddr placement = _heapStart;
 
-  // Allocate a new entry for the kheap object instance
-  //Screen::cout << "  create Kheap into " << placement << Screen::endl;
-  Kheap* kheap = (Kheap*)CreateEntryPlacement(placement, sizeof(Kheap), false);
-  //Screen::cout << "    =>  " << kheap << Screen::endl;
-
-  //Screen::cout << "  create freeList into " << placement << Screen::endl;
-  SortedArray<intptr>* freeList = (SortedArray<intptr>*)CreateEntryPlacement(placement, sizeof(SortedArray<intptr>), false);
-  //Screen::cout << "    =>  " << freeList << Screen::endl;
-
-  //Screen::cout << "  create freeList buffer into " << placement << Screen::endl;
+  _freeList = (SortedArray<intptr>*)CreateEntryPlacement(placement, sizeof(SortedArray<intptr>), false);
   intptr* freeListBuffer = (intptr*)CreateEntryPlacement(placement, 4*sizeof(intptr), false);
-  //Screen::cout << "    =>  " << freeListBuffer << Screen::endl;
 
-  //Screen::cout << "  construct freeList" << Screen::endl;
-  freeList = new (freeList) SortedArray<intptr>(freeListBuffer, 4, CompareEntries);
+  _freeList = new (_freeList) SortedArray<intptr>(freeListBuffer, 4, CompareEntries);
   
   intptr freeEntry = placement;
 
   const size_t initialMemory = 0x1000;
   const size_t freeMemory = initialMemory - 4*(sizeof(EntryHead)+sizeof(EntryFoot)) - sizeof(Kheap) - sizeof(SortedArray<intptr>) - 4*sizeof(intptr);
 
-  //Screen::cout << "  create free block into " << placement << ", size " << freeMemory << Screen::endl;
-  /*intptr freeBlock = */CreateEntryPlacement(placement, freeMemory, true);
-  //Screen::cout << "    =>  " << freeBlock << Screen::endl;
+  CreateEntryPlacement(placement, freeMemory, true);
 
-  //Screen::cout << "  insert free block " << freeEntry << Screen::endl;
-  freeList->Insert(freeEntry);
+  _freeList->Insert(freeEntry);
 
-  // Create the kheap instance in the previous reserved place
-  //Screen::cout << "  construct kheap" << Screen::endl;
-  kheap = new (kheap) Kheap(heapStart, 0x1000, heapMaxSize, freeList);
-
-  g_heap = kheap;
 
   bridge_new = _new;
   bridge_delete = _delete;
 }
-
-Kheap::Kheap(vaddr heapStart, size_t heapSize, size_t heapMaxSize, SortedArray<intptr>* freeList)
-: _heapStart(heapStart)
-, _heapSize(heapSize)
-, _heapMaxSize(heapMaxSize)
-, _freeList(freeList)
-{
-}
-
 
 intptr Kheap::Allocate(size_t size, uint32 alignment)
 {

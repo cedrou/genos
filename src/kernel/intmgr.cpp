@@ -126,13 +126,12 @@ struct InterruptDescriptorTable
 
 static InterruptDescriptor idt[256];
 
-InterruptManager::InterruptHandler InterruptManager::_handlers[256];
+InterruptManager::InterruptHandlerInfo InterruptManager::_handlers[256];
 
-InterruptManager::InterruptHandler InterruptManager::RegisterInterrupt(uint8 interrupt, InterruptHandler handler)
+void InterruptManager::RegisterInterrupt(uint8 interrupt, InterruptHandler handler, void* data)
 {
-  InterruptHandler oldHandler = _handlers[interrupt];
-  _handlers[interrupt] = handler;
-  return oldHandler;
+  _handlers[interrupt].handler = handler;
+  _handlers[interrupt].data = data;
 }
 
 void InterruptManager::Initialize()
@@ -233,9 +232,10 @@ void InterruptManager::Isr(Registers regs)
     IOPort::Out8(IOPort::PIC_Master_Command, 0x20);
   }
 
-  if (_handlers[regs.int_no] != 0)
+  const InterruptHandlerInfo& ihi = _handlers[regs.int_no];
+  if (ihi.handler != 0)
   {
-    return _handlers[regs.int_no](regs);
+    return ihi.handler(regs, ihi.data);
   }
 
   if(regs.int_no < 19)

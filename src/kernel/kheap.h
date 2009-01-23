@@ -29,17 +29,10 @@
 
 #pragma once
 
-#include "common.h"
-#include "kernel.h"
 #include "sortedarray.h"
 
 namespace GenOS
 {
-
-#define KHEAP_HEAD_USED 'KHHU'
-#define KHEAP_FOOT_USED 'KHFU'
-#define KHEAP_HEAD_FREE 'KHHF'
-#define KHEAP_FOOT_FREE 'KHFF'
 
   class Kheap
   {
@@ -63,13 +56,11 @@ namespace GenOS
     };
 
   public:
-    static void Initialize(vaddr heapStart, size_t heapMaxSize);
-
-  private:
-    Kheap(vaddr heapStart, size_t heapSize, size_t heapMaxSize, SortedArray<intptr>* freeList);
+    Kheap();
     ~Kheap();
     
-  public:
+    void Initialize(vaddr heapStart, size_t heapMaxSize);
+
     intptr Allocate(size_t size, uint32 alignment);
     void Free(intptr data);
   private:

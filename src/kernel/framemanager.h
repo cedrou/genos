@@ -42,15 +42,15 @@ namespace GenOS
   
   public:
     // Initialization of tha manager
-    static void   Initialize(paddr base, vaddr bitset);
+    void   Initialize(paddr base, vaddr bitset);
     
     // Allocate a frame
-    static paddr  GetFrame();
+    paddr  GetFrame();
 
     // Deallocate a frame
-    static void   ReleaseFrame(paddr frame);
+    void   ReleaseFrame(paddr frame);
   
   private:
-    static paddr FindFreeFrame();
+    paddr FindFreeFrame();
   };
 }

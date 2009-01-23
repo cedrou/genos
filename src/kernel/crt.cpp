@@ -1,8 +1,5 @@
-//------------------------------------------------------------------------------
-// bitmanip.cpp
-//	Implements several optimized bit twiddling algorithms
-//
-// See http://graphics.stanford.edu/~seander/bithacks.html
+// crt.cpp
+//	Microsoft Visual C++ runtime (msvcrt) compatibility
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -29,26 +26,67 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#include "bitmanip.h"
+#include "crt.h"
 
 using namespace GenOS;
 
-const char BitManip::LogTable256[] = 
+
+// Initializers
+//-----------------------
+#pragma data_seg(".CRT$XCA")
+initmethod Crt::__xc_a[] = { NULL }; // Beginning of initializer table
+
+#pragma data_seg(".CRT$XCZ")
+initmethod Crt::__xc_z[] = { NULL }; // End of initializer table
+
+#pragma data_seg()  // Go back to default data segment (.data)
+
+#pragma comment(linker, "/merge:.CRT=.data")// Merge .CRT into .data section
+
+
+// Finalizers
+//-----------------------
+initmethod* Crt::finalizers = NULL;
+uint32      Crt::finalizers_max;
+uint32      Crt::finalizers_count;
+
+
+void Crt::Start(uint32 crtStart, uint32 crtSize) 
 {
-  0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3,
-  4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-  5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-  5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-  6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-  6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-  6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-  6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7
-};
+  finalizers = (initmethod*)crtStart;
+  finalizers_max = crtSize / sizeof(initmethod);
+  finalizers_count = 0;
+
+  for( initmethod* current = __xc_a; current < __xc_z; current++ )
+  {
+    if ( *current )
+      (**current)();
+  }
+}
+
+void Crt::Shutdown() 
+{
+  while (finalizers_count--) {
+    (*(--finalizers)) ();
+  }
+}
+
+int Crt::atexit(initmethod fn) 
+{
+  if ( finalizers_count < finalizers_max )
+  {
+    // Add the exit routine
+    *(finalizers++) = fn;
+    finalizers_count++;
+    return 0;
+  }
+
+  return 1;
+}
+
+extern "C" int atexit(initmethod fn) 
+{
+  return Crt::atexit(fn);
+}
+
+
