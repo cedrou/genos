@@ -1,9 +1,11 @@
+//------------------------------------------------------------------------------
 // crt.cpp
 //	Microsoft Visual C++ runtime (msvcrt) compatibility
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
 // 
+// This source code is released under the new BSD License.
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
 // 1. Redistributions of source code must retain the above copyright
