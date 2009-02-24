@@ -40,6 +40,7 @@ namespace GenOS {
   {
   private:
     static const char LogTable256[];
+    static const uint8 BitsSetTable256[]; 
 
   public:
     inline static void SetBit(uint32& value, uint32 bit)
@@ -109,5 +110,22 @@ namespace GenOS {
       return value - (value >> 1); 
     }
 
+    inline static uint8 CountBitSet(uint32 value)
+    {
+      unsigned char* p = (unsigned char*) &value;
+      return BitsSetTable256[p[0]] + 
+             BitsSetTable256[p[1]] + 
+             BitsSetTable256[p[2]] +	
+             BitsSetTable256[p[3]];
+    }
+
+    inline static uint8 CountBitSet(uint64 value)
+    {
+      unsigned char* p = (unsigned char*) &value;
+      return BitsSetTable256[p[0]] + BitsSetTable256[p[1]] + 
+             BitsSetTable256[p[2]] + BitsSetTable256[p[3]] +
+             BitsSetTable256[p[4]] + BitsSetTable256[p[5]] +
+             BitsSetTable256[p[6]] + BitsSetTable256[p[7]];
+    }
   };
 }

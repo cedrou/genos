@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
-	Name="pdbparse"
-	ProjectGUID="{A426FE4F-D04B-420F-BCB2-C1F4390E4AC6}"
-	RootNamespace="pdbparse"
+	Name="AssemblyLoader"
+	ProjectGUID="{24476DE5-043D-41D3-857D-55E980F70C00}"
+	RootNamespace="AssemblyLoader"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_NON_CONFORMING_SWPRINTFS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -117,7 +117,7 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
-				UsePrecompiledHeader="2"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -171,15 +171,55 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\src\kernel\common.cpp"
+				RelativePath=".\AssemblyLoader.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\pdbparse.cpp"
+				RelativePath="..\..\src\kernel\bitmanip.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\kernel\pdbparser.cpp"
+				RelativePath=".\CilOpCode.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\main.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MdCodedIndex.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MdDisassembler.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MdPhysicalLayout.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MdRecord.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MdRecordItem.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MdSchemas.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MdTable.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MdToken.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Metadata.cpp"
 				>
 			</File>
 		</Filter>
@@ -189,7 +229,11 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\src\kernel\pdbparser.h"
+				RelativePath=".\AssemblyLoader.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Metadata.h"
 				>
 			</File>
 		</Filter>
