@@ -31,14 +31,16 @@
 #pragma once
 
 // These typedefs are written for 32-bit X86.
-typedef unsigned int   uint32;
-typedef          int   int32;
-typedef unsigned short uint16;
-typedef          short int16;
-typedef unsigned char  uint8;
-typedef          char  int8;
-typedef unsigned int   size_t;
-typedef          void* intptr;
+typedef unsigned char     uint8;
+typedef          char     int8;
+typedef unsigned short    uint16;
+typedef          short    int16;
+typedef unsigned int      uint32;
+typedef          int      int32;
+typedef unsigned __int64  uint64;
+typedef          __int64  int64;
+typedef unsigned int      size_t;
+typedef          void*    intptr;
 
 typedef          void* paddr;
 typedef          void* vaddr;
