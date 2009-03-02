@@ -156,9 +156,9 @@ const uint8* MdPhysicalLayout::GetString(uint32 index) const
   return GetStream(streamString) + index; 
 }
 
-const uint16* MdPhysicalLayout::GetUserString(uint32 index) const
+const uint8* MdPhysicalLayout::GetUserString(uint32 index) const
 {
-  return (uint16*)GetStream(streamUS) + index; 
+  return GetStream(streamUS) + index; 
 }
 
 const uint8* MdPhysicalLayout::GetBlob(uint32 index) const
@@ -194,6 +194,11 @@ const uint32 MdPhysicalLayout::GetSubsystem() const
 const uint32 MdPhysicalLayout::GetCorFlags() const
 {
   return ((PIMAGE_COR20_HEADER)net)->Flags;
+}
+
+const MdToken MdPhysicalLayout::GetEntryPoint() const
+{
+  return ((PIMAGE_COR20_HEADER)net)->EntryPointToken;
 }
 
 const uint8* MdPhysicalLayout::GetMethod(uint32 rva) const
