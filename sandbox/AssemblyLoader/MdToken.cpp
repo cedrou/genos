@@ -69,6 +69,11 @@ MdToken MdToken::operator+(uint32 i) const
   return MdToken(_token + i);
 }
 
+MdToken MdToken::operator-(uint32 i) const
+{
+  return MdToken(_token - i);
+}
+
 MdToken& MdToken::operator++()
 {
   _token++;
@@ -82,4 +87,9 @@ bool MdToken::operator==(const MdToken& tk) const
 bool MdToken::operator!=(const MdToken& tk) const
 {
   return _token != tk._token;
+}
+
+bool MdToken::operator>(const MdToken& tk) const
+{
+  return _token > tk._token;
 }
