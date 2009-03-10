@@ -216,7 +216,6 @@ namespace GenOS
 
     MdTableId TabID() const;
     uint32    Index() const;
-    MdRecord  Record(const MdTable* tables) const;
     uint32    Token() const;
 
     MdToken   Max(const MdTable* tables) const;
@@ -338,13 +337,18 @@ namespace GenOS
     const uint8*  GetGuid(uint32 index) const;
     const uint8*  GetMethod(uint32 rva) const;
 
-    const uint32  GetImageBase() const;
-    const uint32  GetFileAlignment() const;
-    const uint32  GetStackReserve() const;
-    const uint32  GetSubsystem() const;
-    const uint32  GetCorFlags() const;
-    const MdToken GetEntryPoint() const;
+    uint32        GetImageBase() const;
+    uint32        GetFileAlignment() const;
+    uint32        GetStackReserve() const;
+    uint32        GetSubsystem() const;
+    uint32        GetCorFlags() const;
+    MdToken       GetEntryPoint() const;
 
+    MdRecord      GetRecord(const MdToken& token) const;
+    MdRecord      GetRecord(MdTableId tabid, uint32 index) const;
+    uint32        NbRecords(MdTableId tabid) const;
+
+    MdToken       GetMaxToken(MdTableId tabid) const;
 
   private:
     const uint8*  GetStream(MdStreamType type) const;
@@ -357,7 +361,6 @@ namespace GenOS
   {
   private:
     MdPhysicalLayout* _mdpl;
-    MdTable*          _tables;
 
   public :
     MdDisassembler(MdPhysicalLayout* _mdpl);
@@ -372,38 +375,40 @@ namespace GenOS
     void Classes(std::ostream& os) const;
 
 
-    std::ostream& Hex (std::ostream& os, uint32 value) const;
-    std::ostream& Hex8(std::ostream& os, uint32 value) const;
+    std::ostream& Hex  (std::ostream& os, uint32 value) const;
+    std::ostream& Hex8 (std::ostream& os, uint32 value) const;
     std::ostream& Hex16(std::ostream& os, uint32 value) const;
     std::ostream& Hex32(std::ostream& os, uint32 value) const;
-    std::ostream& hex (std::ostream& os, uint32 value) const;
-    std::ostream& hex8(std::ostream& os, uint32 value) const;
+    std::ostream& hex  (std::ostream& os, uint32 value) const;
+    std::ostream& hex8 (std::ostream& os, uint32 value) const;
     std::ostream& hex16(std::ostream& os, uint32 value) const;
     std::ostream& hex32(std::ostream& os, uint32 value) const;
 
-    std::ostream& String(std::ostream& os, uint32 index) const;
+    std::ostream& String    (std::ostream& os, const MdRecordItem& item) const;
     std::ostream& UserString(std::ostream& os, uint32 index) const;
-    std::ostream& Blob(std::ostream& os, uint32 index) const;
-    std::ostream& Guid(std::ostream& os, uint32 index) const;
-
-    std::ostream& Token(std::ostream& os, const MdToken& token) const;
+    std::ostream& Blob      (std::ostream& os, const MdRecordItem& item) const;
+    std::ostream& Guid      (std::ostream& os, const MdRecordItem& item) const;
 
     std::ostream& SignatureElementType(std::ostream& os, const uint8*& signature) const;
     std::ostream& CustomAttribute(std::ostream& os, const MdRecord& record) const;
-    std::ostream& TypeDef_Impl(std::ostream& os, const MdToken& token) const;
-    std::ostream& TypeDef(std::ostream& os, const MdToken& token) const;
-    std::ostream& TypeRef(std::ostream& os, const MdToken& token) const;
-    std::ostream& TypeSpec(std::ostream& os, const MdToken& token) const;
-    std::ostream& MemberRef(std::ostream& os, const MdToken& token) const;
-    std::ostream& MethodDef_Impl(std::ostream& os, const MdToken& token) const;
-    std::ostream& MethodDef_Def(std::ostream& os, const MdToken& token) const;
-    std::ostream& Field(std::ostream& os, const MdToken& token) const;
-    std::ostream& Field_Impl(std::ostream& os, const MdToken& token) const;
 
-    std::ostream& TypeDefOrRef(std::ostream& os, const MdToken& token) const;
+    std::ostream& Token         (std::ostream& os, const MdToken& token) const;
+
+    std::ostream& TypeDef       (std::ostream& os, const MdToken& token) const;
+    std::ostream& TypeDef_Impl  (std::ostream& os, const MdToken& token) const;
+    std::ostream& TypeRef       (std::ostream& os, const MdToken& token) const;
+    std::ostream& TypeSpec      (std::ostream& os, const MdToken& token) const;
+    std::ostream& MemberRef     (std::ostream& os, const MdToken& token) const;
+    std::ostream& MethodDef     (std::ostream& os, const MdToken& token) const;
+    std::ostream& MethodDef_Impl(std::ostream& os, const MdToken& token) const;
+    std::ostream& Field         (std::ostream& os, const MdToken& token) const;
+    std::ostream& Field_Impl    (std::ostream& os, const MdToken& token) const;
+
+    std::ostream& TypeDefOrRef  (std::ostream& os, const MdToken& token) const;
 
     std::vector<MdRecord> FindCustomAttributes(const MdToken& tk) const;
     MdRecord      FindConstant(const MdToken& tk) const;
+    MdRecord      FindPInvokeImpl(const MdToken& tk) const;
     MdToken       FindTypeDef(const MdToken& tk) const;
 
     uint32        DecodeSignatureItem(const uint8*& signature) const;

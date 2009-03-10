@@ -54,11 +54,6 @@ uint32 MdToken::Token() const
   return _token;
 }
 
-MdRecord MdToken::Record(const MdTable* tables) const
-{
-  return tables[TabID()].GetRecord(Index());
-}
-
 MdToken MdToken::Max(const MdTable* tables) const
 {
   return MdToken(TabID(), tables[TabID()].RecordCount() + 1);

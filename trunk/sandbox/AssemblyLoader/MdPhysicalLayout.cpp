@@ -171,32 +171,32 @@ const uint8* MdPhysicalLayout::GetGuid(uint32 index) const
   return GetStream(streamGuid) + 16*(index - 1); 
 }
 
-const uint32 MdPhysicalLayout::GetImageBase() const
+uint32 MdPhysicalLayout::GetImageBase() const
 {
   return ((PIMAGE_NT_HEADERS32)nt32)->OptionalHeader.ImageBase;
 }
 
-const uint32 MdPhysicalLayout::GetFileAlignment() const
+uint32 MdPhysicalLayout::GetFileAlignment() const
 {
   return ((PIMAGE_NT_HEADERS32)nt32)->OptionalHeader.FileAlignment;
 }
 
-const uint32 MdPhysicalLayout::GetStackReserve() const
+uint32 MdPhysicalLayout::GetStackReserve() const
 {
   return ((PIMAGE_NT_HEADERS32)nt32)->OptionalHeader.SizeOfStackReserve;
 }
 
-const uint32 MdPhysicalLayout::GetSubsystem() const
+uint32 MdPhysicalLayout::GetSubsystem() const
 {
   return ((PIMAGE_NT_HEADERS32)nt32)->OptionalHeader.Subsystem;
 }
 
-const uint32 MdPhysicalLayout::GetCorFlags() const
+uint32 MdPhysicalLayout::GetCorFlags() const
 {
   return ((PIMAGE_COR20_HEADER)net)->Flags;
 }
 
-const MdToken MdPhysicalLayout::GetEntryPoint() const
+MdToken MdPhysicalLayout::GetEntryPoint() const
 {
   return ((PIMAGE_COR20_HEADER)net)->EntryPointToken;
 }
@@ -204,4 +204,24 @@ const MdToken MdPhysicalLayout::GetEntryPoint() const
 const uint8* MdPhysicalLayout::GetMethod(uint32 rva) const
 {
   return (uint8*)dos + Rva2Offset(rva, (PIMAGE_SECTION_HEADER)sections, ((PIMAGE_NT_HEADERS32)nt32)->FileHeader.NumberOfSections);
+}
+
+MdRecord MdPhysicalLayout::GetRecord(const MdToken& token) const
+{
+  return mdTables[token.TabID()].GetRecord(token.Index());
+}
+
+MdRecord MdPhysicalLayout::GetRecord(MdTableId tabid, uint32 index) const
+{
+  return mdTables[tabid].GetRecord(index);
+}
+
+uint32 MdPhysicalLayout::NbRecords(MdTableId tabid) const
+{
+  return mdTables[tabid].RecordCount();
+}
+
+MdToken MdPhysicalLayout::GetMaxToken(MdTableId tabid) const
+{
+  return MdToken(tabid, mdTables[tabid].RecordCount() + 1);
 }
