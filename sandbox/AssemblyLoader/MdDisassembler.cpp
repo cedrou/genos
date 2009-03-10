@@ -54,7 +54,7 @@ enum ElementType
 //=============================================
 
 MdDisassembler::MdDisassembler(MdPhysicalLayout* mdpl)
-: _mdpl(mdpl), _tables(mdpl->mdTables)
+: _mdpl(mdpl) 
 {
 }
 
@@ -73,23 +73,23 @@ void MdDisassembler::Disassemble(std::ostream& os) const
 
 void MdDisassembler::ExternModules(std::ostream& os) const
 {
-  for( uint32 i=0; i < _tables[tabidModuleRef].RecordCount(); i++ )
+  for( uint32 i=0; i < _mdpl->NbRecords(tabidModuleRef); i++ )
   {
-    MdRecord record = _tables[tabidModuleRef].GetRecord(i + 1);
+    MdRecord record = _mdpl->GetRecord(tabidModuleRef, i + 1);
 
-    os << ".module extern "; String(os, record.GetItem(0, _mdpl).Value) << std::endl;
+    os << ".module extern "; String(os, record.GetItem(0, _mdpl)) << std::endl;
   }
 }
 
 void MdDisassembler::ExternAssemblies(std::ostream& os) const
 {
-  for( uint32 i=1; i <= _tables[tabidAssemblyRef].RecordCount(); i++ )
+  for( uint32 i=1; i <= _mdpl->NbRecords(tabidAssemblyRef); i++ )
   {
-    MdRecord record = _tables[tabidAssemblyRef].GetRecord(i);
+    MdRecord record = _mdpl->GetRecord(tabidAssemblyRef, i);
 
-    os << ".assembly extern "; String(os, record.GetItem(6, _mdpl).Value) << std::endl;
+    os << ".assembly extern "; String(os, record.GetItem(6, _mdpl)) << std::endl;
     os << "{" << std::endl;
-    os << "  .publickeytoken = ("; Blob(os, record.GetItem(5, _mdpl).Value) << ")" << std::endl;
+    os << "  .publickeytoken = ("; Blob(os, record.GetItem(5, _mdpl)) << ")" << std::endl;
     os << "  .ver " << record.GetItem(0, _mdpl).Value <<
                 ":" << record.GetItem(1, _mdpl).Value <<
                 ":" << record.GetItem(2, _mdpl).Value <<
@@ -103,10 +103,10 @@ std::vector<MdRecord> MdDisassembler::FindCustomAttributes(const MdToken& tk) co
   std::vector<MdRecord> attr;
 
   MdToken tkCurrent(tabidCustomAttribute, 1);
-  MdToken tkMax = tkCurrent.Max(_tables);
+  MdToken tkMax = _mdpl->GetMaxToken(tabidCustomAttribute);
   while ( tkCurrent != tkMax )
   {
-    MdRecord customAttributeRecord = tkCurrent.Record(_tables);
+    MdRecord customAttributeRecord = _mdpl->GetRecord(tkCurrent);
 
     MdToken tkParent(customAttributeRecord.GetItem(0, _mdpl));
     if( tkParent == tk )
@@ -123,10 +123,10 @@ std::vector<MdRecord> MdDisassembler::FindCustomAttributes(const MdToken& tk) co
 MdRecord MdDisassembler::FindConstant(const MdToken& tk) const
 {
   MdToken tkCurrent(tabidConstant, 1);
-  MdToken tkMax = tkCurrent.Max(_tables);
+  MdToken tkMax = _mdpl->GetMaxToken(tabidConstant);
   while ( tkCurrent != tkMax )
   {
-    MdRecord constantRecord = tkCurrent.Record(_tables);
+    MdRecord constantRecord = _mdpl->GetRecord(tkCurrent);
 
     MdToken tkParent(constantRecord.GetItem(2, _mdpl));
     if( tkParent == tk )
@@ -138,16 +138,34 @@ MdRecord MdDisassembler::FindConstant(const MdToken& tk) const
   }
 }
 
+MdRecord MdDisassembler::FindPInvokeImpl(const MdToken& tk) const
+{
+  MdToken tkCurrent(tabidImplMap, 1);
+  MdToken tkMax = _mdpl->GetMaxToken(tabidImplMap);
+  while ( tkCurrent != tkMax )
+  {
+    MdRecord implRecord = _mdpl->GetRecord(tkCurrent);
+
+    MdToken tkParent(implRecord.GetItem(1, _mdpl));
+    if( tkParent == tk )
+    {
+      return implRecord;
+    }
+
+    ++tkCurrent;
+  }
+}
+
 MdToken MdDisassembler::FindTypeDef(const MdToken& tk) const
 {
   MdToken tkCurrent(tabidTypeDef, 2);
-  MdToken tkMax = tkCurrent.Max(_tables);
+  MdToken tkMax = _mdpl->GetMaxToken(tabidTypeDef);
   switch (tk.TabID())
   {
   case tabidField:
     while ( tkCurrent != tkMax )
     {
-      MdRecord typedefRecord = tkCurrent.Record(_tables);
+      MdRecord typedefRecord = _mdpl->GetRecord(tkCurrent);
 
       MdToken tkField(typedefRecord.GetItem(4, _mdpl));
       if( tkField > tk )
@@ -162,7 +180,7 @@ MdToken MdDisassembler::FindTypeDef(const MdToken& tk) const
   case tabidMethodDef:
     while ( tkCurrent != tkMax )
     {
-      MdRecord typedefRecord = tkCurrent.Record(_tables);
+      MdRecord typedefRecord = _mdpl->GetRecord(tkCurrent);
 
       MdToken tkMethodDef(typedefRecord.GetItem(5, _mdpl));
       if( tkMethodDef > tk )
@@ -179,12 +197,12 @@ MdToken MdDisassembler::FindTypeDef(const MdToken& tk) const
 void MdDisassembler::Assembly(std::ostream& os) const
 {
   // Zero or one record
-  if(_tables[tabidAssembly].RecordCount() == 0) return;
+  if(_mdpl->NbRecords(tabidAssembly) == 0) return;
   
   MdToken tkAssembly(tabidAssembly, 1);
-  MdRecord record = tkAssembly.Record(_tables);
+  MdRecord record = _mdpl->GetRecord(tkAssembly);
 
-  os << ".assembly "; String(os, record.GetItem(7, _mdpl).Value) << std::endl;
+  os << ".assembly "; String(os, record.GetItem(7, _mdpl)) << std::endl;
   os << "{" << std::endl;
 
   // Enumerate each custom attribute
@@ -205,10 +223,10 @@ void MdDisassembler::Assembly(std::ostream& os) const
 
 void MdDisassembler::Module(std::ostream& os) const
 {
-  MdRecord modulerec = _tables[tabidModule].GetRecord(1);
+  MdRecord modulerec = _mdpl->GetRecord(tabidModule, 1);
 
-  os << ".module "; String(os, modulerec.GetItem(1, _mdpl).Value) << std::endl;
-  os << "// MVID: "; Guid(os, modulerec.GetItem(2, _mdpl).Value) << std::endl;
+  os << ".module "; String(os, modulerec.GetItem(1, _mdpl)) << std::endl;
+  os << "// MVID: "; Guid(os, modulerec.GetItem(2, _mdpl)) << std::endl;
   os << ".imagebase 0x"; Hex32(os, _mdpl->GetImageBase()) << std::endl;
   os << ".file alignment 0x"; Hex32(os, _mdpl->GetFileAlignment()) << std::endl;
   os << ".stackreserve 0x"; Hex32(os, _mdpl->GetStackReserve()) << std::endl;
@@ -228,7 +246,7 @@ void MdDisassembler::Classes(std::ostream& os) const
 #define Abstract 0x00000080
 
   MdToken tkCurrent(tabidTypeDef, 1);
-  MdToken tkMax = tkCurrent.Max(_tables);
+  MdToken tkMax = _mdpl->GetMaxToken(tabidTypeDef);
   while ( tkCurrent != tkMax )
   {
     os << std::endl;
@@ -302,9 +320,12 @@ inline std::ostream& MdDisassembler::hex32(std::ostream& os, uint32 value) const
   return os;
 }
 
-inline std::ostream& MdDisassembler::String(std::ostream& os, uint32 index) const
+inline std::ostream& MdDisassembler::String(std::ostream& os, const MdRecordItem& item) const
 {
-  os << _mdpl->GetString(index);
+  if( item.Value )
+  {
+    os << _mdpl->GetString(item.Value);
+  }
   return os;
 }
 
@@ -324,9 +345,9 @@ inline std::ostream& MdDisassembler::UserString(std::ostream& os, uint32 index) 
   return os;
 }
 
-inline std::ostream& MdDisassembler::Blob(std::ostream& os, uint32 index) const
+inline std::ostream& MdDisassembler::Blob(std::ostream& os, const MdRecordItem& item) const
 {
-  const uint8* blob = _mdpl->GetBlob(index);
+  const uint8* blob = _mdpl->GetBlob(item.Value);
   const uint32 size = DecodeSignatureItem(blob);
   for( uint8 i=0; i<size; i++ )
   {
@@ -335,9 +356,9 @@ inline std::ostream& MdDisassembler::Blob(std::ostream& os, uint32 index) const
   return os;
 }
 
-inline std::ostream& MdDisassembler::Guid(std::ostream& os, uint32 index) const
+inline std::ostream& MdDisassembler::Guid(std::ostream& os, const MdRecordItem& item) const
 {
-  const uint8* guid = _mdpl->GetGuid(index);
+  const uint8* guid = _mdpl->GetGuid(item.Value);
   os << "{"; 
   Hex32(os, *(uint32*)guid);
   guid += 4;
@@ -377,7 +398,7 @@ std::ostream& MdDisassembler::CustomAttribute(std::ostream& os, const MdRecord& 
     break;
   }
 
-  os << " = ( "; Blob(os, record.GetItem(2, _mdpl).Value) << ")";
+  os << " = ( "; Blob(os, record.GetItem(2, _mdpl)) << ")";
 
   return os;
 }
@@ -395,21 +416,21 @@ std::ostream& MdDisassembler::TypeDefOrRef(std::ostream& os, const MdToken& toke
 
 std::ostream& MdDisassembler::TypeDef(std::ostream& os, const MdToken& token) const
 {
-  MdRecord recTypeDef = token.Record(_tables);
+  MdRecord recTypeDef = _mdpl->GetRecord(token);
 
   // Namespace.Name
-  if( recTypeDef.GetItem(2, _mdpl).Value ) String(os, recTypeDef.GetItem(2, _mdpl).Value) << ".";
-  String(os, recTypeDef.GetItem(1, _mdpl).Value);
+  if( recTypeDef.GetItem(2, _mdpl).Value ) String(os, recTypeDef.GetItem(2, _mdpl)) << ".";
+  String(os, recTypeDef.GetItem(1, _mdpl));
 
   return os;
 }
 
 std::ostream& MdDisassembler::TypeDef_Impl(std::ostream& os, const MdToken& token) const
 {
-  MdToken tkMax = token.Max(_tables);
+  MdToken tkMax = _mdpl->GetMaxToken(token.TabID());
   MdToken tkNext = token + 1;
 
-  MdRecord recTypeDef = token.Record(_tables);
+  MdRecord recTypeDef = _mdpl->GetRecord(token);
 
   const uint32 flags = recTypeDef.GetItem(0, _mdpl).Value;
   // Filter out <Module> ?
@@ -470,8 +491,8 @@ std::ostream& MdDisassembler::TypeDef_Impl(std::ostream& os, const MdToken& toke
     if( flags & 0x00040000 ) os << "hassecurity "; 
 
     // Namespace.Name
-    if( recTypeDef.GetItem(2, _mdpl).Value ) String(os, recTypeDef.GetItem(2, _mdpl).Value) << ".";
-    String(os, recTypeDef.GetItem(1, _mdpl).Value) << std::endl;
+    if( recTypeDef.GetItem(2, _mdpl).Value ) String(os, recTypeDef.GetItem(2, _mdpl)) << ".";
+    String(os, recTypeDef.GetItem(1, _mdpl)) << std::endl;
 
     // Extends
     os << "       extends "; TypeDefOrRef(os, MdToken(recTypeDef.GetItem(3, _mdpl))) << std::endl;
@@ -480,10 +501,10 @@ std::ostream& MdDisassembler::TypeDef_Impl(std::ostream& os, const MdToken& toke
 
     // Fields
     MdToken tkField(recTypeDef.GetItem(4, _mdpl));
-    MdToken tkFieldMax = tkField.Max(_tables);
+    MdToken tkFieldMax = _mdpl->GetMaxToken(tkField.TabID());
     if( tkNext != tkMax )
     {
-      MdRecord recNext = tkNext.Record(_tables);
+      MdRecord recNext = _mdpl->GetRecord(tkNext);
       tkFieldMax = MdToken(recNext.GetItem(4, _mdpl));
     }
 
@@ -495,10 +516,10 @@ std::ostream& MdDisassembler::TypeDef_Impl(std::ostream& os, const MdToken& toke
 
     // Methods
     MdToken tkMethod(recTypeDef.GetItem(5, _mdpl));
-    MdToken tkMethodMax = tkMethod.Max(_tables);
+    MdToken tkMethodMax = _mdpl->GetMaxToken(tkMethod.TabID());
     if( tkNext != tkMax )
     {
-      MdRecord recNext = tkNext.Record(_tables);
+      MdRecord recNext = _mdpl->GetRecord(tkNext);
       tkMethodMax = MdToken(recNext.GetItem(5, _mdpl));
     }
 
@@ -509,18 +530,18 @@ std::ostream& MdDisassembler::TypeDef_Impl(std::ostream& os, const MdToken& toke
     }
 
     os << "} // end of class ";
-    if( recTypeDef.GetItem(2, _mdpl).Value ) String(os, recTypeDef.GetItem(2, _mdpl).Value) << ".";
-    String(os, recTypeDef.GetItem(1, _mdpl).Value) << std::endl;
+    if( recTypeDef.GetItem(2, _mdpl).Value ) String(os, recTypeDef.GetItem(2, _mdpl)) << ".";
+    String(os, recTypeDef.GetItem(1, _mdpl)) << std::endl;
   }
   return os;
 }
 std::ostream& MdDisassembler::TypeRef(std::ostream& os, const MdToken& token) const
 {
-  const MdRecord& record = token.Record(_tables);
+  const MdRecord& record = _mdpl->GetRecord(token);
 
   // ResolutionScope
   MdToken tkScope(record.GetItem(0, _mdpl));
-  MdRecord recScope = tkScope.Record(_tables);
+  MdRecord recScope = _mdpl->GetRecord(tkScope);
   switch(tkScope.TabID())
   {
   case tabidModule:
@@ -528,7 +549,7 @@ std::ostream& MdDisassembler::TypeRef(std::ostream& os, const MdToken& token) co
   case tabidModuleRef:
     break;
   case tabidAssemblyRef:
-    os << "["; String(os, recScope.GetItem(6,_mdpl).Value) << "]";
+    os << "["; String(os, recScope.GetItem(6,_mdpl)) << "]";
     break;
   case tabidTypeRef:
     TypeRef(os, tkScope) << "/";
@@ -537,17 +558,17 @@ std::ostream& MdDisassembler::TypeRef(std::ostream& os, const MdToken& token) co
 
   // Namespace
   if(record.GetItem(2, _mdpl).Value) 
-    String(os, record.GetItem(2, _mdpl).Value) << ".";
+    String(os, record.GetItem(2, _mdpl)) << ".";
 
   // Type
-  String(os, record.GetItem(1, _mdpl).Value);
+  String(os, record.GetItem(1, _mdpl));
 
   return os;
 }
 
 std::ostream& MdDisassembler::TypeSpec(std::ostream& os, const MdToken& token) const
 {
-  const MdRecord& record = token.Record(_tables);
+  const MdRecord& record = _mdpl->GetRecord(token);
 
   // Get Member signature
   const uint8* signature = _mdpl->GetBlob(record.GetItem(0, _mdpl).Value);
@@ -562,7 +583,7 @@ std::ostream& MdDisassembler::TypeSpec(std::ostream& os, const MdToken& token) c
 
 std::ostream& MdDisassembler::MemberRef(std::ostream& os, const MdToken& token) const
 {
-  const MdRecord& record = token.Record(_tables);
+  const MdRecord& record = _mdpl->GetRecord(token);
 
   // Get Member signature
   const uint8* signature = _mdpl->GetBlob(record.GetItem(2, _mdpl).Value);
@@ -608,7 +629,7 @@ std::ostream& MdDisassembler::MemberRef(std::ostream& os, const MdToken& token) 
   }
 
   // Name
-  String(os, record.GetItem(1, _mdpl).Value);
+  String(os, record.GetItem(1, _mdpl));
 
   // Parameters types
   os << "(";
@@ -624,7 +645,7 @@ std::ostream& MdDisassembler::MemberRef(std::ostream& os, const MdToken& token) 
 
 std::ostream& MdDisassembler::Field(std::ostream& os, const MdToken& token) const
 {
-  const MdRecord& recField = token.Record(_tables);
+  const MdRecord& recField = _mdpl->GetRecord(token);
 
   // Get Member signature
   const uint8* signature = _mdpl->GetBlob(recField.GetItem(2, _mdpl).Value);
@@ -639,14 +660,14 @@ std::ostream& MdDisassembler::Field(std::ostream& os, const MdToken& token) cons
   TypeDef(os, tkParent) << "::";
 
   // Name
-  String(os, recField.GetItem(1, _mdpl).Value);
+  String(os, recField.GetItem(1, _mdpl));
 
   return os;
 }
 
 std::ostream& MdDisassembler::Field_Impl(std::ostream& os, const MdToken& token) const
 {
-  const MdRecord& recField = token.Record(_tables);
+  const MdRecord& recField = _mdpl->GetRecord(token);
 
   os << "  .field ";
 
@@ -669,7 +690,13 @@ std::ostream& MdDisassembler::Field_Impl(std::ostream& os, const MdToken& token)
   if( flags & 0x0040 ) os << "literal "; 
   if( flags & 0x0080 ) os << "notserialized ";  // reserved
   if( flags & 0x0200 ) os << "specialname "; 
-  if( flags & 0x2000 ) os << "pinvokeimpl "; 
+
+  if( flags & 0x2000 ) 
+  {
+    os << "pinvokeimpl "; 
+    FindPInvokeImpl(token);
+  }
+
   if( flags & 0x0400 ) os << "rtspecialname "; 
   if( flags & 0x1000 ) os << "hasfieldmarshal "; 
   if( flags & 0x0100 ) os << "hasfieldrva "; 
@@ -686,13 +713,13 @@ std::ostream& MdDisassembler::Field_Impl(std::ostream& os, const MdToken& token)
   SignatureElementType(os, signature) << " ";
 
   // Name
-  String(os, recField.GetItem(1, _mdpl).Value);
+  String(os, recField.GetItem(1, _mdpl));
 
   if( flags & 0x8000 ) // os << "hasdefault "; 
   {
     os << " = ";
     MdRecord constantRecord = FindConstant(token);
-    Blob(os, constantRecord.GetItem(3, _mdpl).Value);
+    Blob(os, constantRecord.GetItem(3, _mdpl));
   }
 
   std::vector<MdRecord> attr = FindCustomAttributes(token);
@@ -705,9 +732,9 @@ std::ostream& MdDisassembler::Field_Impl(std::ostream& os, const MdToken& token)
   return os;
 }
 
-std::ostream& MdDisassembler::MethodDef_Def(std::ostream& os, const MdToken& token) const
+std::ostream& MdDisassembler::MethodDef(std::ostream& os, const MdToken& token) const
 {
-  const MdRecord& recMethod = token.Record(_tables);
+  const MdRecord& recMethod = _mdpl->GetRecord(token);
 
   // Get Member signature
   const uint8* signature = _mdpl->GetBlob(recMethod.GetItem(4, _mdpl).Value);
@@ -740,7 +767,7 @@ std::ostream& MdDisassembler::MethodDef_Def(std::ostream& os, const MdToken& tok
   TypeDef(os, tkParent) << "::";
 
   // Name
-  String(os, recMethod.GetItem(3, _mdpl).Value);
+  String(os, recMethod.GetItem(3, _mdpl));
 
   // Parameters
   os << "(";
@@ -757,9 +784,9 @@ std::ostream& MdDisassembler::MethodDef_Def(std::ostream& os, const MdToken& tok
 std::ostream& MdDisassembler::MethodDef_Impl(std::ostream& os, const MdToken& tkMethod) const
 {
   const MdToken tkMethodNext = tkMethod + 1;
-  const MdToken tkMethodMax = tkMethod.Max(_tables);
+  const MdToken tkMethodMax = _mdpl->GetMaxToken(tkMethod.TabID());
 
-  const MdRecord& recMethod = tkMethod.Record(_tables);
+  const MdRecord& recMethod = _mdpl->GetRecord(tkMethod);
 
   os << "  .method ";
 
@@ -768,17 +795,18 @@ std::ostream& MdDisassembler::MethodDef_Impl(std::ostream& os, const MdToken& tk
   // Member access
   switch( flags & 0x0007 )
   {
-  case 0x01: os << "private "; break;
-  case 0x06: os << "public "; break;
   case 0x00: os << "???Visibility_0??? "; break;
+  case 0x01: os << "private "; break;
   case 0x02: os << "???Visibility_2??? "; break;
-  case 0x03: os << "???Visibility_3??? "; break;
+  case 0x03: os << "assembly "; break;
   case 0x04: os << "family "; break;
   case 0x05: os << "???Visibility_5??? "; break;
+  case 0x06: os << "public "; break;
   case 0x07: os << "???Visibility_7??? "; break;
   }
 
   if( flags & 0x0080 ) os << "hidebysig "; 
+  if( flags & 0x0800 ) os << "specialname "; 
   if( flags & 0x0010 ) os << "static "; 
   if( flags & 0x0020 ) os << "sealed "; 
   if( flags & 0x0040 ) os << "virtual "; 
@@ -791,10 +819,9 @@ std::ostream& MdDisassembler::MethodDef_Impl(std::ostream& os, const MdToken& tk
 
   if( flags & 0x0200 ) os << "strict "; 
   if( flags & 0x0400 ) os << "abstract "; 
-  if( flags & 0x0800 ) os << "specialname "; 
 
   // Interop attributes
-  if( flags & 0x2000 ) os << "pinvokeimpl "; 
+  if( flags & 0x2000 ) os << "pinvokeimpl ";
   if( flags & 0x0008 ) os << "unmanagedexport "; 
 
   // Additional flags
@@ -831,16 +858,16 @@ std::ostream& MdDisassembler::MethodDef_Impl(std::ostream& os, const MdToken& tk
   SignatureElementType(os, signature) << " ";
 
   // Name
-  String(os, recMethod.GetItem(3, _mdpl).Value);
+  String(os, recMethod.GetItem(3, _mdpl));
 
   // Parameters
   os << "(";
 
   MdToken tkParam(recMethod.GetItem(5, _mdpl));
-  MdToken tkParamMax = tkParam.Max(_tables);
+  MdToken tkParamMax = _mdpl->GetMaxToken(tkParam.TabID());
   if( tkMethodNext != tkMethodMax )
   {
-    MdRecord recNext = tkMethodNext.Record(_tables);
+    MdRecord recNext = _mdpl->GetRecord(tkMethodNext);
     tkParamMax = MdToken(recNext.GetItem(5, _mdpl));
   }
 
@@ -853,7 +880,7 @@ std::ostream& MdDisassembler::MethodDef_Impl(std::ostream& os, const MdToken& tk
 
     if(tkParam != tkParamMax)
     {
-      MdRecord recParam = tkParam.Record(_tables);
+      MdRecord recParam = _mdpl->GetRecord(tkParam);
 
       uint16 sequence = recParam.GetItem(1, _mdpl).Value;
       if( sequence == param )
@@ -865,11 +892,8 @@ std::ostream& MdDisassembler::MethodDef_Impl(std::ostream& os, const MdToken& tk
         if (flags & 0x1000) os << "???HasDefault??? ";
         if (flags & 0x2000) os << "???HasFieldMarshal??? ";
 
-        uint32 name = recParam.GetItem(2, _mdpl).Value;
-        if(name)
-        {
-          os << " "; String(os, name);
-        }
+        if(recParam.GetItem(2, _mdpl).Value) os << " "; String(os, recParam.GetItem(2, _mdpl));
+        
 
         ++tkParam;
       }
@@ -942,7 +966,7 @@ std::ostream& MdDisassembler::MethodDef_Impl(std::ostream& os, const MdToken& tk
   if(locals)
   {
     // Get Locals signature
-    const uint8* signature = _mdpl->GetBlob(MdToken(locals).Record(_tables).GetItem(0, _mdpl).Value);
+    const uint8* signature = _mdpl->GetBlob(_mdpl->GetRecord(MdToken(locals)).GetItem(0, _mdpl).Value);
     const uint8 sigsize = *signature++;
 
     // First item should be 0x07
@@ -1038,8 +1062,7 @@ std::ostream& MdDisassembler::MethodDef_Impl(std::ostream& os, const MdToken& tk
 
   os << "  } // end of method ";
   TypeDef( os, FindTypeDef(tkMethod)) << "::";
-  /*String(os, recTypeDef.GetItem(1, _mdpl).Value) << "::";*/ 
-  String(os, recMethod.GetItem(3, _mdpl).Value) << std::endl;
+  String(os, recMethod.GetItem(3, _mdpl)) << std::endl;
 
   return os;
 }
@@ -1148,9 +1171,10 @@ std::ostream& MdDisassembler::Token(std::ostream& os, const MdToken& token) cons
   {
   case tabidTypeRef:    return TypeRef(os, token);
   case tabidField:      return Field(os, token);
-  case tabidMethodDef:  return MethodDef_Def(os, token);
+  case tabidMethodDef:  return MethodDef(os, token);
   case tabidMemberRef:  return MemberRef(os, token);
   case tabidString:     return UserString(os, token.Index());
+
   default:
     break;
   }
