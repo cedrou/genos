@@ -38,7 +38,7 @@ namespace GenOS {
 class InterruptManager
 {
 public:
-  typedef void (__stdcall *InterruptHandler)(Registers reg, void* data);
+  typedef void (__stdcall *InterruptHandler)(const Registers& reg, void* data);
 
   enum Interrupts
   {
@@ -126,10 +126,12 @@ public:
   static void RegisterInterrupt(uint8 n, InterruptHandler handler, void* data);
 
 private:
-  static void EncryptIdtEntry(uint8 num, uint32 base, uint16 sel, uint8 flags);
+  static void EncodeIdtEntry(uint8 num, uint32 base, uint16 sel, uint8 flags);
 
   static void Isr(Registers regs);
+public:
   static void IsrCommon (); 
+  static void IsrEnd (); 
 };
 
 }

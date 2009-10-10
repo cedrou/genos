@@ -39,6 +39,7 @@
 #include "kheap.h"
 #include "pdbparser.h"
 #include "timer.h"
+#include "scheduler.h"
 
 using namespace GenOS;
 
@@ -72,16 +73,6 @@ struct MultibootInfo
 
 #pragma pack(pop)
 
-static void _stdcall TimerHandler(Registers, void*)
-{
-  uint32 ticks = Kernel::Timer()->Ticks();
-  if (ticks % 50 == 0)
-  {
-    Screen::cout << "Tick: "<< ticks << "\r";
-  }
-}
-
-
 Kernel* Kernel::_instance = NULL;
 static FrameManager global_framemgr;
 static PageManager global_pagemgr;
@@ -94,10 +85,13 @@ Kernel::Kernel(KernelBootInfo* bootinfo)
   _framemgr = &global_framemgr;
   _pagemgr = &global_pagemgr;
   _heap = &global_kheap;
+  _pdb = NULL;
+  _keyboard = NULL;
   _timer = NULL;
+  _scheduler = NULL;
 }
 
-void Kernel::Run()
+void Kernel::Run_step1()
 {
   Screen::Initialize();
 
@@ -149,13 +143,23 @@ void Kernel::Run()
   _pdb = new GenOS::PdbParser((uint8*)_bootinfo->pdbVirtualStart, _bootinfo->pdbSize);
   _pdb->ParseDebugInfo();
 
+  Screen::cout << "  - Initializing timer..." << Screen::endl; 
+  _timer = new GenOS::Timer(20);
+
+  Screen::cout << "  - Initializing scheduler..." << Screen::endl; 
+  _scheduler = new GenOS::Scheduler();
+  _scheduler->Initialize();
+}
+
+void Kernel::Run_step2_thread()
+{
+  _instance->Run_step2();
+}
+
+void Kernel::Run_step2()
+{
   Screen::cout << "  - Initializing keyboard..." << Screen::endl; 
   _keyboard = new GenOS::Keyboard(); 
-
-  Screen::cout << "  - Initializing timer..." << Screen::endl; 
-  _timer = new GenOS::Timer(50);
-  _timer->RegisterHandler(TimerHandler);
-  
 
   // PageManager tests
   //---------------------------------
@@ -194,8 +198,6 @@ void Kernel::Run()
   //---------------------------------
   //const PdbParser::PublicSymbolEntry* sym = PdbParser::Instance->GetSymbol(Registers::CurrentEIP());
   //Screen::cout << (const char*)&sym->Name << Screen::endl;
-
-  __asm sti;
 
   Screen::cout << "  - Entering idle loop..." << Screen::endl; 
   Idle();

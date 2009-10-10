@@ -40,6 +40,6 @@ Keyboard::Keyboard()
 
 }
 
-void Keyboard::KeyHandler(Registers /*reg*/, void*)
+void Keyboard::KeyHandler(const Registers& /*reg*/, void*)
 {
 }

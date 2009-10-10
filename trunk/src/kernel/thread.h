@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// kmain.cpp
-//  Entry point
+// thread.h
+//	
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -28,13 +28,40 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#include "kernel.h"
-#include "crt.h"
+#pragma once
 
-_declspec(noreturn) void kmain(GenOS::KernelBootInfo* kbi)
+#include "common.h"
+
+namespace GenOS
 {
-  GenOS::Crt::Start(kbi->crtVirtualStart, kbi->crtSize);
+  class Process;
 
-  GenOS::Kernel kernel(kbi);
-  kernel.Run_step1();
+  class Thread
+  {
+  private:
+    static uint32 _counter;
+  public:
+    uint32    _tid;  // Thread ID
+
+    Process*  _parent;  // Process ID
+    Thread*   _next;
+
+    uint32    _ticks;
+    uint32    _priority;
+
+    uint32    _esp; 
+    uint32    _stackbase;
+    uint32    _stacksize;
+
+  public:
+    Thread(Process* parent, void* entryPoint);
+    virtual ~Thread();
+
+    static Thread* Current();
+
+  private:
+    void InitStack(void* entryPoint);
+
+  };
+
 }

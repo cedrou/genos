@@ -33,7 +33,7 @@
 
 using namespace GenOS;
 
-void Registers::Print()
+void Registers::Print() const
 {
   Screen::cout << "DS  " << ds << "\t";
   Screen::cout << "EDI " << edi << "\t";

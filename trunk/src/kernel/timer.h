@@ -31,25 +31,25 @@
 #pragma once
 
 #include "common.h"
-#include "array.h"
+//#include "array.h"
 
 namespace GenOS 
 {
   class Timer
   {
   public:
-    typedef void (__stdcall *TimerHandler)(Registers regs, void* data);
+    typedef void (__stdcall *TimerHandler)(const Registers& regs, void* data);
 
   private:
     struct TimerHandlerInfo
     {
-      TimerHandler  handler;
+      TimerHandler  address;
       void*         data;
     };
 
   private:
-    uint32                    _tick;
-    Array<TimerHandlerInfo>  _handlers;
+    uint32            _tick;
+    TimerHandlerInfo  _handler;
 
   public:
 	  Timer(uint32 freq);
@@ -58,7 +58,7 @@ namespace GenOS
     uint32  Ticks() const;
 
   private:
-    static void __stdcall TickHandler(Registers reg, void* data);
+    static void __stdcall TickHandler(const Registers& reg, void* data);
   };
 
 }

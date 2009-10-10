@@ -41,7 +41,7 @@ struct Registers
 	uint32 int_no, err_code;												// Interrupt number and error code (if applicable)
 	uint32 eip, cs, eflags, useresp, ss;						// Pushed by the processor automatically.
 
-  void Print();
+  void Print() const;
   static void PrintRegs();
 
   static uint32 CurrentEIP();

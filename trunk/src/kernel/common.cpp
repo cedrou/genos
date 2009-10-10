@@ -40,11 +40,15 @@ intptr memcpy(intptr dst, const intptr src, size_t count)
   return dst;
 }
 
+#pragma optimize( "", off )
+
 void memset(intptr dst, uint8 value, size_t count)
 {
   uint8* d = (uint8*)dst;
   while(count--) { *d++ = value; }
 }
+
+#pragma optimize( "", on )
 
 void memset(intptr dst, uint16 value, size_t count)
 {

@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// kmain.cpp
-//  Entry point
+// scheduler.h
+//	
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -28,13 +28,32 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#include "kernel.h"
-#include "crt.h"
+#pragma once
 
-_declspec(noreturn) void kmain(GenOS::KernelBootInfo* kbi)
+#include "common.h"
+
+namespace GenOS
 {
-  GenOS::Crt::Start(kbi->crtVirtualStart, kbi->crtSize);
+  class Process;
+  class Thread;
 
-  GenOS::Kernel kernel(kbi);
-  kernel.Run_step1();
+  class Scheduler
+  {
+  private:
+    Process* _processes;
+
+    Thread* _currentThread;
+
+  public:
+    Scheduler();
+    _declspec(noreturn) void Initialize();
+
+  private:
+    static void _stdcall TimerHandler(const Registers& regs, void* data);
+    static void __stdcall TickHandler(const Registers& reg, void* data);
+
+    void SwitchThread(Registers regs);
+    Thread* NextThread();
+  };
+
 }

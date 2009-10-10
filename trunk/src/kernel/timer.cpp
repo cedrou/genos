@@ -62,20 +62,17 @@ Timer::Timer(uint32 freq)
 
 void Timer::RegisterHandler(TimerHandler handler, void* data)
 {
-  TimerHandlerInfo thi = { handler, data };
-  _handlers.Push(thi);
+  _handler.address = handler;
+  _handler.data = data;
 }
 
-void Timer::TickHandler(Registers regs, void* data)
+void Timer::TickHandler(const Registers& regs, void* data)
 {
   Timer* _this = ((Timer*)data);
   _this->_tick++;
 
-  const size_t size = _this->_handlers.Size();
-  for( size_t i=0; i<size; i++ )
-  {
-    _this->_handlers[i].handler(regs, _this->_handlers[i].data);
-  }
+  if(_this->_handler.address)
+    _this->_handler.address(regs, _this->_handler.data);
 }
 
 uint32 Timer::Ticks() const

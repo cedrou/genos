@@ -153,54 +153,54 @@ void InterruptManager::Initialize()
   // Fill in the IDT
   memset(&idt, (uint8)0, sizeof(InterruptDescriptor)*256);
 
-  EncryptIdtEntry( 0, (uint32)Int0 , 0x08, 0x8E);
-  EncryptIdtEntry( 1, (uint32)Int1 , 0x08, 0x8E);
-  EncryptIdtEntry( 2, (uint32)Int2 , 0x08, 0x8E);
-  EncryptIdtEntry( 3, (uint32)Int3 , 0x08, 0x8E);
-  EncryptIdtEntry( 4, (uint32)Int4 , 0x08, 0x8E);
-  EncryptIdtEntry( 5, (uint32)Int5 , 0x08, 0x8E);
-  EncryptIdtEntry( 6, (uint32)Int6 , 0x08, 0x8E);
-  EncryptIdtEntry( 7, (uint32)Int7 , 0x08, 0x8E);
-  EncryptIdtEntry( 8, (uint32)Int8 , 0x08, 0x8E);
-  EncryptIdtEntry( 9, (uint32)Int9 , 0x08, 0x8E);
-  EncryptIdtEntry(10, (uint32)Int10, 0x08, 0x8E);
-  EncryptIdtEntry(11, (uint32)Int11, 0x08, 0x8E);
-  EncryptIdtEntry(12, (uint32)Int12, 0x08, 0x8E);
-  EncryptIdtEntry(13, (uint32)Int13, 0x08, 0x8E);
-  EncryptIdtEntry(14, (uint32)Int14, 0x08, 0x8E);
-  EncryptIdtEntry(15, (uint32)Int15, 0x08, 0x8E);
-  EncryptIdtEntry(16, (uint32)Int16, 0x08, 0x8E);
-  EncryptIdtEntry(17, (uint32)Int17, 0x08, 0x8E);
-  EncryptIdtEntry(18, (uint32)Int18, 0x08, 0x8E);
-  EncryptIdtEntry(19, (uint32)Int19, 0x08, 0x8E);
-  EncryptIdtEntry(20, (uint32)Int20, 0x08, 0x8E);
-  EncryptIdtEntry(21, (uint32)Int21, 0x08, 0x8E);
-  EncryptIdtEntry(22, (uint32)Int22, 0x08, 0x8E);
-  EncryptIdtEntry(23, (uint32)Int23, 0x08, 0x8E);
-  EncryptIdtEntry(24, (uint32)Int24, 0x08, 0x8E);
-  EncryptIdtEntry(25, (uint32)Int25, 0x08, 0x8E);
-  EncryptIdtEntry(26, (uint32)Int26, 0x08, 0x8E);
-  EncryptIdtEntry(27, (uint32)Int27, 0x08, 0x8E);
-  EncryptIdtEntry(28, (uint32)Int28, 0x08, 0x8E);
-  EncryptIdtEntry(29, (uint32)Int29, 0x08, 0x8E);
-  EncryptIdtEntry(30, (uint32)Int30, 0x08, 0x8E);
-  EncryptIdtEntry(31, (uint32)Int31, 0x08, 0x8E); 
-  EncryptIdtEntry(32, (uint32)Int32, 0x08, 0x8E);
-  EncryptIdtEntry(33, (uint32)Int33, 0x08, 0x8E);
-  EncryptIdtEntry(34, (uint32)Int34, 0x08, 0x8E);
-  EncryptIdtEntry(35, (uint32)Int35, 0x08, 0x8E);
-  EncryptIdtEntry(36, (uint32)Int36, 0x08, 0x8E);
-  EncryptIdtEntry(37, (uint32)Int37, 0x08, 0x8E);
-  EncryptIdtEntry(38, (uint32)Int38, 0x08, 0x8E);
-  EncryptIdtEntry(39, (uint32)Int39, 0x08, 0x8E);
-  EncryptIdtEntry(40, (uint32)Int40, 0x08, 0x8E);
-  EncryptIdtEntry(41, (uint32)Int41, 0x08, 0x8E);
-  EncryptIdtEntry(42, (uint32)Int42, 0x08, 0x8E);
-  EncryptIdtEntry(43, (uint32)Int43, 0x08, 0x8E);
-  EncryptIdtEntry(44, (uint32)Int44, 0x08, 0x8E);
-  EncryptIdtEntry(45, (uint32)Int45, 0x08, 0x8E);
-  EncryptIdtEntry(46, (uint32)Int46, 0x08, 0x8E);
-  EncryptIdtEntry(47, (uint32)Int47, 0x08, 0x8E);
+  EncodeIdtEntry( 0, (uint32)Int0 , 0x08, 0x8E);
+  EncodeIdtEntry( 1, (uint32)Int1 , 0x08, 0x8E);
+  EncodeIdtEntry( 2, (uint32)Int2 , 0x08, 0x8E);
+  EncodeIdtEntry( 3, (uint32)Int3 , 0x08, 0x8E);
+  EncodeIdtEntry( 4, (uint32)Int4 , 0x08, 0x8E);
+  EncodeIdtEntry( 5, (uint32)Int5 , 0x08, 0x8E);
+  EncodeIdtEntry( 6, (uint32)Int6 , 0x08, 0x8E);
+  EncodeIdtEntry( 7, (uint32)Int7 , 0x08, 0x8E);
+  EncodeIdtEntry( 8, (uint32)Int8 , 0x08, 0x8E);
+  EncodeIdtEntry( 9, (uint32)Int9 , 0x08, 0x8E);
+  EncodeIdtEntry(10, (uint32)Int10, 0x08, 0x8E);
+  EncodeIdtEntry(11, (uint32)Int11, 0x08, 0x8E);
+  EncodeIdtEntry(12, (uint32)Int12, 0x08, 0x8E);
+  EncodeIdtEntry(13, (uint32)Int13, 0x08, 0x8E);
+  EncodeIdtEntry(14, (uint32)Int14, 0x08, 0x8E);
+  EncodeIdtEntry(15, (uint32)Int15, 0x08, 0x8E);
+  EncodeIdtEntry(16, (uint32)Int16, 0x08, 0x8E);
+  EncodeIdtEntry(17, (uint32)Int17, 0x08, 0x8E);
+  EncodeIdtEntry(18, (uint32)Int18, 0x08, 0x8E);
+  EncodeIdtEntry(19, (uint32)Int19, 0x08, 0x8E);
+  EncodeIdtEntry(20, (uint32)Int20, 0x08, 0x8E);
+  EncodeIdtEntry(21, (uint32)Int21, 0x08, 0x8E);
+  EncodeIdtEntry(22, (uint32)Int22, 0x08, 0x8E);
+  EncodeIdtEntry(23, (uint32)Int23, 0x08, 0x8E);
+  EncodeIdtEntry(24, (uint32)Int24, 0x08, 0x8E);
+  EncodeIdtEntry(25, (uint32)Int25, 0x08, 0x8E);
+  EncodeIdtEntry(26, (uint32)Int26, 0x08, 0x8E);
+  EncodeIdtEntry(27, (uint32)Int27, 0x08, 0x8E);
+  EncodeIdtEntry(28, (uint32)Int28, 0x08, 0x8E);
+  EncodeIdtEntry(29, (uint32)Int29, 0x08, 0x8E);
+  EncodeIdtEntry(30, (uint32)Int30, 0x08, 0x8E);
+  EncodeIdtEntry(31, (uint32)Int31, 0x08, 0x8E); 
+  EncodeIdtEntry(32, (uint32)Int32, 0x08, 0x8E);
+  EncodeIdtEntry(33, (uint32)Int33, 0x08, 0x8E);
+  EncodeIdtEntry(34, (uint32)Int34, 0x08, 0x8E);
+  EncodeIdtEntry(35, (uint32)Int35, 0x08, 0x8E);
+  EncodeIdtEntry(36, (uint32)Int36, 0x08, 0x8E);
+  EncodeIdtEntry(37, (uint32)Int37, 0x08, 0x8E);
+  EncodeIdtEntry(38, (uint32)Int38, 0x08, 0x8E);
+  EncodeIdtEntry(39, (uint32)Int39, 0x08, 0x8E);
+  EncodeIdtEntry(40, (uint32)Int40, 0x08, 0x8E);
+  EncodeIdtEntry(41, (uint32)Int41, 0x08, 0x8E);
+  EncodeIdtEntry(42, (uint32)Int42, 0x08, 0x8E);
+  EncodeIdtEntry(43, (uint32)Int43, 0x08, 0x8E);
+  EncodeIdtEntry(44, (uint32)Int44, 0x08, 0x8E);
+  EncodeIdtEntry(45, (uint32)Int45, 0x08, 0x8E);
+  EncodeIdtEntry(46, (uint32)Int46, 0x08, 0x8E);
+  EncodeIdtEntry(47, (uint32)Int47, 0x08, 0x8E);
 
   // Give the IDT to the CPU
   InterruptDescriptorTable idtptr; 
@@ -209,7 +209,7 @@ void InterruptManager::Initialize()
   __asm lidt idtptr        ; Load the IDT pointer.
 }
 
-void InterruptManager::EncryptIdtEntry(uint8 index, uint32 base, uint16 sel, uint8 flags)
+void InterruptManager::EncodeIdtEntry(uint8 index, uint32 base, uint16 sel, uint8 flags)
 {
   idt[index].base_lo = base & 0xFFFF;
   idt[index].base_hi = (base >> 16) & 0xFFFF;
@@ -233,6 +233,8 @@ void InterruptManager::Isr(Registers regs)
     IOPort::Out8(IOPort::PIC_Master_Command, 0x20);
   }
 
+  regs.Print();
+
   const InterruptHandlerInfo& ihi = _handlers[regs.int_no];
   if (ihi.handler != 0)
   {
@@ -241,7 +243,7 @@ void InterruptManager::Isr(Registers regs)
 
   if(regs.int_no < 19)
   {
-    const char* CpuExceptions[] = {
+    static const char* CpuExceptions[] = {
       "Division by zero exception",
       "Debug exception",
       "Non maskable interrupt",
@@ -270,8 +272,6 @@ void InterruptManager::Isr(Registers regs)
     Screen::cout << "**** Unhandled interrupt: 0x" << (uint8)regs.int_no << " ****" << Screen::endl;
   }
 
-  regs.Print();
-
   Kernel::Hang();
 }
 
@@ -291,9 +291,73 @@ void __declspec(naked) InterruptManager::IsrCommon ()
     mov es, ax
     mov fs, ax
     mov gs, ax
+  }
 
-    call Isr
+  //__asm call Isr;
 
+  static Registers* regs = NULL;
+  __asm mov regs, esp;
+
+  if (regs->int_no >= 32)
+  {
+    // Send an EOI (end of interrupt) signal to the PICs.
+    // If this interrupt involved the slave.
+    if (regs->int_no >= 40)
+    {
+      // Send reset signal to slave.
+      IOPort::Out8(IOPort::PIC_Slave_Command, 0x20);
+    }
+    // Send reset signal to master. (As well as slave, if necessary).
+    IOPort::Out8(IOPort::PIC_Master_Command, 0x20);
+  }
+
+  if (_handlers[regs->int_no].handler == 0)
+  {
+    regs->Print();
+
+    if(regs->int_no < 19)
+    {
+      static const char* CpuExceptions[] = {
+        "Division by zero exception",
+        "Debug exception",
+        "Non maskable interrupt",
+        "Breakpoint exception",
+        "Into detected overflow",
+        "Out of bounds exception",
+        "Invalid opcode exception",
+        "No coprocessor exception",
+        "Double fault",
+        "Coprocessor segment overrun",
+        "Bad TSS",
+        "Segment not present",
+        "Stack fault",
+        "General protection fault",
+        "Page fault",
+        "Unknown interrupt exception",
+        "Coprocessor fault",
+        "Alignment check exception",
+        "Machine check exception"
+      };
+
+      Screen::cout << "**** Unhandled exception: " << CpuExceptions[regs->int_no] << " ****" << Screen::endl;
+    }
+    else
+    {
+      Screen::cout << "**** Unhandled interrupt: 0x" << (uint8)regs->int_no << " ****" << Screen::endl;
+    }
+
+    Kernel::Hang();
+  }
+
+  _handlers[regs->int_no].handler(*regs, _handlers[regs->int_no].data);
+
+  __asm jmp IsrEnd;
+}
+
+void __declspec(naked) InterruptManager::IsrEnd () 
+{
+  __asm
+  {
     pop eax        ; reload the original data segment descriptor
     mov ds, ax
     mov es, ax

@@ -99,7 +99,7 @@ void PageManager::Initialize()
 }
 
 
-void PageManager::PageFaultHandler(Registers regs, void*)
+void PageManager::PageFaultHandler(const Registers& regs, void*)
 {
    // A page fault has occurred.
    // The faulting address is stored in the CR2 register.

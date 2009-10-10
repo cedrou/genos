@@ -40,7 +40,7 @@ namespace GenOS {
     static void Initialize();
 
   private:
-    static void EncryptGdtEntry(uint8 index, uint32 base, uint32 limit, uint8 access, uint8 granularity);
+    static void EncodeGdtEntry(uint8 index, uint32 base, uint32 limit, uint8 access, uint8 granularity);
 
   };
 }
