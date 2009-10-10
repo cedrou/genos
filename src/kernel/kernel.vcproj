@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="kernel"
 	ProjectGUID="{FBF19DC3-2F6C-4F50-953C-5CEC752B7A4B}"
 	RootNamespace="kernel"
@@ -46,7 +46,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
+				Optimization="3"
 				MinimalRebuild="false"
 				ExceptionHandling="0"
 				BasicRuntimeChecks="0"
@@ -253,11 +253,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\process.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\registers.cpp"
 				>
 			</File>
 			<File
+				RelativePath=".\scheduler.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\screen.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\thread.cpp"
 				>
 			</File>
 			<File
@@ -270,6 +282,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\array.h"
+				>
+			</File>
 			<File
 				RelativePath=".\bitmanip.h"
 				>
@@ -323,7 +339,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\process.h"
+				>
+			</File>
+			<File
 				RelativePath=".\registers.h"
+				>
+			</File>
+			<File
+				RelativePath=".\scheduler.h"
 				>
 			</File>
 			<File
@@ -332,6 +356,10 @@
 			</File>
 			<File
 				RelativePath=".\sortedarray.h"
+				>
+			</File>
+			<File
+				RelativePath=".\thread.h"
 				>
 			</File>
 			<File

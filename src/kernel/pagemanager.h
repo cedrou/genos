@@ -111,6 +111,6 @@ namespace GenOS
     bool Switch(PageDirectory* dir);
     /*static*/ void FlushTLBEntry(vaddr virtualAddress);
 
-    static void __stdcall PageFaultHandler(Registers reg, void* data);
+    static void __stdcall PageFaultHandler(const Registers& reg, void* data);
   };
 }

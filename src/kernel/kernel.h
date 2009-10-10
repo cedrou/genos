@@ -43,6 +43,7 @@ namespace GenOS {
   class PdbParser;
   class Keyboard;
   class Timer;
+  class Scheduler;
 
   struct KernelBootInfo
   {
@@ -94,10 +95,14 @@ namespace GenOS {
     PdbParser*    _pdb;
     Keyboard*     _keyboard;
     Timer*        _timer;
+    Scheduler*    _scheduler;
 
   public:
     Kernel(KernelBootInfo* bootinfo);
-    void Run();
+    void Run_step1();
+    void Run_step2();
+
+    static void Run_step2_thread();
 
     static void Panic(const char* message, const char* file, uint32 line, const char* function);
     static void Assert(const char* message, const char* file, uint32 line, const char* function);
@@ -108,9 +113,10 @@ namespace GenOS {
     static FrameManager* FrameManager() { return _instance->_framemgr; }
     static PageManager* PageManager() { return _instance->_pagemgr; }
     static Kheap* Kheap() { return _instance->_heap; }
-    static PdbParser* PdbParser() { return _instance->_pdb; }
-    static Keyboard* Keyboard() { return _instance->_keyboard; }
+    //static PdbParser* PdbParser() { return _instance->_pdb; }
+    //static Keyboard* Keyboard() { return _instance->_keyboard; }
     static Timer* Timer() { return _instance->_timer; }
+    //static Scheduler* Scheduler() { return _instance->_scheduler; }
 
   private:
     Kernel(const Kernel&);

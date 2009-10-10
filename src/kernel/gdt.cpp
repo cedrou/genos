@@ -61,11 +61,11 @@ static GlobalDescriptor gdt[5];
 void GDT::Initialize()
 {
   // Fill in the GDT
-  EncryptGdtEntry(0, 0, 0, 0, 0);                // Null segment
-  EncryptGdtEntry(1, 0, 0xFFFFFFFF, 0x9A, 0xCF); // Code segment
-  EncryptGdtEntry(2, 0, 0xFFFFFFFF, 0x92, 0xCF); // Data segment
-  EncryptGdtEntry(3, 0, 0xFFFFFFFF, 0xFA, 0xCF); // User mode code segment
-  EncryptGdtEntry(4, 0, 0xFFFFFFFF, 0xF2, 0xCF); // User mode data segment
+  EncodeGdtEntry(0, 0, 0, 0, 0);                // Null segment
+  EncodeGdtEntry(1, 0, 0xFFFFFFFF, 0x9A, 0xCF); // Code segment
+  EncodeGdtEntry(2, 0, 0xFFFFFFFF, 0x92, 0xCF); // Data segment
+  EncodeGdtEntry(3, 0, 0xFFFFFFFF, 0xFA, 0xCF); // User mode code segment
+  EncodeGdtEntry(4, 0, 0xFFFFFFFF, 0xF2, 0xCF); // User mode data segment
   
   // Give the GDT to the CPU
   GlobalDescriptorTable gdtptr; 
@@ -92,7 +92,7 @@ flush:
 }
 
 // Set the value of one GDT entry.
-void GDT::EncryptGdtEntry(uint8 index, uint32 base, uint32 limit, uint8 access, uint8 granularity)
+void GDT::EncodeGdtEntry(uint8 index, uint32 base, uint32 limit, uint8 access, uint8 granularity)
 {
    gdt[index].base_low    = (base & 0xFFFF);
    gdt[index].base_middle = (base >> 16) & 0xFF;

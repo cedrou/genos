@@ -166,13 +166,15 @@ void Kheap::Initialize(vaddr heapStart, size_t heapMaxSize)
 
 intptr Kheap::Allocate(size_t size, uint32 alignment)
 {
-  // Must be a power of two
+  // Must be null or a power of two
   ASSERT( !alignment || (alignment & (alignment-1))==0 );
 
   //Screen::cout << "initial size: " << size;
 
-  size += sizeof(EntryHead) + sizeof(EntryFoot);
-  //Screen::cout << " - allocated size: " << size;
+  // 
+  size_t actualSize = (((size + 3) / 4) * 4);
+  actualSize += sizeof(EntryHead) + sizeof(EntryFoot);
+  //Screen::cout << " - actual size: " << actualSize;
 
 
   // Find the first free zone that fits the request
@@ -185,38 +187,38 @@ intptr Kheap::Allocate(size_t size, uint32 alignment)
     {
       // TODO
     }
-    else if(head->Size >= size)
+    else if(head->Size >= actualSize)
     {
       //Screen::cout << " - index: " << index;
       _freeList->Remove(index);
 
       // Check that there is enough room after this entry to create another one.
-      // Else, increase the size.
-      if (head->Size - size < sizeof(EntryHead) + sizeof(EntryFoot))
+      // Else, increase the actualSize.
+      if (head->Size - actualSize < sizeof(EntryHead) + sizeof(EntryFoot))
       {
-        size = head->Size;
-        //Screen::cout << " - new size: " << size;
+        actualSize = head->Size;
+        //Screen::cout << " - new actualSize: " << actualSize;
       }
       else
       {
-        EntryHead* newFreeHead = (EntryHead*)((uint32)head + size);
+        EntryHead* newFreeHead = (EntryHead*)((uint32)head + actualSize);
         EntryFoot* newFreeFoot = (EntryFoot*)((uint32)head + head->Size - sizeof(EntryFoot));
 
         newFreeHead->Magic = KHEAP_HEAD_FREE;
-        newFreeHead->Size = head->Size - size;
+        newFreeHead->Size = head->Size - actualSize;
         newFreeFoot->Magic = KHEAP_FOOT_FREE;
-        newFreeFoot->Size = head->Size - size;
+        newFreeFoot->Size = head->Size - actualSize;
 
         _freeList->Insert(newFreeHead);
       }
 
       EntryHead* newBlockHead = head;
-      EntryFoot* newBlockFoot = (EntryFoot*)((uint32)head + size - sizeof(EntryFoot));
+      EntryFoot* newBlockFoot = (EntryFoot*)((uint32)head + actualSize - sizeof(EntryFoot));
 
       newBlockHead->Magic = KHEAP_HEAD_USED;
-      newBlockHead->Size = size;
+      newBlockHead->Size = actualSize;
       newBlockFoot->Magic = KHEAP_FOOT_USED;
-      newBlockFoot->Size = size;
+      newBlockFoot->Size = actualSize;
 
       //Screen::cout << Screen::endl;
 
@@ -224,10 +226,42 @@ intptr Kheap::Allocate(size_t size, uint32 alignment)
     }
   }
 
-  // Not enough room... Map new page
-  // TODO
+  // Not enough memory... Map new pages
+  //Screen::cout << " - not enough memory." << Screen::endl;
 
-  return NULL;
+  uint32 neededPages = (actualSize + 0x0FFF) / 0x1000;
+  //Screen::cout << "Adding 0x" << neededPages << " pages" << Screen::endl;
+
+  vaddr newStart = (vaddr)((uint32)_heapStart + _heapSize);
+  vaddr currentAddress = newStart;
+  for (uint32 i = 0; i< neededPages; i++ )
+  {
+    if( !Kernel::PageManager()->Map(0, currentAddress, PageManager::Page::Writable))
+    {
+      PANIC("Cannot map the page");
+    }
+    currentAddress = (vaddr)((uint32)currentAddress + 0x1000);
+  }
+  //Screen::cout << "  from 0x" << newStart << " to 0x" << currentAddress << Screen::endl;
+
+  _heapSize += neededPages * 0x1000;
+
+  // Create a new entry and free it to merge new space with the current one.
+  EntryHead* newSpaceHead = (EntryHead*)newStart;
+  newSpaceHead->Magic = KHEAP_HEAD_USED;
+  newSpaceHead->Size = neededPages * 0x1000;
+
+  //Screen::cout << " - Merging ";
+  Free((intptr)((uint32)newStart + sizeof(EntryHead)));
+
+  //Screen::cout << " - Allocating ";
+  return Allocate(size, alignment);
+
+  // TODO
+  //Screen::cout << "ERROR" << Screen::endl;
+  //Kernel::Hang();
+
+  //return NULL;
 }
 
 void Kheap::Free(intptr data)
@@ -267,7 +301,7 @@ void Kheap::Free(intptr data)
 
   // Merge next entry
   EntryHead* nextHead = (EntryHead*)((uint32)head + head->Size);
-  if(nextHead->Magic == KHEAP_HEAD_FREE)
+  if(((uint32)nextHead < (uint32)_heapStart + _heapSize) && (nextHead->Magic == KHEAP_HEAD_FREE))
   {
     EntryFoot* nextFoot = (EntryFoot*)((uint32)nextHead + nextHead->Size - sizeof(EntryFoot));
     ASSERT(nextFoot->Magic == KHEAP_FOOT_FREE);

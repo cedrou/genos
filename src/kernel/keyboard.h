@@ -40,6 +40,6 @@ namespace GenOS {
 	  Keyboard();
 
   private:
-    static void __stdcall KeyHandler(Registers reg, void* data);
+    static void __stdcall KeyHandler(const Registers& reg, void* data);
   };
 }
