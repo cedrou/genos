@@ -40,6 +40,7 @@
 #include "pdbparser.h"
 #include "timer.h"
 #include "scheduler.h"
+#include "serial.h"
 
 using namespace GenOS;
 
