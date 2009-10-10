@@ -40,11 +40,13 @@ namespace GenOS
   public:
     enum Ports {
 
-      // 0020-0021 - Master Programmable Interrupt (PIC) Controller
+      // Programmable Interrupt (PIC) Controller
 			PIC_Master_Command  = 0x0020,
 			PIC_Master_Data     = 0x0021,
+			PIC_Slave_Command   = 0x00A0,
+			PIC_Slave_Data      = 0x00A1,
 
-      // 0040-005F - Primary Programmable Interrupt Timer (PIT) Controller
+      // Primary Programmable Interrupt Timer (PIT) Controller
       PIT_0               = 0x0040,   // r/w, counter divisor
       PIT_1               = 0x0041,   // r/w, RAM refresh counter
       PIT_2               = 0x0042,   // r/w, cassette and speaker
@@ -52,11 +54,7 @@ namespace GenOS
       PIT_3               = 0x0044,   // r/w
       PIT_3_Control       = 0x0047,   // r/w
 
-      // 00A0-00A1 - Slave Programmable Interrupt (PIC) Controller
-			PIC_Slave_Command   = 0x00A0,
-			PIC_Slave_Data      = 0x00A1,
-
-      // 03D0-03DF - CGA (Color Graphics Adapter)
+      // CGA (Color Graphics Adapter)
       // Register list:
       //	0x00 horizontal total
 			//  0x01 horizontal displayed
@@ -76,8 +74,26 @@ namespace GenOS
 			//  0x0F cursor location low (readable)
 			//  0x10 light pen high
 			//  0x11 light pen low
-			CGA_selector        = 0x03D4,   // w, selects which register (0-11h) is to be accessed through 3B5
-			CGA_data            = 0x03D5,   // (r/)w, write data in register selected by 3B4
+			CGA_selector        = 0x03D4,   // w, selects which register (0-11h) is to be accessed through CGA_data
+			CGA_data            = 0x03D5,   // (r/)w, write data in register selected by CGA_selector
+
+      // Serial port
+      COM1 = 0x03F8,
+      COM2 = 0x02F8,
+      COM3 = 0x03E8,
+      COM4 = 0x02E8,
+      COM_RBR = 0, // r, receiver buffer register
+      COM_THB = 0, // w, transmitter holding buffer
+      COM_DLL = 0, // w, divisor latch LSB
+      COM_IER = 1, // r/w, Interrupt enable register
+      COM_DLM = 1, // w, divisor latch MSB
+      COM_IIR = 2, // r, Interrupt identification register
+      COM_FCR = 2, // w, FIFO control register
+      COM_LCR = 3, // r/w, line control register
+      COM_MCR = 4, // r/w, modem control register
+      COM_LSR = 5, // r, line status register
+      COM_MSR = 6, // r, modem status register
+      COM_SCR = 7, // r/w, scratch register
 
     } ;
 

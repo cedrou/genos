@@ -269,6 +269,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\serial.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\thread.cpp"
 				>
 			</File>
@@ -352,6 +356,10 @@
 			</File>
 			<File
 				RelativePath=".\screen.h"
+				>
+			</File>
+			<File
+				RelativePath=".\serial.h"
 				>
 			</File>
 			<File

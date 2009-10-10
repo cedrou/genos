@@ -30,6 +30,7 @@
 
 #include "screen.h"
 #include "ioports.h"
+#include "serial.h"
 
 using namespace GenOS;
 
@@ -49,6 +50,8 @@ void Screen::Initialize()
 // Writes a single character out to the screen.
 void Screen::WriteChar(char c)
 {
+  Serial::COM1.Write(c);
+
 	// Backspace, move the cursor back one space and put a space
 	if (c == 0x08 && cursor_x)
 	{
