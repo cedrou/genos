@@ -49,7 +49,7 @@ namespace GenOS
     _declspec(noreturn) void Initialize();
 
   private:
-    static void _stdcall TimerHandler(const Registers& regs, void* data);
+    static void __stdcall TimerHandler(const Registers& regs, void* data);
     static void __stdcall TickHandler(const Registers& reg, void* data);
 
     void SwitchThread(Registers regs);

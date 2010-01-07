@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// timer.cpp
-//	
+// DebuggerClient.h
+//	Client stub for remote debugger
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -28,54 +28,50 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#include "timer.h"
-#include "intmgr.h"
-#include "screen.h"
-#include "ioports.h"
+#pragma once
 
-using namespace GenOS;
+#include "registers.h"
 
-
-Timer::Timer(uint32 freq)
+namespace GenOS
 {
-  // The value we send to the PIT is the value to divide it's input clock
-  // (1193180 Hz) by, to get our required frequency. Important to note is
-  // that the divisor must be small enough to fit into 16-bits.
-  uint32 divisor = 1193180 / freq;
 
-  // Send the command byte.
-  IOPort::Out8(IOPort::PIT_Control, 0x36);
+  class SerialPort;
 
-  // Divisor has to be sent byte-wise, so split here into upper/lower bytes.
-  uint8 l = (uint8)(divisor & 0xFF);
-  uint8 h = (uint8)( (divisor>>8) & 0xFF );
+  class DebuggerProtocol
+  {
+  public:
+    virtual const char* ReadMessage(SerialPort* port) = 0;
 
-  // Send the frequency divisor.
-  IOPort::Out8(IOPort::PIT_0, l);
-  IOPort::Out8(IOPort::PIT_0, h);
+    virtual void InterpretMessage (const char* message, SerialPort* port, const Registers& regs) = 0;
+  };
 
-  _tick = 0;
+  class GDBProtocol : public DebuggerProtocol
+  {
+  private:
+    static char s_buffer[];
 
-  // Register the timer interrupt handler.
-  InterruptManager::RegisterInterrupt(InterruptManager::SystemTimer, &Timer::TickHandler, this);
-}
+  public:
+    virtual const char* ReadMessage(SerialPort* port);
+    virtual void SendMessage (const char* message, SerialPort* port);
 
-void Timer::RegisterHandler(InterruptManager::Handler handler, void* data)
-{
-  _handler.Address = handler;
-  _handler.Data = data;
-}
+    virtual void InterpretMessage (const char* message, SerialPort* port, const Registers& regs);
+  };
 
-void Timer::TickHandler(const Registers& regs, void* data)
-{
-  Timer* that = ((Timer*)data);
-  that->_tick++;
+  class DebuggerClient
+  {
+  private:
+    SerialPort* _port;
+    DebuggerProtocol* _protocol;
 
-  if(that->_handler.Address)
-    that->_handler.Address(regs, that->_handler.Data);
-}
+  public:
+    DebuggerClient();
+    ~DebuggerClient();
 
-uint32 Timer::Ticks() const
-{
-  return _tick;
+    void Initialize();
+
+  private:
+    static void __stdcall Serial_OnReceive(const Registers& regs, void* data);
+
+  };
+
 }

@@ -30,7 +30,9 @@
 
 #pragma once
 
+#include "fifo.h"
 #include "ioports.h"
+#include "intmgr.h"
 
 namespace GenOS 
 {
@@ -38,23 +40,37 @@ namespace GenOS
   class SerialPort
   {
   private:
-    IOPort::Ports _base;
+    static SerialPort s_COM1;
+    static SerialPort s_COM2;
+    static SerialPort s_COM3;
+    static SerialPort s_COM4;
+
+    static bool s_isCOM1Available;
+    static bool s_isCOM2Available;
+    static bool s_isCOM3Available;
+    static bool s_isCOM4Available;
+
+  private:
+    IOPort::Ports                 _base;
+    InterruptManager::HandlerInfo _handler;
+    Fifo<uint8, 1024>             _cache;
 
   public: 
-    SerialPort(uint32 port);
+    static SerialPort* Acquire(IOPort::Ports port);
+    static void Release(IOPort::Ports port);
+
+    void RegisterHandler(InterruptManager::Handler handler, void* data = NULL);
+    void UnregisterHandler();
 
     void Write (uint8 character) const;
-    uint8 Read () const;
-  };
+    uint8 Read ();
 
-  class Serial
-  {
-  public:
-    static const SerialPort COM1;
-    static const SerialPort COM2;
-    static const SerialPort COM3;
-    static const SerialPort COM4;
-  };
+    uint8 ReadByteNoWait () const;
 
+
+  private:
+    SerialPort(uint32 port);
+    static void __stdcall InterruptHandler(const Registers& regs, void* data);
+  };
 
 }

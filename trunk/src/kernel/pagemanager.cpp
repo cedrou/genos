@@ -174,15 +174,15 @@ bool PageManager::Switch(PageDirectory* dir)
   return true;
 }
 
-void PageManager::FlushTLBEntry(vaddr virtualAddress)
-{
-  _asm 
-  {
-    cli
-    invlpg virtualAddress
-    sti
-  }
-}
+//void PageManager::FlushTLBEntry(vaddr virtualAddress)
+//{
+//  _asm 
+//  {
+//    cli
+//    invlpg virtualAddress
+//    sti
+//  }
+//}
 
 bool PageManager::Map(paddr physicalAddress, vaddr virtualAddress, Page::Attributes flags)
 {
