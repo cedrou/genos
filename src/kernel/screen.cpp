@@ -35,10 +35,12 @@
 using namespace GenOS;
 
 Screen Screen::cout;
-const char* Screen::endl = "\n";
+const char* Screen::endl = "\r\n";
 
 void Screen::Initialize()
 {
+  cout.dumpPort = SerialPort::Acquire(IOPort::COM2);
+
   cout.cursor_x = 0;
   cout.cursor_y = 0;
   cout.video_memory = ((uint16*)0xB8000);
@@ -50,7 +52,7 @@ void Screen::Initialize()
 // Writes a single character out to the screen.
 void Screen::WriteChar(char c)
 {
-  Serial::COM1.Write(c);
+  dumpPort->Write(c);
 
 	// Backspace, move the cursor back one space and put a space
 	if (c == 0x08 && cursor_x)
@@ -236,6 +238,12 @@ Screen& Screen::operator <<(uint32 n)
 Screen& Screen::operator <<(intptr n)
 {
   WriteHex((uint32)n,32);
+  return *this;
+}
+
+Screen& Screen::operator <<(char c)
+{
+  WriteChar(c);
   return *this;
 }
 

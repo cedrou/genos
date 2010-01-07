@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// timer.cpp
-//	
+// fifo.h
+//	Definition of a templated circular fifo
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -28,54 +28,65 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#include "timer.h"
-#include "intmgr.h"
-#include "screen.h"
-#include "ioports.h"
+#pragma once
 
-using namespace GenOS;
-
-
-Timer::Timer(uint32 freq)
+namespace GenOS
 {
-  // The value we send to the PIT is the value to divide it's input clock
-  // (1193180 Hz) by, to get our required frequency. Important to note is
-  // that the divisor must be small enough to fit into 16-bits.
-  uint32 divisor = 1193180 / freq;
 
-  // Send the command byte.
-  IOPort::Out8(IOPort::PIT_Control, 0x36);
+  template <typename T, unsigned int Size>
+  class Fifo
+  {
+  private:
+    T       _buffer[Size];
+    T*      _in;
+    T*      _out;
+    size_t  _count;
 
-  // Divisor has to be sent byte-wise, so split here into upper/lower bytes.
-  uint8 l = (uint8)(divisor & 0xFF);
-  uint8 h = (uint8)( (divisor>>8) & 0xFF );
+  public:
+    Fifo()
+    {
+      Reset();
+    }
 
-  // Send the frequency divisor.
-  IOPort::Out8(IOPort::PIT_0, l);
-  IOPort::Out8(IOPort::PIT_0, h);
+    void Reset()
+    {
+      _in = _buffer + 1;
+      _out = _buffer;
+      _count = 0;
+    }
 
-  _tick = 0;
+    size_t Count() const
+    {
+      return _count;
+    }
 
-  // Register the timer interrupt handler.
-  InterruptManager::RegisterInterrupt(InterruptManager::SystemTimer, &Timer::TickHandler, this);
-}
+    bool Dequeue(T& value)
+    {
+      if (_count == 0)
+        return false;
 
-void Timer::RegisterHandler(InterruptManager::Handler handler, void* data)
-{
-  _handler.Address = handler;
-  _handler.Data = data;
-}
+      _out++;
+      _count--;
 
-void Timer::TickHandler(const Registers& regs, void* data)
-{
-  Timer* that = ((Timer*)data);
-  that->_tick++;
+      value = *_out;
 
-  if(that->_handler.Address)
-    that->_handler.Address(regs, that->_handler.Data);
-}
+      return true;
+    }
 
-uint32 Timer::Ticks() const
-{
-  return _tick;
+    bool Queue(const T& value)
+    {
+      if (_count == Size)
+        return false;
+
+      *_in = value;
+
+      _in++;
+      _count++;
+
+      return true;
+    }
+
+  };
+
+
 }

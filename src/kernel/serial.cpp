@@ -30,6 +30,9 @@
 
 #include "serial.h"
 
+#include "intmgr.h"
+#include "screen.h"
+
 using namespace GenOS;
 
 class IER { public: enum values
@@ -106,7 +109,7 @@ SerialPort::SerialPort(uint32 port)
   IOPort::Out8 ((uint16)(_base + IOPort::COM_LCR), (uint8)LCR::DLAB);           
 
 	// Set Baud rate
-	int baudRate = 115200;
+	int baudRate = 33800;
 	int divisor = 115200 / baudRate;
 	IOPort::Out8 ((uint16)(_base + IOPort::COM_DLL), (uint8)(divisor & 0xFF));
 	IOPort::Out8 ((uint16)(_base + IOPort::COM_DLM), (uint8)(divisor>>8 & 0xFF));
@@ -124,24 +127,132 @@ SerialPort::SerialPort(uint32 port)
   IOPort::Out8 ((uint16)(_base + IOPort::COM_IER), (uint8)IER::DR);
 }
 
+void SerialPort::RegisterHandler(InterruptManager::Handler handler, void* data)
+{
+  _handler.Address = handler;
+  _handler.Data = data;
+}
+
+void SerialPort::UnregisterHandler()
+{
+  _handler.Address = NULL;
+  _handler.Data = NULL;
+}
+
+void SerialPort::InterruptHandler(const Registers& regs, void* data)
+{
+  SerialPort* that = ((SerialPort*)data);
+
+  const uint8 readValue = that->ReadByteNoWait();
+  //Screen::cout << "[SERIAL] queue '" << (char)readValue << "' (0x" << readValue << ")" << Screen::endl;
+  that->_cache.Queue (readValue);
+
+  if (that->_handler.Address)
+    that->_handler.Address(regs, that->_handler.Data);
+}
+
+
 void SerialPort::Write (uint8 character) const
 {
   while ((IOPort::In8 ((uint16)(_base + IOPort::COM_LSR)) & (uint8)LSR::THRE) == 0)
 		;
 
-
   IOPort::Out8 ((uint16)(_base + IOPort::COM_THB), character);
+  //Screen::cout << "[SERIAL] write '" << (char)character << "' (0x" << character << ")" << Screen::endl;
 }
 
-uint8 SerialPort::Read () const
+uint8 SerialPort::Read ()
 {
+  uint8 value = 0;
+  if (_cache.Dequeue(value))
+  {
+    //Screen::cout << "[SERIAL] dequeue '" << (char)value << "' (0x" << value << ")" << Screen::endl;
+    return value;
+  }
+
 	while ((IOPort::In8 ((uint16)(_base + IOPort::COM_LSR)) & (uint8)LSR::DR) == 0)
 		;
 
-  return IOPort::In8 ((uint16)(_base + IOPort::COM_RBR));
+  value = IOPort::In8 ((uint16)(_base + IOPort::COM_RBR));
+  //Screen::cout << "[SERIAL] read '" << (char)value << "' (0x" << value << ")" << Screen::endl;
+  return value;
 }
 
-const SerialPort Serial::COM1(1);
-const SerialPort Serial::COM2(2);
-const SerialPort Serial::COM3(3);
-const SerialPort Serial::COM4(4);
+uint8 SerialPort::ReadByteNoWait () const
+{
+  uint8 value = IOPort::In8 ((uint16)(_base + IOPort::COM_RBR));
+  //Screen::cout << "[SERIAL] read nowait '" << (char)value << "' (0x" << value << ")" << Screen::endl;
+  return value;
+}
+
+SerialPort SerialPort::s_COM1(1);
+SerialPort SerialPort::s_COM2(2);
+SerialPort SerialPort::s_COM3(3);
+SerialPort SerialPort::s_COM4(4);
+
+bool SerialPort::s_isCOM1Available = true;
+bool SerialPort::s_isCOM2Available = true;
+bool SerialPort::s_isCOM3Available = false;
+bool SerialPort::s_isCOM4Available = false;
+
+SerialPort* SerialPort::Acquire(IOPort::Ports port)
+{
+  switch (port)
+  {
+  case IOPort::COM1:
+    if (!s_isCOM1Available)
+      return NULL;
+    s_isCOM1Available = false;
+    InterruptManager::RegisterInterrupt(InterruptManager::COM1Default, &SerialPort::InterruptHandler, &s_COM1);
+    return &s_COM1;
+
+  case IOPort::COM2:
+    if (!s_isCOM2Available)
+      return NULL;
+    s_isCOM2Available = false;
+    InterruptManager::RegisterInterrupt(InterruptManager::COM2Default, &SerialPort::InterruptHandler, &s_COM2);
+    return &s_COM2;
+
+  case IOPort::COM3:
+    if (!s_isCOM3Available)
+      return NULL;
+    s_isCOM3Available = false;
+    //InterruptManager::RegisterInterrupt(InterruptManager::COM3User, &SerialPort::InterruptHandler, &s_COM3);
+    return &s_COM3;
+
+  case IOPort::COM4:
+    if (!s_isCOM4Available)
+      return NULL;
+    s_isCOM4Available = false;
+    //InterruptManager::RegisterInterrupt(InterruptManager::COM4User, &SerialPort::InterruptHandler, &s_COM4);
+    return &s_COM4;
+  }
+
+  return NULL;
+}
+
+void SerialPort::Release(IOPort::Ports port)
+{
+  switch (port)
+  {
+  case IOPort::COM1:
+    s_isCOM1Available = true;
+    InterruptManager::UnregisterInterrupt(InterruptManager::COM1Default);
+    break;
+
+  case IOPort::COM2:
+    s_isCOM2Available = true;
+    InterruptManager::UnregisterInterrupt(InterruptManager::COM2Default);
+    break;
+
+  case IOPort::COM3:
+    s_isCOM3Available = true;
+    InterruptManager::UnregisterInterrupt(InterruptManager::COM3User);
+    break;
+
+  case IOPort::COM4:
+    s_isCOM4Available = true;
+    InterruptManager::UnregisterInterrupt(InterruptManager::COM4User);
+    break;
+  }
+}

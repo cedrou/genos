@@ -59,8 +59,11 @@ void Crt::Start(uint32 crtStart, uint32 crtSize)
   finalizers_max = crtSize / sizeof(initmethod);
   finalizers_count = 0;
 
+  uint8 i = 0; 
   for( initmethod* current = __xc_a; current < __xc_z; current++ )
   {
+    ((uint16*)0xB8000)[0] = (0x0F << 8) | ('A' + i++);
+
     if ( *current )
       (**current)();
   }

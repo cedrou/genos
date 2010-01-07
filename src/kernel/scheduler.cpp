@@ -169,10 +169,10 @@ _declspec(noreturn) void Scheduler::Initialize()
   _processes = kernelProcess;
   _currentThread = 0;
 
-  //Kernel::Timer()->RegisterHandler(TimerHandler, this);
+  Kernel::Timer()->RegisterHandler(&Scheduler::TickHandler, this);
 
   // Register the timer interrupt handler.
-  InterruptManager::RegisterInterrupt(InterruptManager::SystemTimer, &Scheduler::TickHandler, this);
+  //InterruptManager::RegisterInterrupt(InterruptManager::SystemTimer, &Scheduler::TickHandler, this);
 
   //Screen::cout << "Scheduler enabled";
 

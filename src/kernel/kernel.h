@@ -37,6 +37,7 @@
 
 namespace GenOS {
 
+  class DebuggerClient;
   class FrameManager;
   class PageManager;
   class Kheap;
@@ -44,6 +45,7 @@ namespace GenOS {
   class Keyboard;
   class Timer;
   class Scheduler;
+  class SerialPort;
 
   struct KernelBootInfo
   {
@@ -89,13 +91,14 @@ namespace GenOS {
     const KernelBootInfo* _bootinfo;
     static Kernel* _instance;
 
-    FrameManager* _framemgr;
-    PageManager*  _pagemgr;
-    Kheap*        _heap;
-    PdbParser*    _pdb;
-    Keyboard*     _keyboard;
-    Timer*        _timer;
-    Scheduler*    _scheduler;
+    DebuggerClient* _debugger;
+    FrameManager*   _framemgr;
+    PageManager*    _pagemgr;
+    Kheap*          _heap;
+    PdbParser*      _pdb;
+    Keyboard*       _keyboard;
+    Timer*          _timer;
+    Scheduler*      _scheduler;
 
   public:
     Kernel(KernelBootInfo* bootinfo);
@@ -104,10 +107,10 @@ namespace GenOS {
 
     static void Run_step2_thread();
 
-    static void Panic(const char* message, const char* file, uint32 line, const char* function);
-    static void Assert(const char* message, const char* file, uint32 line, const char* function);
-    static void Hang();
-    static void Idle();
+    static _declspec(noreturn) void Panic(const char* message, const char* file, uint32 line, const char* function);
+    static _declspec(noreturn) void Assert(const char* message, const char* file, uint32 line, const char* function);
+    static _declspec(noreturn) void Hang();
+    static _declspec(noreturn) void Idle();
 
   public:
     static FrameManager* FrameManager() { return _instance->_framemgr; }

@@ -127,13 +127,26 @@ struct InterruptDescriptorTable
 
 static InterruptDescriptor idt[256];
 
-InterruptManager::InterruptHandlerInfo InterruptManager::_handlers[256];
+InterruptManager::HandlerInfo InterruptManager::_handlers[256] = {0};
 
-void InterruptManager::RegisterInterrupt(uint8 interrupt, InterruptHandler handler, void* data)
+void InterruptManager::RegisterInterrupt(uint8 interrupt, Handler handler, void* data)
 {
-  _handlers[interrupt].handler = handler;
-  _handlers[interrupt].data = data;
+  if ( (_handlers[interrupt].Address != NULL) && (_handlers[interrupt].Address != (void*)-1) )
+  {
+    Screen::cout << "WARNING - overwrite interrupt #" << interrupt << " handler !" << Screen::endl;
+    Screen::cout << "    Previous Address/Data = " << _handlers[interrupt].Address << " / " << _handlers[interrupt].Data << Screen::endl;
+    Screen::cout << "         New Address/Data = " << handler << " / " << data << Screen::endl;
+  }
+  _handlers[interrupt].Address = handler;
+  _handlers[interrupt].Data = data;
 }
+
+void InterruptManager::UnregisterInterrupt(uint8 interrupt)
+{
+  _handlers[interrupt].Address = NULL;
+  _handlers[interrupt].Data = NULL;
+}
+
 
 void InterruptManager::Initialize()
 {
@@ -235,10 +248,10 @@ void InterruptManager::Isr(Registers regs)
 
   regs.Print();
 
-  const InterruptHandlerInfo& ihi = _handlers[regs.int_no];
-  if (ihi.handler != 0)
+  const HandlerInfo& ihi = _handlers[regs.int_no];
+  if (ihi.Address != 0)
   {
-    return ihi.handler(regs, ihi.data);
+    return ihi.Address(regs, ihi.Data);
   }
 
   if(regs.int_no < 19)
@@ -311,7 +324,7 @@ void __declspec(naked) InterruptManager::IsrCommon ()
     IOPort::Out8(IOPort::PIC_Master_Command, 0x20);
   }
 
-  if (_handlers[regs->int_no].handler == 0)
+  if (_handlers[regs->int_no].Address == 0)
   {
     regs->Print();
 
@@ -349,7 +362,7 @@ void __declspec(naked) InterruptManager::IsrCommon ()
     Kernel::Hang();
   }
 
-  _handlers[regs->int_no].handler(*regs, _handlers[regs->int_no].data);
+  _handlers[regs->int_no].Address(*regs, _handlers[regs->int_no].Data);
 
   __asm jmp IsrEnd;
 }

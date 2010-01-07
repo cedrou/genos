@@ -29,18 +29,19 @@
 //------------------------------------------------------------------------------
 
 #include "kernel.h"
-#include "screen.h"
+
+#include "DebuggerClient.h"
+#include "framemanager.h"
 #include "gdt.h"
 #include "intmgr.h"
-#include "timer.h"
-#include "framemanager.h"
-#include "pagemanager.h"
 #include "keyboard.h"
 #include "kheap.h"
+#include "pagemanager.h"
 #include "pdbparser.h"
-#include "timer.h"
 #include "scheduler.h"
+#include "screen.h"
 #include "serial.h"
+#include "timer.h"
 
 using namespace GenOS;
 
@@ -78,11 +79,13 @@ Kernel* Kernel::_instance = NULL;
 static FrameManager global_framemgr;
 static PageManager global_pagemgr;
 static Kheap global_kheap;
+static DebuggerClient global_debugger;
 
 Kernel::Kernel(KernelBootInfo* bootinfo)
 : _bootinfo(bootinfo)
 {
   _instance = this;
+  _debugger = &global_debugger;
   _framemgr = &global_framemgr;
   _pagemgr = &global_pagemgr;
   _heap = &global_kheap;
@@ -97,6 +100,10 @@ void Kernel::Run_step1()
   Screen::Initialize();
 
   Screen::cout << "Starting GenOS" << Screen::endl; 
+
+  Screen::cout << "  - Initializing debugger..." << Screen::endl;
+  _debugger->Initialize();
+
 
 #if 0
   Screen::cout << "kernelSize: 0x" <<                  _bootinfo->kernelSize << Screen::endl;
@@ -205,7 +212,7 @@ void Kernel::Run_step2()
 }
 
 
-void Kernel::Panic(const char* message, const char* file, uint32 line, const char* function)
+_declspec(noreturn) void Kernel::Panic(const char* message, const char* file, uint32 line, const char* function)
 {
   __asm cli;
 
@@ -216,7 +223,7 @@ void Kernel::Panic(const char* message, const char* file, uint32 line, const cha
   Hang();
 }
 
-void Kernel::Assert(const char* message, const char* file, uint32 line, const char* function)
+_declspec(noreturn) void Kernel::Assert(const char* message, const char* file, uint32 line, const char* function)
 {
   __asm cli;
 
@@ -228,14 +235,14 @@ void Kernel::Assert(const char* message, const char* file, uint32 line, const ch
   Hang();
 }
 
-void __declspec(naked) Kernel::Idle()
+_declspec(naked) _declspec(noreturn) void Kernel::Idle()
 {
   __asm hlt
 	__asm jmp Idle
 }
 
 
-void __declspec(naked) Kernel::Hang()
+_declspec(naked) _declspec(noreturn) void Kernel::Hang()
 {
 	__asm cli
   __asm hlt

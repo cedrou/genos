@@ -57,7 +57,6 @@ static void __cdecl _delete(intptr p)
 static intptr __cdecl panic_new(uint32)
 {
   PANIC("Cannot use operator_new because KHeap is not initialized");
-  return NULL;
 }
 
 static void __cdecl panic_delete(intptr)

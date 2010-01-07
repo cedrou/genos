@@ -34,16 +34,21 @@
 
 namespace GenOS {
 
+  class SerialPort;
+
   class Screen
   {
   public:
     static Screen cout;
     static const char* endl;
+
   private:
 	  uint16  cursor_x;
 	  uint16  cursor_y;
 	  uint16* video_memory;
     uint16  video_length;
+    
+    SerialPort* dumpPort;
 
   public:
     static void Initialize();
@@ -57,6 +62,7 @@ namespace GenOS {
     Screen& operator <<(uint16 n);
     Screen& operator <<(uint32 n);
     Screen& operator <<(intptr n);
+    Screen& operator <<(char c);
     Screen& operator <<(const char* s);
 
   private:

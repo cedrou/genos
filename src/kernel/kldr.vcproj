@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="kldr"
 	ProjectGUID="{2ACA7262-EFF5-4399-8D5C-51CAE38F44FF}"
 	RootNamespace="kernel"
@@ -14,9 +14,6 @@
 		/>
 	</Platforms>
 	<ToolFiles>
-		<ToolFile
-			RelativePath="..\..\nasmrule.rules"
-		/>
 	</ToolFiles>
 	<Configurations>
 		<Configuration
@@ -31,9 +28,6 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="Nasm build"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -126,9 +120,6 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="Nasm build"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"

@@ -80,7 +80,6 @@ int memcmp(const intptr a, const intptr b, size_t size)
 int __cdecl ::_purecall() 
 { 
   PANIC("Pure function call");
-  return 0;
 }
 
 extern "C" int _fltused = 1;

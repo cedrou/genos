@@ -109,7 +109,7 @@ namespace GenOS
 
   private:
     bool Switch(PageDirectory* dir);
-    /*static*/ void FlushTLBEntry(vaddr virtualAddress);
+    ///*static*/ void FlushTLBEntry(vaddr virtualAddress);
 
     static void __stdcall PageFaultHandler(const Registers& reg, void* data);
   };
