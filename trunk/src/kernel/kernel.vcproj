@@ -220,10 +220,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ioports.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\kernel.cpp"
 				>
 			</File>
@@ -322,10 +318,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ioports.h"
-				>
-			</File>
-			<File
 				RelativePath=".\kernel.h"
 				>
 			</File>
@@ -395,6 +387,22 @@
 			</File>
 			<File
 				RelativePath=".\Hal\DisplayCGA.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Hal\ioports.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Hal\ioports.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Hal\PIC.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Hal\PIC.h"
 				>
 			</File>
 		</Filter>

@@ -29,7 +29,7 @@
 //------------------------------------------------------------------------------
 
 #include "DisplayCGA.h"
-#include "../ioports.h"
+#include "ioports.h"
 
 using namespace GenOS::HAL;
 

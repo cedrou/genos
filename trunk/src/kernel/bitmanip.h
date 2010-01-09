@@ -43,12 +43,14 @@ namespace GenOS {
     static const uint8 BitsSetTable256[]; 
 
   public:
-    inline static void SetBit(uint32& value, uint32 bit)
+    template <typename T>
+    inline static void SetBit(T& value, uint32 bit)
     {
       value |= (1 << bit);
     }
 
-    inline static void ClearBit(uint32& value, uint32 bit)
+    template <typename T>
+    inline static void ClearBit(T& value, uint32 bit)
     {
       value &= ~(1 << bit);
     }

@@ -34,6 +34,7 @@
 #include "screen.h"
 
 using namespace GenOS;
+using namespace GenOS::HAL;
 
 class IER { public: enum values
 {
