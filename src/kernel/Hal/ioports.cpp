@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// serial.h
-//	serial port management
+// ioports.cpp
+//	IO hardware ports
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -28,49 +28,62 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#pragma once
+#include "ioports.h"
 
-#include "fifo.h"
-#include "hal/ioports.h"
-#include "intmgr.h"
+using namespace GenOS::HAL;
 
-namespace GenOS 
+void IOPort::Out8(uint16 port, uint8 value)
 {
-
-  class SerialPort
-  {
-  private:
-    static SerialPort s_COM1;
-    static SerialPort s_COM2;
-    static SerialPort s_COM3;
-    static SerialPort s_COM4;
-
-    static bool s_isCOM1Available;
-    static bool s_isCOM2Available;
-    static bool s_isCOM3Available;
-    static bool s_isCOM4Available;
-
-  private:
-    HAL::IOPort::Ports                 _base;
-    InterruptManager::HandlerInfo _handler;
-    Fifo<uint8, 1024>             _cache;
-
-  public: 
-    static SerialPort* Acquire(HAL::IOPort::Ports port);
-    static void Release(HAL::IOPort::Ports port);
-
-    void RegisterHandler(InterruptManager::Handler handler, void* data = NULL);
-    void UnregisterHandler();
-
-    void Write (uint8 character) const;
-    uint8 Read ();
-
-    uint8 ReadByteNoWait () const;
-
-
-  private:
-    SerialPort(uint32 port);
-    static void __stdcall InterruptHandler(const Registers& regs, void* data);
-  };
-
+	__asm
+	{
+		mov al, value
+		mov dx, port
+		out dx, al
+	}
 }
+void IOPort::Out16(uint16 port, uint16 value)
+{
+	__asm
+	{
+		mov ax, value
+		mov dx, port
+		out dx, ax
+	}
+}
+void IOPort::Out32(uint16 port, uint32 value)
+{
+	__asm
+	{
+		mov eax, value
+		mov dx, port
+		out dx, eax
+	}
+}
+
+uint8 IOPort::In8(uint16 port)
+{
+	__asm
+	{
+		mov dx, port
+		in al, dx
+	}
+}
+
+uint16 IOPort::In16(uint16 port)
+{
+	__asm
+	{
+		mov dx, port
+		in ax, dx
+	}
+}
+
+uint32 IOPort::In32(uint16 port)
+{
+	__asm
+	{
+		mov dx, port
+		in eax, dx
+	}
+}
+

@@ -29,9 +29,9 @@
 //------------------------------------------------------------------------------
 
 #include "screen.h"
-#include "ioports.h"
+
+#include "hal/DisplayCGA.h"
 #include "serial.h"
-#include "hal/display.h"
 
 using namespace GenOS;
 
@@ -40,7 +40,7 @@ const char* Screen::endl = "\r\n";
 
 void Screen::Initialize()
 {
-  cout.dumpPort = SerialPort::Acquire(IOPort::COM2);
+  cout.dumpPort = SerialPort::Acquire(HAL::IOPort::COM2);
 
   cout.cursor_x = 0;
   cout.cursor_y = 0;

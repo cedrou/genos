@@ -31,9 +31,10 @@
 #include "intmgr.h"
 #include "screen.h"
 #include "kernel.h"
-#include "ioports.h"
+#include "hal/pic.h"
 
 using namespace GenOS;
+using namespace GenOS::HAL;
 
 
 #define ISR_NOERRCODE(i) \
@@ -151,17 +152,7 @@ void InterruptManager::UnregisterInterrupt(uint8 interrupt)
 void InterruptManager::Initialize()
 {
   // Remap the irq table.
-  IOPort::Out8(IOPort::PIC_Master_Command, 0x11);
-  IOPort::Out8(IOPort::PIC_Slave_Command, 0x11);
-
-  IOPort::Out8(IOPort::PIC_Master_Data, 0x20);
-  IOPort::Out8(IOPort::PIC_Slave_Data, 0x28);
-  IOPort::Out8(IOPort::PIC_Master_Data, 0x04);
-  IOPort::Out8(IOPort::PIC_Slave_Data, 0x02);
-  IOPort::Out8(IOPort::PIC_Master_Data, 0x01);
-  IOPort::Out8(IOPort::PIC_Slave_Data, 0x01);
-  IOPort::Out8(IOPort::PIC_Master_Data, 0x0);
-  IOPort::Out8(IOPort::PIC_Slave_Data, 0x0);
+  HAL::PIC::Remap (0x20, 0x28);
 
   // Fill in the IDT
   memset(&idt, (uint8)0, sizeof(InterruptDescriptor)*256);
@@ -233,19 +224,6 @@ void InterruptManager::EncodeIdtEntry(uint8 index, uint32 base, uint16 sel, uint
 
 void InterruptManager::Isr(Registers regs)
 {
-  if (regs.int_no >= 32)
-  {
-    // Send an EOI (end of interrupt) signal to the PICs.
-    // If this interrupt involved the slave.
-    if (regs.int_no >= 40)
-    {
-      // Send reset signal to slave.
-      IOPort::Out8(IOPort::PIC_Slave_Command, 0x20);
-    }
-    // Send reset signal to master. (As well as slave, if necessary).
-    IOPort::Out8(IOPort::PIC_Master_Command, 0x20);
-  }
-
   regs.Print();
 
   const HandlerInfo& ihi = _handlers[regs.int_no];
@@ -311,19 +289,6 @@ void __declspec(naked) InterruptManager::IsrCommon ()
   static Registers* regs = NULL;
   __asm mov regs, esp;
 
-  if (regs->int_no >= 32)
-  {
-    // Send an EOI (end of interrupt) signal to the PICs.
-    // If this interrupt involved the slave.
-    if (regs->int_no >= 40)
-    {
-      // Send reset signal to slave.
-      IOPort::Out8(IOPort::PIC_Slave_Command, 0x20);
-    }
-    // Send reset signal to master. (As well as slave, if necessary).
-    IOPort::Out8(IOPort::PIC_Master_Command, 0x20);
-  }
-
   if (_handlers[regs->int_no].Address == 0)
   {
     regs->Print();
@@ -363,6 +328,12 @@ void __declspec(naked) InterruptManager::IsrCommon ()
   }
 
   _handlers[regs->int_no].Address(*regs, _handlers[regs->int_no].Data);
+
+  if (regs->int_no >= 32)
+  {
+    // Send an EOI (end of interrupt) signal to the PICs.
+    HAL::PIC::EndOfInterrupt((uint8)(regs->int_no - 32));
+  }
 
   __asm jmp IsrEnd;
 }

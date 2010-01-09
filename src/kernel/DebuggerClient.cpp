@@ -48,7 +48,7 @@ DebuggerClient::~DebuggerClient(void)
 
 void DebuggerClient::Initialize()
 {
-  _port = SerialPort::Acquire(IOPort::COM1);
+  _port = SerialPort::Acquire(HAL::IOPort::COM1);
   _protocol = &s_protocol; //new GDBProtocol();
   //const char* message = _protocol->ReadMessage(_port);
   //if (message == NULL)

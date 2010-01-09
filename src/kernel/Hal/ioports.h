@@ -30,10 +30,10 @@
 
 #pragma once
 
-#include "common.h"
+#include "../common.h"
 
-namespace GenOS 
-{
+namespace GenOS {
+  namespace HAL {
 
   class IOPort
   {
@@ -109,4 +109,5 @@ namespace GenOS
     static uint32 In32(uint16 port);
   };
 
+}
 }

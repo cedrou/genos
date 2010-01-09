@@ -31,10 +31,10 @@
 #include "timer.h"
 #include "intmgr.h"
 #include "screen.h"
-#include "ioports.h"
+#include "hal/ioports.h"
 
 using namespace GenOS;
-
+using namespace GenOS::HAL;
 
 Timer::Timer(uint32 freq)
 {

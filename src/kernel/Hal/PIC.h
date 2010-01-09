@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// ioports.cpp
-//	IO hardware ports
+// PIC.h
+//	HAL - Programmable Interrupt Controller
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -28,62 +28,33 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#include "ioports.h"
+#pragma once
 
-using namespace GenOS;
+#include "../common.h"
 
-void IOPort::Out8(uint16 port, uint8 value)
-{
-	__asm
-	{
-		mov al, value
-		mov dx, port
-		out dx, al
-	}
-}
-void IOPort::Out16(uint16 port, uint16 value)
-{
-	__asm
-	{
-		mov ax, value
-		mov dx, port
-		out dx, ax
-	}
-}
-void IOPort::Out32(uint16 port, uint32 value)
-{
-	__asm
-	{
-		mov eax, value
-		mov dx, port
-		out dx, eax
-	}
-}
+namespace GenOS {
+  namespace HAL {
 
-uint8 IOPort::In8(uint16 port)
+class PIC
 {
-	__asm
-	{
-		mov dx, port
-		in al, dx
-	}
-}
+public:
+  PIC();
 
-uint16 IOPort::In16(uint16 port)
-{
-	__asm
-	{
-		mov dx, port
-		in ax, dx
-	}
-}
+  static void Remap (uint8 offset1, uint8 offset2);
+  static void EnableInterrupt (uint8 interrupt);
+  static void DisableInterrupt (uint8 interrupt);
 
-uint32 IOPort::In32(uint16 port)
-{
-	__asm
-	{
-		mov dx, port
-		in eax, dx
-	}
-}
+  static void EndOfInterrupt (uint8 interrupt);
 
+private:
+  static uint8 GetController (uint8 intnum);
+
+  static void  SendCommand (uint8 controller, uint8 command);
+  static void  SendData (uint8 controller, uint8 command);
+
+  static uint8 GetMask (uint8 controller);
+  static void  SetMask (uint8 controller, uint8 mask);
+};
+
+  }
+}
