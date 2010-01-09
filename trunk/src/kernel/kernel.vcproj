@@ -386,6 +386,18 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="HAL"
+			>
+			<File
+				RelativePath=".\Hal\DisplayCGA.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Hal\DisplayCGA.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath="..\..\bin\kernel.map"
 			>

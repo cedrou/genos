@@ -31,6 +31,7 @@
 #include "screen.h"
 #include "ioports.h"
 #include "serial.h"
+#include "hal/display.h"
 
 using namespace GenOS;
 
@@ -43,10 +44,11 @@ void Screen::Initialize()
 
   cout.cursor_x = 0;
   cout.cursor_y = 0;
-  cout.video_memory = ((uint16*)0xB8000);
-  cout.video_length = 0x4000;
 
-  cout.Clear();
+  //cout.Clear();
+  HAL::DisplayCGA::Clear (0);
+  HAL::DisplayCGA::SetCursor (0, 0);
+
 }
 
 // Writes a single character out to the screen.
@@ -67,7 +69,7 @@ void Screen::WriteChar(char c)
 			cursor_y--;
 		}
 
-		*(char*)(&video_memory[cursor_y*80 + cursor_x]) = ' ';
+    HAL::DisplayCGA::PutChar(' ', cursor_x, cursor_y);
 	}
 
 	// Handle a tab by increasing the cursor's X, but only to a point
@@ -86,7 +88,6 @@ void Screen::WriteChar(char c)
 	// Handle newline by moving cursor back to left and increasing the row
 	else if (c == '\n')
 	{
-		cursor_x = 0;
 		cursor_y++;
 	}
 	
@@ -97,15 +98,9 @@ void Screen::WriteChar(char c)
     uint8 backColour = 0;
     uint8 foreColour = 15;
 
-    // The attribute byte is made up of two nibbles - the lower being the
-    // foreground colour, and the upper the background colour.
-    uint8  attributeByte = (backColour << 4) | (foreColour & 0x0F);
-    // The attribute byte is the top 8 bits of the word we have to send to the
-    // VGA board.
-    uint16 attribute = attributeByte << 8;
-
-	  video_memory[cursor_y*80 + cursor_x] = c | attribute;
-		cursor_x++;
+    HAL::DisplayCGA::PutChar(c, cursor_x, cursor_y, backColour, foreColour);
+		
+    cursor_x++;
 	}
 
 	// Check if we need to insert a new line because we have reached the end
@@ -117,24 +112,46 @@ void Screen::WriteChar(char c)
 	}
 
 	// Scroll the screen if needed.
-	Scroll();
+	//Scroll();
+	// Row 25 is the end, this means we need to scroll up
+	if(cursor_y >= 25)
+  {
+	  // Invoke HAL
+    HAL::DisplayCGA::Scroll(cursor_y-24);
+
+	  // The cursor should now be on the last line.
+	  cursor_y = 24;
+  }
 	// Move the hardware cursor.
-	SetCursor();
+  HAL::DisplayCGA::SetCursor(cursor_x, cursor_y);
 }
 
 // Clears the screen.
-void Screen::Clear()
-{
-	for (int i = 0; i < 80*25; i++)
-	{
-		video_memory[i] = 0x0F20;
-	}
+//void Screen::Clear()
+//{
+//	HAL::DisplayCGA::Clear(0);
+//
+//	// Move the hardware cursor back to the start.
+//	cursor_x = 0;
+//	cursor_y = 0;
+//  HAL::DisplayCGA::SetCursor (cursor_x, cursor_y);
+//} 
 
-	// Move the hardware cursor back to the start.
-	cursor_x = 0;
-	cursor_y = 0;
-	SetCursor();
-} 
+// Scrolls the text on the screen up by one line.
+//void Screen::Scroll()
+//{
+//	// Row 25 is the end, this means we need to scroll up
+//	if(cursor_y < 25) return;
+//
+//	// Invoke HAL
+//  HAL::DisplayCGA::Scroll();
+//
+//	// The cursor should now be on the last line.
+//	cursor_y = 24;
+//} 
+
+
+
 
 // Outputs a null-terminated ASCII string to the screen.
 void Screen::WriteString(const char* string)
@@ -176,46 +193,6 @@ void Screen::DumpMemory(intptr start, uint32 size)
   }
   WriteChar('\n');
 }
-
-
-// Scrolls the text on the screen up by one line.
-void Screen::Scroll()
-{
-	// Row 25 is the end, this means we need to scroll up
-	if(cursor_y < 25) return;
-
-	// Move the current text chunk that makes up the screen
-	// back in the buffer by a line
-	memcpy((intptr)video_memory, (intptr)(video_memory + 80), 24*2*80);
-
-	// The last line should now be blank. Do this by writing
-	// 80 spaces to it.
-	uint8  attributeByte = (0 /*black*/ << 4) | (15 /*white*/ & 0x0F);
-	uint16 blank = 0x20 /* space */ | (attributeByte << 8);
-
-	for (int i = 24*80; i < 25*80; i++)
-	{
-		 video_memory[i] = blank;
-	}
-
-	// The cursor should now be on the last line.
-	cursor_y = 24;
-} 
-
-// Move the cursor
-void Screen::SetCursor()
-{
-	// The screen is 80 characters wide...
-	uint16 cursorLocation = cursor_y * 80 + cursor_x;
-
-  // Set the high cursor byte.
-	IOPort::Out8(IOPort::CGA_selector, 0x0E);                  
-	IOPort::Out8(IOPort::CGA_data, (cursorLocation >> 8) & 0xFF);
-  // Set the low cursor byte.
-	IOPort::Out8(IOPort::CGA_selector, 0x0F);                  
-	IOPort::Out8(IOPort::CGA_data, cursorLocation & 0xFF);
-}
-
 
 Screen& Screen::operator <<(uint8 n)
 {
