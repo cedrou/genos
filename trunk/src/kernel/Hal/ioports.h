@@ -47,10 +47,10 @@ namespace GenOS {
 			PIC_Slave_Data      = 0x00A1,
 
       // Primary Programmable Interrupt Timer (PIT) Controller
-      PIT_0               = 0x0040,   // r/w, counter divisor
-      PIT_1               = 0x0041,   // r/w, RAM refresh counter
-      PIT_2               = 0x0042,   // r/w, cassette and speaker
-      PIT_Control         = 0x0043,   // r/w
+      PIT_0_Data          = 0x0040,   // r/w, Channel 0: counter divisor
+      PIT_1_Data          = 0x0041,   // r/w, Channel 1: RAM refresh counter (obsolete, should not be used)
+      PIT_2_Data          = 0x0042,   // r/w, Channel 2: speaker
+      PIT_Command         = 0x0043,   // r/w
       PIT_3               = 0x0044,   // r/w
       PIT_3_Control       = 0x0047,   // r/w
 

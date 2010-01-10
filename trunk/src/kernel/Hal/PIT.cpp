@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// timer.cpp
-//	
+// pit.cpp
+//	HAL - Programmable Interval Timer
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -28,39 +28,31 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#include "timer.h"
-#include "intmgr.h"
-#include "screen.h"
-#include "hal/pit.h"
+#include "PIT.h"
+#include "ioports.h"
 
-using namespace GenOS;
 
-Timer::Timer(uint32 freq)
+using namespace GenOS::HAL;
+
+uint32 PIT::SetFrequency(uint32 freq)
 {
-  HAL::PIT::SetFrequency (freq);
+  // The value we send to the PIT is the value to divide it's input clock
+  // (1193180 Hz) by, to get our required frequency. Important to note is
+  // that the divisor must be small enough to fit into 16-bits.
+  uint32 divisor = 1193180 / freq;
+  if (divisor > 0xFFFF)
+    divisor = 0xFFFF;
 
-  _tick = 0;
+  // Send the command byte.
+  IOPort::Out8(IOPort::PIT_Command, 0x36);
 
-  // Register the timer interrupt handler.
-  InterruptManager::RegisterInterrupt(InterruptManager::SystemTimer, &Timer::TickHandler, this);
-}
+  // Divisor has to be sent byte-wise, so split here into upper/lower bytes.
+  const uint8 l = (uint8)(divisor & 0xFF);
+  const uint8 h = (uint8)( (divisor>>8) & 0xFF );
 
-void Timer::RegisterHandler(InterruptManager::Handler handler, void* data)
-{
-  _handler.Address = handler;
-  _handler.Data = data;
-}
+  // Send the frequency divisor.
+  IOPort::Out8(IOPort::PIT_0_Data, l);
+  IOPort::Out8(IOPort::PIT_0_Data, h);
 
-void Timer::TickHandler(const Registers& regs, void* data)
-{
-  Timer* that = ((Timer*)data);
-  that->_tick++;
-
-  if(that->_handler.Address)
-    that->_handler.Address(regs, that->_handler.Data);
-}
-
-uint32 Timer::Ticks() const
-{
-  return _tick;
+  return 1193180 / divisor;
 }
