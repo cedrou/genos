@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// timer.cpp
-//	
+// pit.h
+//	HAL - Programmable Interval Timer
 //------------------------------------------------------------------------------
 // Copyright (c) 2008, Cedric Rousseau
 // All rights reserved.
@@ -28,39 +28,19 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#include "timer.h"
-#include "intmgr.h"
-#include "screen.h"
-#include "hal/pit.h"
+#pragma once
 
-using namespace GenOS;
+#include "../common.h"
 
-Timer::Timer(uint32 freq)
+
+namespace GenOS {
+  namespace HAL {
+
+class PIT
 {
-  HAL::PIT::SetFrequency (freq);
+public:
+  static uint32 SetFrequency(uint32 freq);
+};
 
-  _tick = 0;
-
-  // Register the timer interrupt handler.
-  InterruptManager::RegisterInterrupt(InterruptManager::SystemTimer, &Timer::TickHandler, this);
-}
-
-void Timer::RegisterHandler(InterruptManager::Handler handler, void* data)
-{
-  _handler.Address = handler;
-  _handler.Data = data;
-}
-
-void Timer::TickHandler(const Registers& regs, void* data)
-{
-  Timer* that = ((Timer*)data);
-  that->_tick++;
-
-  if(that->_handler.Address)
-    that->_handler.Address(regs, that->_handler.Data);
-}
-
-uint32 Timer::Ticks() const
-{
-  return _tick;
+  }
 }

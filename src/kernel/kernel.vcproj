@@ -405,6 +405,14 @@
 				RelativePath=".\Hal\PIC.h"
 				>
 			</File>
+			<File
+				RelativePath=".\Hal\PIT.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Hal\PIT.h"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath="..\..\bin\kernel.map"
