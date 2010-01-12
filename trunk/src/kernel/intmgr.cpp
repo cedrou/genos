@@ -2,7 +2,10 @@
 // intmgr.cpp
 //	CPU Interruptions Manager
 //------------------------------------------------------------------------------
-// Copyright (c) 2008, Cedric Rousseau
+// This file is part of the GenOS (Genesis Operating System) project.
+// The latest version can be found at http://code.google.com/p/genos
+//------------------------------------------------------------------------------
+// Copyright (c) 2008-2010 Cedric Rousseau
 // All rights reserved.
 // 
 // This source code is released under the new BSD License.
@@ -130,9 +133,18 @@ static InterruptDescriptor idt[256];
 
 InterruptManager::HandlerInfo InterruptManager::_handlers[256] = {0};
 
+bool InterruptManager::InitHandlers()
+{
+  memset (InterruptManager::_handlers, (uint8)0, 256 * sizeof(InterruptManager::HandlerInfo));
+  return true;
+}
+
+// hack to initialize _handlers at startup
+static const bool handlerInit = InterruptManager::InitHandlers();
+
 void InterruptManager::RegisterInterrupt(uint8 interrupt, Handler handler, void* data)
 {
-  if ( (_handlers[interrupt].Address != NULL) && (_handlers[interrupt].Address != (void*)-1) )
+  if ( _handlers[interrupt].Address != NULL )
   {
     Screen::cout << "WARNING - overwrite interrupt #" << interrupt << " handler !" << Screen::endl;
     Screen::cout << "    Previous Address/Data = " << _handlers[interrupt].Address << " / " << _handlers[interrupt].Data << Screen::endl;
@@ -153,6 +165,10 @@ void InterruptManager::Initialize()
 {
   // Remap the irq table.
   HAL::PIC::Remap (0x20, 0x28);
+
+  // Unmask all interrupts
+  HAL::PIC::SetMask (0, 0);
+  HAL::PIC::SetMask (1, 0);
 
   // Fill in the IDT
   memset(&idt, (uint8)0, sizeof(InterruptDescriptor)*256);
@@ -222,50 +238,6 @@ void InterruptManager::EncodeIdtEntry(uint8 index, uint32 base, uint16 sel, uint
   idt[index].flags   = flags;
 }
 
-void InterruptManager::Isr(Registers regs)
-{
-  regs.Print();
-
-  const HandlerInfo& ihi = _handlers[regs.int_no];
-  if (ihi.Address != 0)
-  {
-    return ihi.Address(regs, ihi.Data);
-  }
-
-  if(regs.int_no < 19)
-  {
-    static const char* CpuExceptions[] = {
-      "Division by zero exception",
-      "Debug exception",
-      "Non maskable interrupt",
-      "Breakpoint exception",
-      "Into detected overflow",
-      "Out of bounds exception",
-      "Invalid opcode exception",
-      "No coprocessor exception",
-      "Double fault",
-      "Coprocessor segment overrun",
-      "Bad TSS",
-      "Segment not present",
-      "Stack fault",
-      "General protection fault",
-      "Page fault",
-      "Unknown interrupt exception",
-      "Coprocessor fault",
-      "Alignment check exception",
-      "Machine check exception"
-    };
-
-    Screen::cout << "**** Unhandled exception: " << CpuExceptions[regs.int_no] << " ****" << Screen::endl;
-  }
-  else
-  {
-    Screen::cout << "**** Unhandled interrupt: 0x" << (uint8)regs.int_no << " ****" << Screen::endl;
-  }
-
-  Kernel::Hang();
-}
-
 
 void __declspec(naked) InterruptManager::IsrCommon () 
 {
@@ -284,10 +256,16 @@ void __declspec(naked) InterruptManager::IsrCommon ()
     mov gs, ax
   }
 
-  //__asm call Isr;
-
   static Registers* regs = NULL;
   __asm mov regs, esp;
+
+  //Screen::cout << "[INT] Entering #" << regs->int_no << Screen::endl;
+
+    // Mask interrupt
+  if (regs->int_no > 32)
+  {
+    HAL::PIC::DisableInterrupt ((uint8)(regs->int_no - 32));
+  }
 
   if (_handlers[regs->int_no].Address == 0)
   {
@@ -329,17 +307,26 @@ void __declspec(naked) InterruptManager::IsrCommon ()
 
   _handlers[regs->int_no].Address(*regs, _handlers[regs->int_no].Data);
 
-  if (regs->int_no >= 32)
-  {
-    // Send an EOI (end of interrupt) signal to the PICs.
-    HAL::PIC::EndOfInterrupt((uint8)(regs->int_no - 32));
-  }
+  // Do not add code here: it will be jumped in scheduler initialization.
 
   __asm jmp IsrEnd;
 }
 
 void __declspec(naked) InterruptManager::IsrEnd () 
 {
+  static Registers* regs = NULL;
+  __asm mov regs, esp;
+
+  if (regs->int_no >= 32)
+  {
+    // Send an EOI (end of interrupt) signal to the PICs.
+    HAL::PIC::EndOfInterrupt((uint8)(regs->int_no - 32));
+    // Unmask
+    HAL::PIC::EnableInterrupt ((uint8)(regs->int_no - 32));
+  }
+
+  //Screen::cout << "[INT] Exiting #" << regs->int_no << Screen::endl;
+
   __asm
   {
     pop eax        ; reload the original data segment descriptor

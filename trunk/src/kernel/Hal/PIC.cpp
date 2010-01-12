@@ -2,7 +2,10 @@
 // PIC.cpp
 //	HAL - Programmable Interrupt Controller
 //------------------------------------------------------------------------------
-// Copyright (c) 2008, Cedric Rousseau
+// This file is part of the GenOS (Genesis Operating System) project.
+// The latest version can be found at http://code.google.com/p/genos
+//------------------------------------------------------------------------------
+// Copyright (c) 2008-2010 Cedric Rousseau
 // All rights reserved.
 // 
 // This source code is released under the new BSD License.
@@ -126,7 +129,7 @@ void PIC::EndOfInterrupt (uint8 interrupt)
 uint8 PIC::GetController (uint8 interrupt)
 {
 	ASSERT(interrupt < PIC_CTRLS * PIC_INT_PER_CTRL);
-	return (interrupt / PIC_CTRLS);
+	return (interrupt / PIC_INT_PER_CTRL);
 }
 
 void PIC::SendCommand (uint8 controller, uint8 command)

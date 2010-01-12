@@ -2,7 +2,10 @@
 // thread.cpp
 //	
 //------------------------------------------------------------------------------
-// Copyright (c) 2008, Cedric Rousseau
+// This file is part of the GenOS (Genesis Operating System) project.
+// The latest version can be found at http://code.google.com/p/genos
+//------------------------------------------------------------------------------
+// Copyright (c) 2008-2010 Cedric Rousseau
 // All rights reserved.
 // 
 // This source code is released under the new BSD License.
@@ -71,7 +74,7 @@ void Thread::InitStack(void* entryPoint)
   *(--esp) = (uint32)entryPoint; // eip
 
   *(--esp) = 0; // err_code
-  *(--esp) = 0; // int_no
+  *(--esp) = 0x20; // int_no (Timer)
   
   *(--esp) = 0; // eax
   *(--esp) = 0; // ecx

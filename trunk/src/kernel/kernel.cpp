@@ -2,7 +2,10 @@
 // kernel.cpp
 //	Kernel class
 //------------------------------------------------------------------------------
-// Copyright (c) 2008, Cedric Rousseau
+// This file is part of the GenOS (Genesis Operating System) project.
+// The latest version can be found at http://code.google.com/p/genos
+//------------------------------------------------------------------------------
+// Copyright (c) 2008-2010 Cedric Rousseau
 // All rights reserved.
 // 
 // This source code is released under the new BSD License.
@@ -76,19 +79,15 @@ struct MultibootInfo
 #pragma pack(pop)
 
 Kernel* Kernel::_instance = NULL;
-static FrameManager global_framemgr;
-static PageManager global_pagemgr;
-static Kheap global_kheap;
-static DebuggerClient global_debugger;
 
 Kernel::Kernel(KernelBootInfo* bootinfo)
 : _bootinfo(bootinfo)
 {
   _instance = this;
-  _debugger = &global_debugger;
-  _framemgr = &global_framemgr;
-  _pagemgr = &global_pagemgr;
-  _heap = &global_kheap;
+  _debugger = NULL; //&global_debugger;
+  _framemgr = NULL; //&global_framemgr;
+  _pagemgr = NULL; //&global_pagemgr;
+  _heap = NULL; //&global_kheap;
   _pdb = NULL;
   _keyboard = NULL;
   _timer = NULL;
@@ -102,6 +101,8 @@ void Kernel::Run_step1()
   Screen::cout << "Starting GenOS" << Screen::endl; 
 
   Screen::cout << "  - Initializing debugger..." << Screen::endl;
+  DebuggerClient debugger;
+  _debugger = &debugger;
   _debugger->Initialize();
 
 
@@ -139,12 +140,18 @@ void Kernel::Run_step1()
   InterruptManager::Initialize();
 
   Screen::cout << "  - Initializing frame manager (" << _bootinfo->availableMemoryPhysicalBase << "," << _bootinfo->frameManagerVirtualStart << ")..." << Screen::endl; 
+  GenOS::FrameManager global_framemgr;
+  _framemgr = &global_framemgr;
   _framemgr->Initialize((paddr)_bootinfo->availableMemoryPhysicalBase, (vaddr)_bootinfo->frameManagerVirtualStart);
 
   Screen::cout << "  - Initializing page manager..." << Screen::endl; 
+  GenOS::PageManager global_pagemgr;
+  _pagemgr = &global_pagemgr;
   _pagemgr->Initialize();
 
   Screen::cout << "  - Initializing kernel heap (" <<_bootinfo->frameManagerVirtualEnd << ", 0x01000000) ..." << Screen::endl; 
+  GenOS::Kheap global_kheap;
+  _heap = &global_kheap;
   _heap->Initialize((vaddr)_bootinfo->frameManagerVirtualEnd, 0x01000000); // 16 MiB
 
   Screen::cout << "  - Initializing debugging features (" << _bootinfo->pdbVirtualStart << "," << _bootinfo->pdbSize << ")..." << Screen::endl;

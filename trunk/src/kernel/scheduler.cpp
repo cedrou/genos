@@ -2,7 +2,10 @@
 // scheduler.cpp
 //	
 //------------------------------------------------------------------------------
-// Copyright (c) 2008, Cedric Rousseau
+// This file is part of the GenOS (Genesis Operating System) project.
+// The latest version can be found at http://code.google.com/p/genos
+//------------------------------------------------------------------------------
+// Copyright (c) 2008-2010 Cedric Rousseau
 // All rights reserved.
 // 
 // This source code is released under the new BSD License.
@@ -39,7 +42,6 @@ using namespace GenOS;
 
 void Scheduler::TickHandler(const Registers& /*regs*/, void* data)
 {
-
   Scheduler* _this = (Scheduler*)data;
   uint32 temp = 0xBAADF00D;
 

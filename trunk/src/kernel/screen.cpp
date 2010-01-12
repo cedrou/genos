@@ -2,7 +2,10 @@
 // screen.cpp
 //	
 //------------------------------------------------------------------------------
-// Copyright (c) 2008, Cedric Rousseau
+// This file is part of the GenOS (Genesis Operating System) project.
+// The latest version can be found at http://code.google.com/p/genos
+//------------------------------------------------------------------------------
+// Copyright (c) 2008-2010 Cedric Rousseau
 // All rights reserved.
 // 
 // This source code is released under the new BSD License.
@@ -40,21 +43,19 @@ const char* Screen::endl = "\r\n";
 
 void Screen::Initialize()
 {
-  cout.dumpPort = SerialPort::Acquire(HAL::IOPort::COM2);
+  HAL::DisplayCGA::Clear (0);
+  HAL::DisplayCGA::SetCursor (0, 0);
 
   cout.cursor_x = 0;
   cout.cursor_y = 0;
 
-  //cout.Clear();
-  HAL::DisplayCGA::Clear (0);
-  HAL::DisplayCGA::SetCursor (0, 0);
-
+  cout.dumpPort = SerialPort::Acquire(HAL::IOPort::COM2);
 }
 
 // Writes a single character out to the screen.
 void Screen::WriteChar(char c)
 {
-  dumpPort->Write(c);
+  //dumpPort->WriteByte(c);
 
 	// Backspace, move the cursor back one space and put a space
 	if (c == 0x08 && cursor_x)

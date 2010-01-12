@@ -275,6 +275,10 @@
 				RelativePath=".\timer.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\Hal\UART.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -375,6 +379,10 @@
 			</File>
 			<File
 				RelativePath=".\timer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Hal\UART.h"
 				>
 			</File>
 		</Filter>

@@ -2,7 +2,10 @@
 // serial.cpp
 //	serial port manager
 //------------------------------------------------------------------------------
-// Copyright (c) 2008, Cedric Rousseau
+// This file is part of the GenOS (Genesis Operating System) project.
+// The latest version can be found at http://code.google.com/p/genos
+//------------------------------------------------------------------------------
+// Copyright (c) 2008-2010 Cedric Rousseau
 // All rights reserved.
 // 
 // This source code is released under the new BSD License.
@@ -32,100 +35,15 @@
 
 #include "intmgr.h"
 #include "screen.h"
+#include "hal/uart.h"
 
 using namespace GenOS;
 using namespace GenOS::HAL;
 
-class IER { public: enum values
-{
-	DR = 0x01,    // Data ready, it is generated if data waits to be read by the CPU.
-	THRE = 0x02,  // THR Empty, this interrupt tells the CPU to write characters to the THR.
-	SI = 0x04,    // Status interrupt. It informs the CPU of occurred transmission errors during reception.
-	MSI = 0x08    // Modem status interrupt. It is triggered whenever one of the delta-bits is set (see MSR).
-};};
-
-class LCR { public: enum values
-{
-  // Word length
-  CS5 = 0x00, // 5bits
-  CS6 = 0x01, // 6bits
-  CS7 = 0x02, // 7bits
-  CS8 = 0x03, // 8bits
-  // Stop bit
-  ST1 = 0x00, // 1
-  ST2 = 0x04, // 2
-  // Parity
-  PNO = 0x00, // None
-  POD = 0x08, // Odd
-  PEV = 0x18, // Even
-  PMK = 0x28, // Mark 
-  PSP = 0x38, // Space
-
-  BRK = 0x40,
-  DLAB = 0x80,
-};};
-
-class FCR { public: enum values
-{
-	Enabled = 0x01,   // FIFO enable.
-	CLR_RCVR = 0x02,  // Clear receiver FIFO. This bit is self-clearing.
-	CLR_XMIT = 0x04,  // Clear transmitter FIFO. This bit is self-clearing.
-	DMA = 0x08,       // DMA mode
-	// Receiver FIFO trigger level
-	TL1 = 0x00,
-	TL4 = 0x40,
-	TL8 = 0x80,
-	TL14 = 0xC0,
-};};
-
-class MCR { public: enum values
-{
-	DTR = 0x01,
-	RTS = 0x02,
-	OUT1 = 0x04,
-	OUT2 = 0x08,
-	LOOP = 0x10,
-};};
-
-class LSR { public: enum values
-{
-	DR = 0x01, // Data Ready. Reset by reading RBR (but only if the RX FIFO is empty, 16550+).
-	OE = 0x02, // Overrun Error. Reset by reading LSR. Indicates loss of data.
-	PE = 0x04, // Parity Error. Indicates transmission error. Reset by LSR.
-	FE = 0x08, // Framing Error. Indicates missing stop bit. Reset by LSR.
-	BI = 0x10, // Break Indicator. Set if RxD is 'space' for more than 1 word ('break'). Reset by reading LSR.
-	THRE = 0x20, // Transmitter Holding Register Empty. Indicates that a new word can be written to THR. Reset by writing THR.
-	TEMT = 0x40, // Transmitter Empty. Indicates that no transmission is running. Reset by reading LSR.
-};};
-
 SerialPort::SerialPort(uint32 port)
 {
-  const IOPort::Ports bases[] = { IOPort::COM1, IOPort::COM2, IOPort::COM3, IOPort::COM4 };
-  _base = bases[port - 1];
-
-	// Disable all UART interrupts
-  IOPort::Out8 ((uint16)(_base + IOPort::COM_IER), 0x00);          
-
-	// Enable DLAB (set baud rate divisor)
-  IOPort::Out8 ((uint16)(_base + IOPort::COM_LCR), (uint8)LCR::DLAB);           
-
-	// Set Baud rate
-	int baudRate = 33800;
-	int divisor = 115200 / baudRate;
-	IOPort::Out8 ((uint16)(_base + IOPort::COM_DLL), (uint8)(divisor & 0xFF));
-	IOPort::Out8 ((uint16)(_base + IOPort::COM_DLM), (uint8)(divisor>>8 & 0xFF));
-
-	// Reset DLAB, Set 8 bits, no parity, one stop bit
-  IOPort::Out8 ((uint16)(_base + IOPort::COM_LCR), (uint8)(LCR::CS8 | LCR::ST1 | LCR::PNO));
-
-	// Enable FIFO, clear them, with 14-byte threshold
-  IOPort::Out8 ((uint16)(_base + IOPort::COM_FCR), (uint8)(FCR::Enabled | FCR::CLR_RCVR | FCR::CLR_XMIT | FCR::TL14));
-
-	// IRQs enabled, RTS/DSR set
-  IOPort::Out8 ((uint16)(_base + IOPort::COM_MCR), (uint8)(MCR::DTR | MCR::RTS | MCR::OUT2));     
-  
-	// Interrupt when data received
-  IOPort::Out8 ((uint16)(_base + IOPort::COM_IER), (uint8)IER::DR);
+  _port = port;
+  HAL::UART::Initialize (_port);
 }
 
 void SerialPort::RegisterHandler(InterruptManager::Handler handler, void* data)
@@ -143,8 +61,10 @@ void SerialPort::UnregisterHandler()
 void SerialPort::InterruptHandler(const Registers& regs, void* data)
 {
   SerialPort* that = ((SerialPort*)data);
+  //Screen::cout << "[SERIAL] IRQ port #" << that->_port << Screen::endl;
 
-  const uint8 readValue = that->ReadByteNoWait();
+  const uint8 readValue = HAL::UART::ReadByte(that->_port, false);
+
   //Screen::cout << "[SERIAL] queue '" << (char)readValue << "' (0x" << readValue << ")" << Screen::endl;
   that->_cache.Queue (readValue);
 
@@ -153,16 +73,13 @@ void SerialPort::InterruptHandler(const Registers& regs, void* data)
 }
 
 
-void SerialPort::Write (uint8 character) const
+void SerialPort::WriteByte (uint8 character)
 {
-  while ((IOPort::In8 ((uint16)(_base + IOPort::COM_LSR)) & (uint8)LSR::THRE) == 0)
-		;
-
-  IOPort::Out8 ((uint16)(_base + IOPort::COM_THB), character);
   //Screen::cout << "[SERIAL] write '" << (char)character << "' (0x" << character << ")" << Screen::endl;
+  HAL::UART::WriteByte (_port, character, true);
 }
 
-uint8 SerialPort::Read ()
+uint8 SerialPort::ReadByte ()
 {
   uint8 value = 0;
   if (_cache.Dequeue(value))
@@ -171,25 +88,15 @@ uint8 SerialPort::Read ()
     return value;
   }
 
-	while ((IOPort::In8 ((uint16)(_base + IOPort::COM_LSR)) & (uint8)LSR::DR) == 0)
-		;
-
-  value = IOPort::In8 ((uint16)(_base + IOPort::COM_RBR));
+  value = HAL::UART::ReadByte (_port, true);
   //Screen::cout << "[SERIAL] read '" << (char)value << "' (0x" << value << ")" << Screen::endl;
   return value;
 }
 
-uint8 SerialPort::ReadByteNoWait () const
-{
-  uint8 value = IOPort::In8 ((uint16)(_base + IOPort::COM_RBR));
-  //Screen::cout << "[SERIAL] read nowait '" << (char)value << "' (0x" << value << ")" << Screen::endl;
-  return value;
-}
-
-SerialPort SerialPort::s_COM1(1);
-SerialPort SerialPort::s_COM2(2);
-SerialPort SerialPort::s_COM3(3);
-SerialPort SerialPort::s_COM4(4);
+SerialPort SerialPort::s_COM1(0);
+SerialPort SerialPort::s_COM2(1);
+SerialPort SerialPort::s_COM3(2);
+SerialPort SerialPort::s_COM4(3);
 
 bool SerialPort::s_isCOM1Available = true;
 bool SerialPort::s_isCOM2Available = true;
@@ -198,6 +105,8 @@ bool SerialPort::s_isCOM4Available = false;
 
 SerialPort* SerialPort::Acquire(IOPort::Ports port)
 {
+  //Screen::cout << "[SERIAL] acquire COM #" << (uint16)port << Screen::endl;
+
   switch (port)
   {
   case IOPort::COM1:
