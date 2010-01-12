@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// DebuggerClient.h
-//	Client stub for remote debugger
+// UART.h
+//	HAL - Universal Asynchronous Receiver/Transmitter
 //------------------------------------------------------------------------------
 // This file is part of the GenOS (Genesis Operating System) project.
 // The latest version can be found at http://code.google.com/p/genos
@@ -33,48 +33,22 @@
 
 #pragma once
 
-#include "registers.h"
+#include "../common.h"
 
-namespace GenOS
+namespace GenOS {
+  namespace HAL {
+
+class UART
 {
+public:
+  static void Initialize (uint32 port);
 
-  class SerialPort;
+  static bool CanWrite (uint32 port);
+  static bool CanRead (uint32 port);
+  
+  static void WriteByte (uint32 port, uint8 character, bool wait = true);
+  static uint8 ReadByte (uint32 port, bool wait = true);
+};
 
-  class DebuggerProtocol
-  {
-  public:
-    virtual const char* ReadMessage(SerialPort* port) = 0;
-
-    virtual void InterpretMessage (const char* message, SerialPort* port, const Registers& regs) = 0;
-  };
-
-  class GDBProtocol : public DebuggerProtocol
-  {
-  private:
-    static char s_buffer[];
-
-  public:
-    virtual const char* ReadMessage(SerialPort* port);
-    virtual void SendMessage (const char* message, SerialPort* port);
-
-    virtual void InterpretMessage (const char* message, SerialPort* port, const Registers& regs);
-  };
-
-  class DebuggerClient
-  {
-  private:
-    SerialPort* _port;
-    DebuggerProtocol* _protocol;
-
-  public:
-    DebuggerClient();
-    ~DebuggerClient();
-
-    void Initialize();
-
-  private:
-    static void __stdcall Serial_OnReceive(const Registers& regs, void* data);
-
-  };
-
+  }
 }

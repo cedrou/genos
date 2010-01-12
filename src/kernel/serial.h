@@ -2,7 +2,10 @@
 // serial.h
 //	serial port management
 //------------------------------------------------------------------------------
-// Copyright (c) 2008, Cedric Rousseau
+// This file is part of the GenOS (Genesis Operating System) project.
+// The latest version can be found at http://code.google.com/p/genos
+//------------------------------------------------------------------------------
+// Copyright (c) 2008-2010 Cedric Rousseau
 // All rights reserved.
 // 
 // This source code is released under the new BSD License.
@@ -51,7 +54,8 @@ namespace GenOS
     static bool s_isCOM4Available;
 
   private:
-    HAL::IOPort::Ports                 _base;
+    //HAL::IOPort::Ports            _base;
+    uint32                        _port;
     InterruptManager::HandlerInfo _handler;
     Fifo<uint8, 1024>             _cache;
 
@@ -62,11 +66,13 @@ namespace GenOS
     void RegisterHandler(InterruptManager::Handler handler, void* data = NULL);
     void UnregisterHandler();
 
-    void Write (uint8 character) const;
-    uint8 Read ();
+    //void Write (uint8 character) const;
+    //uint8 Read ();
 
-    uint8 ReadByteNoWait () const;
+    //uint8 ReadByteNoWait () const;
 
+    void WriteByte (uint8 character);
+    uint8 ReadByte ();
 
   private:
     SerialPort(uint32 port);

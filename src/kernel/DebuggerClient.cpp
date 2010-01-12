@@ -2,7 +2,10 @@
 // DebuggerClient.cpp
 //	Client stub for remote debugger
 //------------------------------------------------------------------------------
-// Copyright (c) 2008, Cedric Rousseau
+// This file is part of the GenOS (Genesis Operating System) project.
+// The latest version can be found at http://code.google.com/p/genos
+//------------------------------------------------------------------------------
+// Copyright (c) 2008-2010 Cedric Rousseau
 // All rights reserved.
 // 
 // This source code is released under the new BSD License.
@@ -48,13 +51,9 @@ DebuggerClient::~DebuggerClient(void)
 
 void DebuggerClient::Initialize()
 {
-  _port = SerialPort::Acquire(HAL::IOPort::COM1);
   _protocol = &s_protocol; //new GDBProtocol();
-  //const char* message = _protocol->ReadMessage(_port);
-  //if (message == NULL)
-  //  return;
 
-  //_protocol->InterpretMessage(message, _port);
+  _port = SerialPort::Acquire(HAL::IOPort::COM1);
   _port->RegisterHandler (&DebuggerClient::Serial_OnReceive, this); 
 }
 
@@ -80,7 +79,7 @@ const char* GDBProtocol::ReadMessage(SerialPort* port)
   // the leading `$' and the trailing `#' (an eight bit unsigned checksum).
 
   char* pointer = 0;
-  while (1)
+  for(;;)
   {
     pointer = s_buffer;
     
@@ -90,7 +89,7 @@ const char* GDBProtocol::ReadMessage(SerialPort* port)
     uint8 value = 0;
 
     // Get start of packet
-    value = port->Read();
+    value = port->ReadByte();
     if (value != '$')
       return NULL;
 
@@ -104,7 +103,7 @@ const char* GDBProtocol::ReadMessage(SerialPort* port)
       computedChkSum += value;
 
       // read current value
-      value = port->Read();
+      value = port->ReadByte();
 
       // store this value into the array
       *pointer++ = value;
@@ -113,11 +112,11 @@ const char* GDBProtocol::ReadMessage(SerialPort* port)
     // read the packet checksum
     uint8 readChkSum = 0;
 
-    value = port->Read();
+    value = port->ReadByte();
     *pointer++ = value;
     readChkSum += (StringManip::FromHexDigit(value) << 4);
 
-    value = port->Read();
+    value = port->ReadByte();
     *pointer++ = value;
     readChkSum += StringManip::FromHexDigit(value);
 
@@ -127,40 +126,40 @@ const char* GDBProtocol::ReadMessage(SerialPort* port)
       break;
     
     // if checksums are different, request a retransmission
-    port->Write('-');
+    port->WriteByte('-');
   }
 
-  port->Write('+');
+  port->WriteByte('+');
 
-  Screen::cout << "[GDB] Packet received: " << s_buffer << Screen::endl;
+  //Screen::cout << "[GDB] Packet received: " << s_buffer << Screen::endl;
   return s_buffer + 1;
 }
 
 void GDBProtocol::SendMessage (const char* message, SerialPort* port)
 {
-  while (1)
+  for(;;)
   {
-    Screen::cout << "[GDB] Sending message: " << message << Screen::endl;
+    //Screen::cout << "[GDB] Sending message: " << message << Screen::endl;
 
-    port->Write ('$');
+    port->WriteByte ('$');
 
     uint8 chkSum = 0;
     const char* p = message;
 
     while (*p != 0)
     {
-      port->Write (*p);
+      port->WriteByte (*p);
       chkSum += *p;
       p++;
     }
 
-    port->Write ('#');
+    port->WriteByte ('#');
 
-    port->Write (StringManip::ToHexDigit((chkSum >> 4) & 0x0F));
-    port->Write (StringManip::ToHexDigit(chkSum & 0x0F));
+    port->WriteByte (StringManip::ToHexDigit((chkSum >> 4) & 0x0F));
+    port->WriteByte (StringManip::ToHexDigit(chkSum & 0x0F));
 
-    uint8 ack = port->Read();
-    Screen::cout << "[GDB] read ack: " << (char)ack << Screen::endl;
+    uint8 ack = port->ReadByte ();
+    //Screen::cout << "[GDB] read ack: " << (char)ack << Screen::endl;
     if (ack == '+')
       break;
   }
@@ -274,10 +273,10 @@ void GDBProtocol::InterpretMessage (const char* message, SerialPort* port, const
       uint32 count = 0;
 
       message = ReadBigEndian (address, message + 1);
-    Screen::cout << "[GDB] address: " << address << Screen::endl;
+    //Screen::cout << "[GDB] address: " << address << Screen::endl;
       message++; // skip ','
       message = ReadBigEndian (count, message);
-    Screen::cout << "[GDB] count: " << count << Screen::endl;
+    //Screen::cout << "[GDB] count: " << count << Screen::endl;
 
       if (count > GDBProtocol_bufferSize)
       {

@@ -2,7 +2,10 @@
 // intmgr.h
 //	CPU Interruptions Manager
 //------------------------------------------------------------------------------
-// Copyright (c) 2008, Cedric Rousseau
+// This file is part of the GenOS (Genesis Operating System) project.
+// The latest version can be found at http://code.google.com/p/genos
+//------------------------------------------------------------------------------
+// Copyright (c) 2008-2010 Cedric Rousseau
 // All rights reserved.
 // 
 // This source code is released under the new BSD License.
@@ -130,10 +133,11 @@ public:
 private:
   static void EncodeIdtEntry(uint8 num, uint32 base, uint16 sel, uint8 flags);
 
-  static void Isr(Registers regs);
 public:
   static void IsrCommon (); 
   static void IsrEnd (); 
+
+  static bool InitHandlers();
 };
 
 }

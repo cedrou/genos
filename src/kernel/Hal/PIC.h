@@ -2,7 +2,10 @@
 // PIC.h
 //	HAL - Programmable Interrupt Controller
 //------------------------------------------------------------------------------
-// Copyright (c) 2008, Cedric Rousseau
+// This file is part of the GenOS (Genesis Operating System) project.
+// The latest version can be found at http://code.google.com/p/genos
+//------------------------------------------------------------------------------
+// Copyright (c) 2008-2010 Cedric Rousseau
 // All rights reserved.
 // 
 // This source code is released under the new BSD License.
@@ -46,14 +49,15 @@ public:
 
   static void EndOfInterrupt (uint8 interrupt);
 
+  static uint8 GetMask (uint8 controller);
+  static void  SetMask (uint8 controller, uint8 mask);
+
 private:
   static uint8 GetController (uint8 intnum);
 
   static void  SendCommand (uint8 controller, uint8 command);
   static void  SendData (uint8 controller, uint8 command);
 
-  static uint8 GetMask (uint8 controller);
-  static void  SetMask (uint8 controller, uint8 mask);
 };
 
   }
