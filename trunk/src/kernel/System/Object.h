@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// keyboard.cpp
-//	
+// object.h
+//	Base class for all managed classes
 //------------------------------------------------------------------------------
 // This file is part of the GenOS (Genesis Operating System) project.
 // The latest version can be found at http://code.google.com/p/genos
@@ -31,18 +31,19 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#include "keyboard.h"
-#include "intmgr.h"
+#pragma once
 
-using namespace GenOS;
+#include "../common.h"
 
-Keyboard::Keyboard()
+namespace GenOS {
+  namespace System {
+
+class Object
 {
-  // Register the keyboard interrupt handler.
-  InterruptManager::RegisterInterrupt(InterruptManager::Keyboard, &KeyHandler, NULL);
+public:
+  Object();
+  virtual ~Object();
+};
 
-}
-
-void Keyboard::KeyHandler(const Registers& /*reg*/, void*)
-{
+  }
 }

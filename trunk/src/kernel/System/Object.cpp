@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// keyboard.h
-//	Definition of the Keyboard class
+// object.cpp
+//	Base class for all managed classes
 //------------------------------------------------------------------------------
 // This file is part of the GenOS (Genesis Operating System) project.
 // The latest version can be found at http://code.google.com/p/genos
@@ -31,18 +31,14 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#pragma once
+#include "Object.h"
 
-#include "common.h"
+using namespace GenOS::System;
 
-namespace GenOS {
+Object::Object(void)
+{
+}
 
-  class Keyboard
-  {
-  public:
-	  Keyboard();
-
-  private:
-    static void __stdcall KeyHandler(const Registers& reg, void* data);
-  };
+Object::~Object(void)
+{
 }
