@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// serial.h
-//	serial port management
+// keyboard.cpp
+//	HAL - Keyboard
 //------------------------------------------------------------------------------
 // This file is part of the GenOS (Genesis Operating System) project.
 // The latest version can be found at http://code.google.com/p/genos
@@ -31,51 +31,46 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#pragma once
+#include "keyboard.h"
+#include "ioports.h"
 
-#include "fifo.h"
-#include "hal/ioports.h"
-#include "intmgr.h"
+using namespace GenOS::HAL;
 
-namespace GenOS 
+uint8 Keyboard::GetData(bool wait)
 {
+  // wait while input buffer is empty
+  while (wait && (IOPort::In8 (IOPort::KBD_Status) & 0x01) == 0)
+    ;
 
-  class SerialPort
-  {
-  private:
-    static SerialPort s_COM1;
-    static SerialPort s_COM2;
-    static SerialPort s_COM3;
-    static SerialPort s_COM4;
+  return IOPort::In8 (IOPort::KBD_Data);
+}
 
-    static bool s_isCOM1Available;
-    static bool s_isCOM2Available;
-    static bool s_isCOM3Available;
-    static bool s_isCOM4Available;
+uint32 Keyboard::GetScanCode ()
+{
+  uint32 scancode = GetData();
 
-  private:
-    uint32                        _port;
-    InterruptManager::HandlerInfo _handler;
-    Fifo<uint8, 1024>             _cache;
+  if (scancode == 0xE0) // escape scancode
+    scancode = 0xE000 + GetData();
 
-  public: 
-    static SerialPort* Acquire(HAL::IOPort::Ports port);
-    static void Release(HAL::IOPort::Ports port);
+  //else if (scancode = 0xE1) // escape (make+break) : only for [Pause/Break] key
+  //  scancode = 
 
-    void RegisterHandler(InterruptManager::Handler handler, void* data = NULL);
-    void UnregisterHandler();
+  return scancode;
+}
 
-    //void Write (uint8 character) const;
-    //uint8 Read ();
+void Keyboard::SetLEDs(LED leds)
+{
+  // wait while input buffer is full
+  while ((IOPort::In8 (IOPort::KBD_Status) & 0x02) != 0)
+    ;
 
-    //uint8 ReadByteNoWait () const;
+  // Send command "Set LEDS"
+  IOPort::Out8 (IOPort::KBD_Data, 0xED);
 
-    void WriteByte (uint8 character);
-    uint8 ReadByte ();
+  // wait while input buffer is full
+  while ((IOPort::In8 (IOPort::KBD_Status) & 0x02) != 0)
+    ;
 
-  private:
-    SerialPort(uint32 port);
-    static void __stdcall InterruptHandler(const Registers& regs, void* data);
-  };
-
+  // Send LEDs config
+  IOPort::Out8 (IOPort::KBD_Data, (uint8)leds);
 }

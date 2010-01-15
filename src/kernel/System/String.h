@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// serial.h
-//	serial port management
+// string.h
+//	Class that represent text.
 //------------------------------------------------------------------------------
 // This file is part of the GenOS (Genesis Operating System) project.
 // The latest version can be found at http://code.google.com/p/genos
@@ -33,49 +33,30 @@
 
 #pragma once
 
-#include "fifo.h"
-#include "hal/ioports.h"
-#include "intmgr.h"
+#include "Object.h"
 
-namespace GenOS 
+namespace GenOS {
+  namespace System {
+
+class String : public Object
 {
+private:
+  size_t  _length;
+  intptr  _buffer;
 
-  class SerialPort
-  {
-  private:
-    static SerialPort s_COM1;
-    static SerialPort s_COM2;
-    static SerialPort s_COM3;
-    static SerialPort s_COM4;
+public:
+  static const String Empty;
 
-    static bool s_isCOM1Available;
-    static bool s_isCOM2Available;
-    static bool s_isCOM3Available;
-    static bool s_isCOM4Available;
+public:
+  String (const char* text);
+  String (const String& string);
 
-  private:
-    uint32                        _port;
-    InterruptManager::HandlerInfo _handler;
-    Fifo<uint8, 1024>             _cache;
+  virtual ~String();
 
-  public: 
-    static SerialPort* Acquire(HAL::IOPort::Ports port);
-    static void Release(HAL::IOPort::Ports port);
+private:
+  // Not implemented
+  String& operator= (const String& string);
+};
 
-    void RegisterHandler(InterruptManager::Handler handler, void* data = NULL);
-    void UnregisterHandler();
-
-    //void Write (uint8 character) const;
-    //uint8 Read ();
-
-    //uint8 ReadByteNoWait () const;
-
-    void WriteByte (uint8 character);
-    uint8 ReadByte ();
-
-  private:
-    SerialPort(uint32 port);
-    static void __stdcall InterruptHandler(const Registers& regs, void* data);
-  };
-
+  }
 }

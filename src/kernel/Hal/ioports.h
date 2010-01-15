@@ -57,6 +57,11 @@ namespace GenOS {
       PIT_3               = 0x0044,   // r/w
       PIT_3_Control       = 0x0047,   // r/w
 
+      // Keyboard Controller
+      KBD_Data            = 0x0060,   // r/w
+      KBD_Status          = 0x0064,   // r
+      KBD_Command         = 0x0064,   // w
+
       // CGA (Color Graphics Adapter)
       // Register list:
       //	0x00 horizontal total
@@ -81,22 +86,22 @@ namespace GenOS {
 			CGA_data            = 0x03D5,   // (r/)w, write data in register selected by CGA_selector
 
       // Serial port
-      COM1 = 0x03F8,
-      COM2 = 0x02F8,
-      COM3 = 0x03E8,
-      COM4 = 0x02E8,
-      COM_RBR = 0, // r, receiver buffer register
-      COM_THB = 0, // w, transmitter holding buffer
-      COM_DLL = 0, // w, divisor latch LSB
-      COM_IER = 1, // r/w, Interrupt enable register
-      COM_DLM = 1, // w, divisor latch MSB
-      COM_IIR = 2, // r, Interrupt identification register
-      COM_FCR = 2, // w, FIFO control register
-      COM_LCR = 3, // r/w, line control register
-      COM_MCR = 4, // r/w, modem control register
-      COM_LSR = 5, // r, line status register
-      COM_MSR = 6, // r, modem status register
-      COM_SCR = 7, // r/w, scratch register
+      COM1                = 0x03F8,
+      COM2                = 0x02F8,
+      COM3                = 0x03E8,
+      COM4                = 0x02E8,
+                  COM_RBR = 0,        // r, receiver buffer register
+                  COM_THB = 0,        // w, transmitter holding buffer
+                  COM_DLL = 0,        // w, divisor latch LSB
+                  COM_IER = 1,        // r/w, Interrupt enable register
+                  COM_DLM = 1,        // w, divisor latch MSB
+                  COM_IIR = 2,        // r, Interrupt identification register
+                  COM_FCR = 2,        // w, FIFO control register
+                  COM_LCR = 3,        // r/w, line control register
+                  COM_MCR = 4,        // r/w, modem control register
+                  COM_LSR = 5,        // r, line status register
+                  COM_MSR = 6,        // r, modem status register
+                  COM_SCR = 7,        // r/w, scratch register
 
     } ;
 

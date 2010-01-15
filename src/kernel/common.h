@@ -48,13 +48,20 @@ typedef          void*    intptr;
 typedef          void* paddr;
 typedef          void* vaddr;
 
+// Copy count bytes of a buffer into another buffer
 intptr memcpy(intptr dst, const intptr src, size_t count);
 
+// Set the content of a buffer
 void memset(intptr dst, uint8 value, size_t count);
 void memset(intptr dst, uint16 value, size_t count);
 void memset(intptr dst, uint32 value, size_t count);
 
+// Compare size bytes of two buffers.
 int32 memcmp(const intptr a, const intptr b, size_t size);
+
+// Get string length
+size_t strlen(const char* string);
+const char* strcpy(const char* string);
 
 #ifndef WIN32
 

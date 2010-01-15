@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// serial.h
-//	serial port management
+// string.cpp
+//	Class that represent text.
 //------------------------------------------------------------------------------
 // This file is part of the GenOS (Genesis Operating System) project.
 // The latest version can be found at http://code.google.com/p/genos
@@ -31,51 +31,38 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#pragma once
+#include "String.h"
 
-#include "fifo.h"
-#include "hal/ioports.h"
-#include "intmgr.h"
+using namespace GenOS::System;
 
-namespace GenOS 
+String::String(const char* value)
 {
+  _length = strlen(value);
+  _buffer = new char[sizeof(size_t) + _length];
 
-  class SerialPort
-  {
-  private:
-    static SerialPort s_COM1;
-    static SerialPort s_COM2;
-    static SerialPort s_COM3;
-    static SerialPort s_COM4;
-
-    static bool s_isCOM1Available;
-    static bool s_isCOM2Available;
-    static bool s_isCOM3Available;
-    static bool s_isCOM4Available;
-
-  private:
-    uint32                        _port;
-    InterruptManager::HandlerInfo _handler;
-    Fifo<uint8, 1024>             _cache;
-
-  public: 
-    static SerialPort* Acquire(HAL::IOPort::Ports port);
-    static void Release(HAL::IOPort::Ports port);
-
-    void RegisterHandler(InterruptManager::Handler handler, void* data = NULL);
-    void UnregisterHandler();
-
-    //void Write (uint8 character) const;
-    //uint8 Read ();
-
-    //uint8 ReadByteNoWait () const;
-
-    void WriteByte (uint8 character);
-    uint8 ReadByte ();
-
-  private:
-    SerialPort(uint32 port);
-    static void __stdcall InterruptHandler(const Registers& regs, void* data);
-  };
-
+  size_t* count = (size_t*)_buffer;
+  char* text = (char*)_buffer + sizeof(size_t);
+  
+  *count = 1;
+  memcpy (text, (const intptr)value, _length + 1);
 }
+
+String::String (const String& string)
+{
+  _length = string._length;
+  _buffer = string._buffer;
+
+  size_t* count = (size_t*)_buffer;
+  *count = *count + 1;
+}
+
+String::~String()
+{
+  size_t* count = (size_t*)_buffer;
+  *count = *count - 1;
+  if (*count == 0)
+  {
+    delete [] _buffer;
+  }
+}
+

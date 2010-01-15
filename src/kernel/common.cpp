@@ -78,6 +78,26 @@ int memcmp(const intptr a, const intptr b, size_t size)
   return 0;
 }
 
+size_t strlen(const char* string)
+{
+  if(string == NULL)
+    return 0;
+
+  size_t len = 0;
+  while (*string++) len++;
+  return len;
+}
+
+const char* strcpy(const char* string)
+{
+  const size_t len = strlen(string);
+  if (len == 0)
+    return NULL;
+  
+  char* copy = new char[len + 1];
+  memcpy (copy, (const intptr)string, len + 1);
+  return copy;
+}
 
 
 int __cdecl ::_purecall() 

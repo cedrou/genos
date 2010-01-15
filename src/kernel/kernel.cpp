@@ -37,7 +37,6 @@
 #include "framemanager.h"
 #include "gdt.h"
 #include "intmgr.h"
-#include "keyboard.h"
 #include "kheap.h"
 #include "pagemanager.h"
 #include "pdbparser.h"
@@ -45,6 +44,8 @@
 #include "screen.h"
 #include "serial.h"
 #include "timer.h"
+
+#include "driver/keyboard.h"
 
 using namespace GenOS;
 
@@ -173,9 +174,6 @@ void Kernel::Run_step2_thread()
 
 void Kernel::Run_step2()
 {
-  Screen::cout << "  - Initializing keyboard..." << Screen::endl; 
-  _keyboard = new GenOS::Keyboard(); 
-
   // PageManager tests
   //---------------------------------
   //paddr physicalAddress = FrameManager::GetFrame();
@@ -213,6 +211,9 @@ void Kernel::Run_step2()
   //---------------------------------
   //const PdbParser::PublicSymbolEntry* sym = PdbParser::Instance->GetSymbol(Registers::CurrentEIP());
   //Screen::cout << (const char*)&sym->Name << Screen::endl;
+
+
+  Driver::Keyboard kbd;
 
   Screen::cout << "  - Entering idle loop..." << Screen::endl; 
   Idle();
