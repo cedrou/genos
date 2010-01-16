@@ -33,9 +33,9 @@
 
 #pragma once
 
-#include "fifo.h"
-#include "hal/ioports.h"
-#include "intmgr.h"
+#include <fifo.h>
+#include <hal/ioports.h>
+#include <intmgr.h>
 
 namespace GenOS 
 {

@@ -32,7 +32,7 @@
 //------------------------------------------------------------------------------
 
 #include "thread.h"
-#include "intmgr.h"
+#include <intmgr.h>
 
 using namespace GenOS;
 

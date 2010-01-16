@@ -32,11 +32,11 @@
 //------------------------------------------------------------------------------
 
 #include "scheduler.h"
-#include "process.h"
-#include "thread.h"
-#include "screen.h"
-#include "timer.h"
-#include "intmgr.h"
+#include <process.h>
+#include <thread.h>
+#include <screen.h>
+#include <timer.h>
+#include <intmgr.h>
 
 using namespace GenOS;
 

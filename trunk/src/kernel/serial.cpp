@@ -33,9 +33,9 @@
 
 #include "serial.h"
 
-#include "intmgr.h"
-#include "screen.h"
-#include "hal/uart.h"
+#include <intmgr.h>
+#include <screen.h>
+#include <hal/uart.h>
 
 using namespace GenOS;
 using namespace GenOS::HAL;

@@ -32,10 +32,10 @@
 //------------------------------------------------------------------------------
 
 #include "pagemanager.h"
-#include "framemanager.h"
-#include "screen.h"
-#include "intmgr.h"
-#include "kernel.h"
+#include <framemanager.h>
+#include <screen.h>
+#include <intmgr.h>
+#include <kernel.h>
 
 using namespace GenOS;
 

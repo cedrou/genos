@@ -32,9 +32,9 @@
 //------------------------------------------------------------------------------
 
 #include "kheap.h"
-#include "kernel.h"
-#include "pagemanager.h"
-#include "screen.h"
+#include <kernel.h>
+#include <pagemanager.h>
+#include <screen.h>
 
 using namespace GenOS;
 

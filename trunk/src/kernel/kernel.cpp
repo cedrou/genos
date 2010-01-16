@@ -33,19 +33,19 @@
 
 #include "kernel.h"
 
-#include "DebuggerClient.h"
-#include "framemanager.h"
-#include "gdt.h"
-#include "intmgr.h"
-#include "kheap.h"
-#include "pagemanager.h"
-#include "pdbparser.h"
-#include "scheduler.h"
-#include "screen.h"
-#include "serial.h"
-#include "timer.h"
+#include <DebuggerClient.h>
+#include <framemanager.h>
+#include <gdt.h>
+#include <intmgr.h>
+#include <kheap.h>
+#include <pagemanager.h>
+#include <pdbparser.h>
+#include <scheduler.h>
+#include <screen.h>
+#include <serial.h>
+#include <timer.h>
 
-#include "driver/keyboard.h"
+#include <system/io/standardstream.h>
 
 using namespace GenOS;
 
@@ -213,9 +213,13 @@ void Kernel::Run_step2()
   //Screen::cout << (const char*)&sym->Name << Screen::endl;
 
 
-  Driver::Keyboard kbd;
-  for(;;)
-  Screen::cout << kbd.ReadKey();
+  //Driver::Keyboard kbd;
+  //for(;;)
+  //Screen::cout << kbd.ReadKey();
+
+  System::IO::StdInStream cin;
+  for (;;)
+    Screen::cout << (char)cin.ReadByte();
 
   Screen::cout << "  - Entering idle loop..." << Screen::endl; 
   Idle();
@@ -231,6 +235,13 @@ _declspec(noreturn) void Kernel::Panic(const char* message, const char* file, ui
   Screen::cout << "(" << file << ":" << line << ")" << Screen::endl;
 
   Hang();
+}
+
+void Kernel::Error(const char* message, const char* file, uint32 line, const char* function)
+{
+  Screen::cout << "******** ERROR (" << message << ") ********" << Screen::endl; 
+  Screen::cout << "in " << function << Screen::endl;
+  Screen::cout << "(" << file << ":" << line << ")" << Screen::endl;
 }
 
 _declspec(noreturn) void Kernel::Assert(const char* message, const char* file, uint32 line, const char* function)

@@ -32,9 +32,9 @@
 //------------------------------------------------------------------------------
 
 #include "intmgr.h"
-#include "screen.h"
-#include "kernel.h"
-#include "hal/pic.h"
+#include <screen.h>
+#include <kernel.h>
+#include <hal/pic.h>
 
 using namespace GenOS;
 using namespace GenOS::HAL;

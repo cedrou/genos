@@ -32,7 +32,7 @@
 //------------------------------------------------------------------------------
 
 #include "keyboard.h"
-#include "ioports.h"
+#include <HAL/ioports.h>
 
 using namespace GenOS::HAL;
 

@@ -33,7 +33,7 @@
 
 #pragma once
 
-#include "Kernel.h"
+#include <Kernel.h>
 
 namespace GenOS
 {

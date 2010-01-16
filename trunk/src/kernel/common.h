@@ -75,8 +75,8 @@ inline void* __cdecl operator new[](size_t, void* placement) { return placement;
 // delete if placement new fails
 inline void __cdecl operator delete[](void*, void*) { }
 
-#include "registers.h"
-#include "kernel.h"
+#include <registers.h>
+#include <kernel.h>
 
 #else
 

@@ -33,9 +33,9 @@
 
 #include "DebuggerClient.h"
 
-#include "Screen.h"
-#include "Serial.h"
-#include "StringManip.h"
+#include <Screen.h>
+#include <Serial.h>
+#include <StringManip.h>
 
 using namespace GenOS;
 

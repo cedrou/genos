@@ -31,8 +31,8 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#include "kernel.h"
-#include "crt.h"
+#include <kernel.h>
+#include <crt.h>
 
 _declspec(noreturn) void kmain(GenOS::KernelBootInfo* kbi)
 {

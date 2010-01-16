@@ -33,8 +33,8 @@
 
 #pragma once
 
-#include "common.h"
-#include "sortedarray.h"
+#include <common.h>
+#include <sortedarray.h>
 
 namespace GenOS
 {
