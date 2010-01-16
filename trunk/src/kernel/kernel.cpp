@@ -214,6 +214,8 @@ void Kernel::Run_step2()
 
 
   Driver::Keyboard kbd;
+  for(;;)
+  Screen::cout << kbd.ReadKey();
 
   Screen::cout << "  - Entering idle loop..." << Screen::endl; 
   Idle();

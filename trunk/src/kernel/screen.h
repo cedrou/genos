@@ -34,6 +34,7 @@
 #pragma once
 
 #include "common.h"
+#include "driver/keyboard.h"
 
 namespace GenOS {
 
@@ -67,6 +68,7 @@ namespace GenOS {
     Screen& operator <<(intptr n);
     Screen& operator <<(char c);
     Screen& operator <<(const char* s);
+    Screen& operator <<(Driver::Keys::values k);
 
   private:
 	  // Outputs a single character to the screen.
