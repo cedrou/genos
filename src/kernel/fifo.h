@@ -63,6 +63,11 @@ namespace GenOS
       return _count;
     }
 
+    bool IsEmpty() const
+    {
+      return _count == 0;
+    }
+
     bool Dequeue(T& value)
     {
       if (_count == 0)

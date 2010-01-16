@@ -231,3 +231,21 @@ Screen& Screen::operator <<(const char* s)
   return *this;
 }
 
+Screen& Screen::operator <<(Driver::Keys::values k)
+{
+  if (k == Driver::Keys::None)
+  {
+    WriteString("NUL");
+    return *this;
+  }
+  else if ((char)k < 0x80)
+  {
+    WriteChar ((char)k);
+  }
+  else
+  {
+    WriteChar ('?');
+  }
+  return *this;
+}
+
