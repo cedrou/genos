@@ -32,7 +32,7 @@
 //------------------------------------------------------------------------------
 
 #include "UART.h"
-#include "ioports.h"
+#include <HAL/ioports.h>
 
 
 namespace GenOS {

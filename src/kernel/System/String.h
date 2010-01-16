@@ -33,7 +33,7 @@
 
 #pragma once
 
-#include "Object.h"
+#include <System/Object.h>
 
 namespace GenOS {
   namespace System {

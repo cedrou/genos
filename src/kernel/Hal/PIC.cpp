@@ -33,8 +33,8 @@
 
 #include "PIC.h"
 
-#include "../bitmanip.h"
-#include "ioports.h"
+#include <bitmanip.h>
+#include <HAL/ioports.h>
 
 using namespace GenOS::HAL;
 

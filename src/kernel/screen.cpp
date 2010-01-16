@@ -33,8 +33,8 @@
 
 #include "screen.h"
 
-#include "hal/DisplayCGA.h"
-#include "serial.h"
+#include <hal/DisplayCGA.h>
+#include <serial.h>
 
 using namespace GenOS;
 

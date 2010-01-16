@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// gdt.cpp
-//	Global Descriptor Table setup
+// StandardStream.h
+//	Implementation of standard input and output streams
 //------------------------------------------------------------------------------
 // This file is part of the GenOS (Genesis Operating System) project.
 // The latest version can be found at http://code.google.com/p/genos
@@ -31,80 +31,75 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#include "gdt.h"
-#include <registers.h>
-#include <screen.h>
+#include "StandardStream.h"
+
+#include <Screen.h>
 
 using namespace GenOS;
+using namespace GenOS::System::IO;
 
-
-#pragma pack(push,1)
-
-struct GlobalDescriptor
+StdInStream::StdInStream()
 {
-  uint16 limit_low;           // The lower 16 bits of the limit.
-  uint16 base_low;            // The lower 16 bits of the base.
-  uint8  base_middle;         // The next 8 bits of the base.
-  uint8  access;              // Access flags, determine what ring this segment can be used in.
-  uint8  granularity;
-  uint8  base_high;           // The last 8 bits of the base.
-};
+}
 
-struct GlobalDescriptorTable
+StdInStream::~StdInStream()
 {
-  uint16 limit;
-  uint32 base;     // The address of the first element in our idt_entry_t array.
-};
+}
 
-#pragma pack(pop)
-
-static GlobalDescriptor gdt[5];
-
-
-void GDT::Initialize()
+int StdInStream::Read (Array<uint8>& buffer, size_t offset, size_t count)
 {
-  // Fill in the GDT
-  EncodeGdtEntry(0, 0, 0, 0, 0);                // Null segment
-  EncodeGdtEntry(1, 0, 0xFFFFFFFF, 0x9A, 0xCF); // Code segment
-  EncodeGdtEntry(2, 0, 0xFFFFFFFF, 0x92, 0xCF); // Data segment
-  EncodeGdtEntry(3, 0, 0xFFFFFFFF, 0xFA, 0xCF); // User mode code segment
-  EncodeGdtEntry(4, 0, 0xFFFFFFFF, 0xF2, 0xCF); // User mode data segment
-  
-  // Give the GDT to the CPU
-  GlobalDescriptorTable gdtptr; 
-  gdtptr.limit = sizeof(GlobalDescriptor) * 5 -1;
-  gdtptr.base  = (uint32)&gdt;
-  __asm 
+  ASSERT ( (offset + count) <= buffer.Size() );
+  for (size_t i = 0; i < count; i++)
   {
-    lgdt gdtptr
+    buffer[offset + i] = (uint8)(ReadByte() & 0xFF);
+  }
+  return count;
+}
 
-    mov ax, 0x10      ; 0x10 is the offset in the GDT to our data segment
-    mov ds, ax        ; Load all data segment selectors
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-    mov ss, ax
-
-    ; jmp 0x08:.flush   ; far jump
-    push 0x08
-    mov eax, offset flush
-    push eax
-    _emit 0xCB ; far return
-flush:
+int StdInStream::ReadByte ()
+{
+  for(;;)
+  {
+    GenOS::Driver::Keys::values key = _kbd.ReadKey();
+    if (key <= 0xFF)
+      return key;
   }
 }
 
-// Set the value of one GDT entry.
-void GDT::EncodeGdtEntry(uint8 index, uint32 base, uint32 limit, uint8 access, uint8 granularity)
+void StdInStream::Close()
 {
-   gdt[index].base_low    = (base & 0xFFFF);
-   gdt[index].base_middle = (base >> 16) & 0xFF;
-   gdt[index].base_high   = (base >> 24) & 0xFF;
-
-   gdt[index].limit_low   = (limit & 0xFFFF);
-   gdt[index].granularity = (limit >> 16) & 0x0F;
-
-   gdt[index].granularity |= granularity & 0xF0;
-   gdt[index].access      = access;
+  NOTIMPLEMENTED;
 }
 
+
+StdOutStream::StdOutStream()
+{
+}
+
+StdOutStream::~StdOutStream()
+{
+}
+
+void StdOutStream::Write (const Array<uint8>& buffer, size_t offset, size_t count)
+{
+  ASSERT ( (offset + count) <= buffer.Size() );
+  for (size_t i = 0; i < count; i++)
+  {
+    Screen::cout << (char)buffer[offset + i];
+  }
+}
+
+void StdOutStream::WriteByte (uint8 value)
+{
+  Screen::cout << (char)value;
+}
+
+void StdOutStream::Close()
+{
+  NOTIMPLEMENTED;
+}
+
+void StdOutStream::Flush()
+{
+  NOTIMPLEMENTED;
+}

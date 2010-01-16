@@ -33,8 +33,8 @@
 
 #pragma once
 
-#include "common.h"
-#include "intmgr.h"
+#include <common.h>
+#include <intmgr.h>
 
 namespace GenOS 
 {

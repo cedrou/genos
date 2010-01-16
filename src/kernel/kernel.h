@@ -33,10 +33,12 @@
 
 #pragma once
 
-#define PANIC(msg) Kernel::Panic(msg, __FILE__, __LINE__, __FUNCSIG__);
+#define PANIC(msg)      Kernel::Panic(msg, __FILE__, __LINE__, __FUNCSIG__);
+#define ERROR(msg)      Kernel::Error(msg, __FILE__, __LINE__, __FUNCSIG__);
+#define NOTIMPLEMENTED  Kernel::Error("Feature is not implemented yet", __FILE__, __LINE__, __FUNCSIG__);
 #define ASSERT(b) ((b) ? (void)0 : Kernel::Assert(#b,__FILE__, __LINE__, __FUNCSIG__))
 
-#include "common.h"
+#include <common.h>
 
 namespace GenOS {
 
@@ -109,6 +111,8 @@ namespace GenOS {
     void Run_step2();
 
     static void Run_step2_thread();
+
+    static void Error(const char* message, const char* file, uint32 line, const char* function);
 
     static _declspec(noreturn) void Panic(const char* message, const char* file, uint32 line, const char* function);
     static _declspec(noreturn) void Assert(const char* message, const char* file, uint32 line, const char* function);

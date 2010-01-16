@@ -33,8 +33,8 @@
 
 #pragma once
 
-#include "common.h"
-#include "driver/keyboard.h"
+#include <common.h>
+#include <driver/keyboard.h>
 
 namespace GenOS {
 

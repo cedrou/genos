@@ -32,8 +32,8 @@
 //------------------------------------------------------------------------------
 
 #include "framemanager.h"
-#include "bitmanip.h"
-#include "screen.h"
+#include <bitmanip.h>
+#include <screen.h>
 
 using namespace GenOS;
 

@@ -32,9 +32,9 @@
 //------------------------------------------------------------------------------
 
 #include "timer.h"
-#include "intmgr.h"
-#include "screen.h"
-#include "hal/pit.h"
+#include <intmgr.h>
+#include <screen.h>
+#include <hal/pit.h>
 
 using namespace GenOS;
 

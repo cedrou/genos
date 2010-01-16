@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// scheduler.h
-//	
+// Stream.h
+//	Abstract stream class
 //------------------------------------------------------------------------------
 // This file is part of the GenOS (Genesis Operating System) project.
 // The latest version can be found at http://code.google.com/p/genos
@@ -33,30 +33,62 @@
 
 #pragma once
 
-#include <common.h>
+#include <array.h>
 
-namespace GenOS
+
+namespace GenOS {
+  namespace System {
+    namespace IO {
+
+
+class Stream
 {
-  class Process;
-  class Thread;
-
-  class Scheduler
-  {
-  private:
-    Process* _processes;
-
-    Thread* _currentThread;
-
-  public:
-    Scheduler();
-    _declspec(noreturn) void Initialize();
-
-  private:
-    static void __stdcall TimerHandler(const Registers& regs, void* data);
-    static void __stdcall TickHandler(const Registers& reg, void* data);
-
-    void SwitchThread(Registers regs);
-    Thread* NextThread();
+public: 
+  enum Origin {
+    Begin,
+    Current,
+    End
   };
 
+public:
+  virtual int Read (GenOS::Array<uint8>& buffer, size_t offset, size_t count) = 0;
+  virtual int ReadByte () = 0;
+
+  virtual void Write (const Array<uint8>& buffer, size_t offset, size_t count) = 0;
+  virtual void WriteByte (uint8 value) = 0;
+
+  virtual size_t Seek (size_t offset, Origin origin) = 0;
+
+  virtual void Close() = 0;
+
+  virtual void Flush() = 0;
+
+  virtual bool CanRead() = 0;
+  virtual bool CanWrite() = 0;
+  virtual bool CanSeek() = 0;
+
+  virtual size_t GetLength() = 0;
+};
+
+class InputStream : public Stream
+{
+public:
+  virtual void Write (const Array<uint8>& /*buffer*/, size_t /*offset*/, size_t /*count*/) { ERROR("Cannot write an input stream"); }
+  virtual void WriteByte (uint8 /*value*/) { ERROR("Cannot write an input stream"); }
+  virtual void Flush()    { ERROR("Cannot flush an input stream"); }
+  virtual bool CanRead()  { return true; }
+  virtual bool CanWrite() { return false; }
+};
+
+class OutputStream : public Stream
+{
+public:
+  virtual int Read (Array<uint8>& /*buffer*/, size_t /*offset*/, size_t /*count*/) { ERROR("Cannot read an output stream"); }
+  virtual int ReadByte () { ERROR("Cannot read an output stream"); }
+  virtual bool CanRead()  { return false; }
+  virtual bool CanWrite() { return true; }
+};
+
+    }
+  }
 }

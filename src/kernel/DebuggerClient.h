@@ -33,7 +33,7 @@
 
 #pragma once
 
-#include "registers.h"
+#include <registers.h>
 
 namespace GenOS
 {

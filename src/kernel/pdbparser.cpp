@@ -32,7 +32,7 @@
 //------------------------------------------------------------------------------
 
 #include "pdbparser.h"
-#include "kernel.h"
+#include <kernel.h>
 
 using namespace GenOS;
 

@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// scheduler.h
-//	
+// StandardStream.h
+//	Implementation of standard input and output streams
 //------------------------------------------------------------------------------
 // This file is part of the GenOS (Genesis Operating System) project.
 // The latest version can be found at http://code.google.com/p/genos
@@ -33,30 +33,53 @@
 
 #pragma once
 
-#include <common.h>
+#include "Stream.h"
+#include <Driver/Keyboard.h>
 
-namespace GenOS
+namespace GenOS {
+  namespace System {
+    namespace IO {
+
+
+class StdInStream : public InputStream
 {
-  class Process;
-  class Thread;
+private:
+  Driver::Keyboard _kbd;
 
-  class Scheduler
-  {
-  private:
-    Process* _processes;
+public:
+  StdInStream();
+  virtual ~StdInStream();
 
-    Thread* _currentThread;
+  virtual int Read (Array<uint8>& buffer, size_t offset, size_t count);
+  virtual int ReadByte ();
 
-  public:
-    Scheduler();
-    _declspec(noreturn) void Initialize();
+  virtual void Close();
 
-  private:
-    static void __stdcall TimerHandler(const Registers& regs, void* data);
-    static void __stdcall TickHandler(const Registers& reg, void* data);
+  virtual bool CanSeek() { return false; }
+  virtual size_t Seek (size_t /*offset*/, Origin /*origin*/) { ERROR("Cannot seek the standard input stream."); return 0; } 
+  virtual size_t GetLength()  { ERROR("Cannot get the length of the standard input stream."); return 0; }
+};
 
-    void SwitchThread(Registers regs);
-    Thread* NextThread();
-  };
 
+class StdOutStream
+{
+public:
+  StdOutStream();
+  virtual ~StdOutStream();
+
+  virtual void Write (const Array<uint8>& buffer, size_t offset, size_t count);
+  virtual void WriteByte (uint8 value);
+
+  virtual void Close();
+
+  virtual void Flush();
+
+  virtual bool CanSeek() { return false; }
+  virtual size_t Seek (size_t /*offset*/, Stream::Origin /*origin*/) { ERROR("Cannot seek the standard output stream."); return 0; } 
+  virtual size_t GetLength()  { ERROR("Cannot get the length of the standard output stream."); return 0; }
+};
+
+
+    }
+  }
 }
