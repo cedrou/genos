@@ -44,6 +44,9 @@
 #include <screen.h>
 #include <serial.h>
 #include <timer.h>
+#include <process.h>
+#include <thread.h>
+#include <Application/Shell/Shell.h>
 
 #include <system/io/standardstream.h>
 
@@ -217,9 +220,14 @@ void Kernel::Run_step2()
   //for(;;)
   //Screen::cout << kbd.ReadKey();
 
-  System::IO::StdInStream cin;
-  for (;;)
-    Screen::cout << (char)cin.ReadByte();
+  //System::IO::StdInStream cin;
+  //for (;;)
+  //  Screen::cout << (char)cin.ReadByte();
+
+  Process* shellProcess = new Process();
+  Thread* shellThread = new Thread(shellProcess, &Application::Shell::Shell::Main);
+  shellProcess->_threads = shellThread;
+  _scheduler->AddProcess(shellProcess);
 
   Screen::cout << "  - Entering idle loop..." << Screen::endl; 
   Idle();

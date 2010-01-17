@@ -52,6 +52,7 @@
 				AssemblerOutput="2"
 				WarningLevel="4"
 				DebugInformationFormat="3"
+				ShowIncludes="false"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -233,7 +234,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\System\Object.cpp"
+				RelativePath=".\CLR\Object.cpp"
 				>
 			</File>
 			<File
@@ -266,6 +267,14 @@
 			</File>
 			<File
 				RelativePath=".\System\IO\StandardStream.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\System\IO\StreamReader.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\System\IO\StreamWriter.cpp"
 				>
 			</File>
 			<File
@@ -343,7 +352,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\System\Object.h"
+				RelativePath=".\CLR\Object.h"
 				>
 			</File>
 			<File
@@ -387,11 +396,27 @@
 				>
 			</File>
 			<File
+				RelativePath=".\System\IO\StreamReader.h"
+				>
+			</File>
+			<File
+				RelativePath=".\System\IO\StreamWriter.h"
+				>
+			</File>
+			<File
 				RelativePath=".\System\String.h"
 				>
 			</File>
 			<File
 				RelativePath=".\StringManip.h"
+				>
+			</File>
+			<File
+				RelativePath=".\System\IO\TextReader.h"
+				>
+			</File>
+			<File
+				RelativePath=".\System\IO\TextWriter.h"
 				>
 			</File>
 			<File
@@ -462,6 +487,22 @@
 				RelativePath=".\Driver\Keyboard.h"
 				>
 			</File>
+		</Filter>
+		<Filter
+			Name="Application"
+			>
+			<Filter
+				Name="Shell"
+				>
+				<File
+					RelativePath=".\Application\Shell\Shell.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\Application\Shell\Shell.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<File
 			RelativePath="..\..\bin\kernel.map"

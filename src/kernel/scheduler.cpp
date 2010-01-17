@@ -181,3 +181,13 @@ _declspec(noreturn) void Scheduler::Initialize()
   _asm sti
   _asm hlt
 }
+
+void Scheduler::AddProcess(Process * p)
+{
+  _asm cli;
+
+  p->_next = _processes;
+  _processes = p;
+
+  _asm sti;
+}

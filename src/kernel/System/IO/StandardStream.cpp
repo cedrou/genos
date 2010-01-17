@@ -38,6 +38,13 @@
 using namespace GenOS;
 using namespace GenOS::System::IO;
 
+StdInStream StdInStream::s_instance;
+
+StdInStream* StdInStream::GetInstance()
+{
+  return &s_instance;
+}
+
 StdInStream::StdInStream()
 {
 }
@@ -46,15 +53,15 @@ StdInStream::~StdInStream()
 {
 }
 
-int StdInStream::Read (Array<uint8>& buffer, size_t offset, size_t count)
-{
-  ASSERT ( (offset + count) <= buffer.Size() );
-  for (size_t i = 0; i < count; i++)
-  {
-    buffer[offset + i] = (uint8)(ReadByte() & 0xFF);
-  }
-  return count;
-}
+//int StdInStream::Read (Array<uint8>& buffer, size_t offset, size_t count)
+//{
+//  ASSERT ( (offset + count) <= buffer.Size() );
+//  for (size_t i = 0; i < count; i++)
+//  {
+//    buffer[offset + i] = (uint8)(ReadByte() & 0xFF);
+//  }
+//  return count;
+//}
 
 int StdInStream::ReadByte ()
 {
@@ -72,6 +79,17 @@ void StdInStream::Close()
 }
 
 
+
+
+
+
+StdOutStream StdOutStream::s_instance;
+
+StdOutStream* StdOutStream::GetInstance()
+{
+  return &s_instance;
+}
+
 StdOutStream::StdOutStream()
 {
 }
@@ -80,12 +98,21 @@ StdOutStream::~StdOutStream()
 {
 }
 
-void StdOutStream::Write (const Array<uint8>& buffer, size_t offset, size_t count)
+//void StdOutStream::Write (const Array<uint8>& buffer, size_t offset, size_t count)
+//{
+//  ASSERT ( (offset + count) <= buffer.Size() );
+//  for (size_t i = 0; i < count; i++)
+//  {
+//    Screen::cout << (char)buffer[offset + i];
+//  }
+//}
+
+void StdOutStream::WriteString (const char* string)
 {
-  ASSERT ( (offset + count) <= buffer.Size() );
-  for (size_t i = 0; i < count; i++)
+  ASSERT (string != NULL);
+  while (*string)
   {
-    Screen::cout << (char)buffer[offset + i];
+    Screen::cout << (char)*string++;
   }
 }
 

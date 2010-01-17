@@ -41,6 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)&quot;;$(NOINHERIT)"
 				IgnoreStandardIncludePath="true"
 				MinimalRebuild="false"
 				ExceptionHandling="0"
