@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// object.cpp
-//	Base class for all managed classes
+// shell.h
+//	A simple shell application
 //------------------------------------------------------------------------------
 // This file is part of the GenOS (Genesis Operating System) project.
 // The latest version can be found at http://code.google.com/p/genos
@@ -31,14 +31,36 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#include "Object.h"
+#pragma once
 
-using namespace GenOS::System;
+#include <System/IO/Stream.h>
 
-Object::Object(void)
+namespace GenOS { namespace System { namespace IO {
+class TextWriter;
+class TextReader;
+}}};
+
+namespace GenOS {
+  namespace Application {
+    namespace Shell {
+
+class Shell
 {
-}
+private:
+  System::IO::TextWriter* cout;
+  System::IO::TextReader* cin;
 
-Object::~Object(void)
-{
+public:
+  static void Main(int argc, char** argv);
+
+public:
+  Shell();
+  ~Shell();
+
+  void Run();
+
+
+};
+    }
+  }
 }

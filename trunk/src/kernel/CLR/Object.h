@@ -36,7 +36,7 @@
 #include <common.h>
 
 namespace GenOS {
-  namespace System {
+  namespace CLR {
 
 class Object
 {

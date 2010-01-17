@@ -33,7 +33,7 @@
 
 #pragma once
 
-#include "Stream.h"
+#include <System/IO/Stream.h>
 #include <Driver/Keyboard.h>
 
 namespace GenOS {
@@ -44,13 +44,20 @@ namespace GenOS {
 class StdInStream : public InputStream
 {
 private:
+  static StdInStream s_instance;
+
   Driver::Keyboard _kbd;
 
 public:
+  static StdInStream* GetInstance();
+
+private:
   StdInStream();
+
+public:
   virtual ~StdInStream();
 
-  virtual int Read (Array<uint8>& buffer, size_t offset, size_t count);
+  //virtual int Read (Array<uint8>& buffer, size_t offset, size_t count);
   virtual int ReadByte ();
 
   virtual void Close();
@@ -61,13 +68,22 @@ public:
 };
 
 
-class StdOutStream
+class StdOutStream : public OutputStream
 {
+private:
+  static StdOutStream s_instance;
+
 public:
+  static StdOutStream* GetInstance();
+  
+private:
   StdOutStream();
+
+public:
   virtual ~StdOutStream();
 
-  virtual void Write (const Array<uint8>& buffer, size_t offset, size_t count);
+  //virtual void Write (const Array<uint8>& buffer, size_t offset, size_t count);
+  virtual void WriteString (const char* string);
   virtual void WriteByte (uint8 value);
 
   virtual void Close();

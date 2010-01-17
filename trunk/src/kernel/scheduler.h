@@ -51,6 +51,8 @@ namespace GenOS
     Scheduler();
     _declspec(noreturn) void Initialize();
 
+    void AddProcess(Process * p);
+
   private:
     static void __stdcall TimerHandler(const Registers& regs, void* data);
     static void __stdcall TickHandler(const Registers& reg, void* data);

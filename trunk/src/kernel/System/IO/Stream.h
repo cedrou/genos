@@ -51,10 +51,10 @@ public:
   };
 
 public:
-  virtual int Read (GenOS::Array<uint8>& buffer, size_t offset, size_t count) = 0;
+  //virtual int Read (Array<uint8>& buffer, size_t offset, size_t count) = 0;
   virtual int ReadByte () = 0;
 
-  virtual void Write (const Array<uint8>& buffer, size_t offset, size_t count) = 0;
+  //virtual void Write (const Array<uint8>& buffer, size_t offset, size_t count) = 0;
   virtual void WriteByte (uint8 value) = 0;
 
   virtual size_t Seek (size_t offset, Origin origin) = 0;
@@ -73,7 +73,7 @@ public:
 class InputStream : public Stream
 {
 public:
-  virtual void Write (const Array<uint8>& /*buffer*/, size_t /*offset*/, size_t /*count*/) { ERROR("Cannot write an input stream"); }
+  //virtual void Write (const Array<uint8>& /*buffer*/, size_t /*offset*/, size_t /*count*/) { ERROR("Cannot write an input stream"); }
   virtual void WriteByte (uint8 /*value*/) { ERROR("Cannot write an input stream"); }
   virtual void Flush()    { ERROR("Cannot flush an input stream"); }
   virtual bool CanRead()  { return true; }
@@ -83,8 +83,8 @@ public:
 class OutputStream : public Stream
 {
 public:
-  virtual int Read (Array<uint8>& /*buffer*/, size_t /*offset*/, size_t /*count*/) { ERROR("Cannot read an output stream"); }
-  virtual int ReadByte () { ERROR("Cannot read an output stream"); }
+  //virtual int Read (Array<uint8>& /*buffer*/, size_t /*offset*/, size_t /*count*/) { ERROR("Cannot read an output stream"); return 0; }
+  virtual int ReadByte () { ERROR("Cannot read an output stream"); return 0; }
   virtual bool CanRead()  { return false; }
   virtual bool CanWrite() { return true; }
 };

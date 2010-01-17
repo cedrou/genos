@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
-// string.h
-//	Class that represent text.
+// object.cpp
+//	Base class for all managed classes
 //------------------------------------------------------------------------------
 // This file is part of the GenOS (Genesis Operating System) project.
 // The latest version can be found at http://code.google.com/p/genos
@@ -31,32 +31,14 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
-#pragma once
+#include "Object.h"
 
-#include <common.h>
+using namespace GenOS::CLR;
 
-namespace GenOS {
-  namespace System {
-
-class String
+Object::Object(void)
 {
-private:
-  size_t  _length;
-  intptr  _buffer;
+}
 
-public:
-  static const String Empty;
-
-public:
-  String (const char* text);
-  String (const String& string);
-
-  virtual ~String();
-
-private:
-  // Not implemented
-  String& operator= (const String& string);
-};
-
-  }
+Object::~Object(void)
+{
 }
