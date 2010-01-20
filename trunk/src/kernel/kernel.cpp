@@ -158,9 +158,9 @@ void Kernel::Run_step1()
   _heap = &global_kheap;
   _heap->Initialize((vaddr)_bootinfo->frameManagerVirtualEnd, 0x01000000); // 16 MiB
 
-  Screen::cout << "  - Initializing debugging features (" << _bootinfo->pdbVirtualStart << "," << _bootinfo->pdbSize << ")..." << Screen::endl;
-  _pdb = new GenOS::PdbParser((uint8*)_bootinfo->pdbVirtualStart, _bootinfo->pdbSize);
-  _pdb->ParseDebugInfo();
+  //Screen::cout << "  - Initializing debugging features (" << _bootinfo->pdbVirtualStart << "," << _bootinfo->pdbSize << ")..." << Screen::endl;
+  //_pdb = new GenOS::PdbParser((uint8*)_bootinfo->pdbVirtualStart, _bootinfo->pdbSize);
+  //_pdb->ParseDebugInfo();
 
   Screen::cout << "  - Initializing timer..." << Screen::endl; 
   _timer = new GenOS::Timer(20);
