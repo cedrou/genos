@@ -22,19 +22,15 @@ rem set GDBOPT=%GDBOPT% -ex "target remote localhost:%QEMUPORT%"
 set VMDIR=%TRUNK%\vm
 set VM=%VMDIR%\floppy.ima
 
-set QEMUDIR=%TRUNK%\tpt\qemu\11.0
-set QEMU=%QEMUDIR%\qemu.exe
-set QEMUOPT=
-set QEMUOPT=%QEMUOPT% -L %QEMUDIR%\bios
-set QEMUOPT=%QEMUOPT% -fda %VM%
-rem -- COM1
-rem set QEMUOPT=%QEMUOPT% -serial file:%TRUNK%\genos_serial.txt
-set QEMUOPT=%QEMUOPT% -serial tcp:127.0.0.1:%GDBPORT%,server
-rem -- COM2
-set QEMUOPT=%QEMUOPT% -serial tcp:127.0.0.1:%TELNETPORT%,server
+set BOCHSDIR="C:\Program Files\Bochs-2.4.1"
+set BOCHS=%BOCHSDIR%\bochs.exe
+set BOCHSOPT=
+set BOCHSOPT=%BOCHSOPT% -q
+set BOCHSOPT=%BOCHSOPT% -f %VMDIR%\Bochs\genos.bxrc
+set BOCHSOPT=%BOCHSOPT% -log %VMDIR%\Bochs\log.txt
+rem set BOCHSOPT=%BOCHSOPT% -dbglog %VMDIR%\Bochs\dbglog.txt
 
-
-cd %QEMUDIR%
+cd %VMDIR%\Bochs\
 
 echo %GDB% %GDBOPT%
 start %GDB% %GDBOPT%
@@ -42,8 +38,8 @@ start %GDB% %GDBOPT%
 echo %TELNET% %TELNETOPT%
 start %TELNET% %TELNETOPT%
 
-echo %QEMU% %QEMUOPT%
-%QEMU% %QEMUOPT%
+echo %BOCHS% %BOCHSOPT%
+%BOCHS% %BOCHSOPT%
 
 
 pause
