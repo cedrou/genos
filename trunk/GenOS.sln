@@ -30,6 +30,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HelloGenOS", "sandbox\Hello
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AssemblyLoader", "sandbox\AssemblyLoader\AssemblyLoader.vcproj", "{24476DE5-043D-41D3-857D-55E980F70C00}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "corlib", "src\clr\corlib\corlib.csproj", "{51A0BEA7-2F13-405A-86D3-E7F71BF51874}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -96,6 +98,16 @@ Global
 		{24476DE5-043D-41D3-857D-55E980F70C00}.Release|Mixed Platforms.Build.0 = Release|Win32
 		{24476DE5-043D-41D3-857D-55E980F70C00}.Release|Win32.ActiveCfg = Release|Win32
 		{24476DE5-043D-41D3-857D-55E980F70C00}.Release|Win32.Build.0 = Release|Win32
+		{51A0BEA7-2F13-405A-86D3-E7F71BF51874}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51A0BEA7-2F13-405A-86D3-E7F71BF51874}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51A0BEA7-2F13-405A-86D3-E7F71BF51874}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{51A0BEA7-2F13-405A-86D3-E7F71BF51874}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{51A0BEA7-2F13-405A-86D3-E7F71BF51874}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{51A0BEA7-2F13-405A-86D3-E7F71BF51874}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51A0BEA7-2F13-405A-86D3-E7F71BF51874}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51A0BEA7-2F13-405A-86D3-E7F71BF51874}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{51A0BEA7-2F13-405A-86D3-E7F71BF51874}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{51A0BEA7-2F13-405A-86D3-E7F71BF51874}.Release|Win32.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

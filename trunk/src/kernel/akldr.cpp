@@ -43,6 +43,7 @@
 #define MULTIBOOT_KEY       0x2BADB002
 
 #include "kernel.h"
+#include "peformat.h"
 
 struct MBModule
 {
@@ -87,7 +88,7 @@ void __declspec(naked) __multiboot_header__(void)
     dd(0x00101000)               ; header_addr
     dd(0x00101000)               ; load_addr
     dd(0x00102000)               ; load_end_addr
-    dd(0x00000000)               ; bss_end_addr
+    dd(0x00103000)               ; bss_end_addr
     dd(0x00101030)               ; entry_addr
     dd(0x00000000)               ; mode_type
     dd(0x00000000)               ; width
@@ -98,42 +99,78 @@ void __declspec(naked) __multiboot_header__(void)
 
 void memset(intptr dst, uint32 value, size_t count);
 
+MBInfo* mbi;
+GenOS::KernelBootInfo kbi;
+
+uint32 bitsetItems;
+uint32* bitset;
+
+IMAGE_DOS_HEADER* kernel_dos;
+IMAGE_NT_HEADERS32* kernel_nt32;
+IMAGE_DOS_HEADER* corlib_dos;
+IMAGE_NT_HEADERS32* corlib_nt32;
+
+uint32 pageIndex;
+
 void __declspec(naked) __entry_point__(void)
 {
-  MBInfo* mbi;
-  GenOS::KernelBootInfo kbi;
-
-  uint32 bitsetItems;
-  uint32* bitset;
-
   __asm
   {
-    cmp eax, MULTIBOOT_KEY
-    jz valid_grub_id
+    cmp     eax, MULTIBOOT_KEY
+    jz      valid_grub_id
+    xor     ecx, ecx
+    mov     edx, 0x1041 ; Red 'A'
+    mov     [ecx+0B8000h], dx
     hlt
 
 valid_grub_id:
-    mov mbi, ebx;
+    mov     mbi, ebx;
   }
 
   // The kernel was already loaded by Grub
   kbi.kernelSize                  = (mbi->Modules[0].End - mbi->Modules[0].Start + 0x0FFF) & 0xFFFFF000;
   kbi.kernelPhysicalStart         = mbi->Modules[0].Start;
   kbi.kernelPhysicalEnd           = mbi->Modules[0].End;
-  kbi.kernelVirtualStart          = 0xC0000000;
 
-  // The PDB was already loaded by Grub
-  kbi.pdbSize                     = (mbi->Modules[1].End - mbi->Modules[1].Start + 0x0FFF) & 0xFFFFF000;
-  kbi.pdbPhysicalStart            = mbi->Modules[1].Start;
-  kbi.pdbPhysicalEnd              = mbi->Modules[1].Start + kbi.pdbSize;
-  kbi.pdbVirtualStart             = kbi.kernelVirtualStart + kbi.kernelSize;
+  kernel_dos = (IMAGE_DOS_HEADER*)kbi.kernelPhysicalStart;
+  kernel_nt32 = (IMAGE_NT_HEADERS32*)(kbi.kernelPhysicalStart + kernel_dos->e_lfanew);
+
+  kbi.kernelVirtualStart          = kernel_nt32->OptionalHeader.ImageBase; //0xC0000000;
+  kbi.kernelVirtualSize           = kernel_nt32->OptionalHeader.SizeOfImage;
+  kbi.kernelMissingPages          = (kbi.kernelVirtualSize - kbi.kernelSize) >> 12;
+
+  if (kbi.kernelVirtualStart != 0xC0000000)
+  {
+    ((uint16*)0xB8000)[0] = 0x1000 | 'B';
+    __asm hlt;
+  }
+
+  // The corlib was already loaded by Grub
+  kbi.corlibSize                  = (mbi->Modules[1].End - mbi->Modules[1].Start + 0x0FFF) & 0xFFFFF000;
+  kbi.corlibPhysicalStart         = mbi->Modules[1].Start;
+  kbi.corlibPhysicalEnd           = mbi->Modules[1].Start + kbi.corlibSize;
+
+  corlib_dos = (IMAGE_DOS_HEADER*)kbi.corlibPhysicalStart;
+  corlib_nt32 = (IMAGE_NT_HEADERS32*)(kbi.corlibPhysicalStart + corlib_dos->e_lfanew);
+
+  kbi.corlibVirtualStart          = corlib_nt32->OptionalHeader.ImageBase; //0xC0010000; //kbi.kernelVirtualStart + kbi.kernelSize;
+  kbi.corlibVirtualSize           = corlib_nt32->OptionalHeader.SizeOfImage;
+  kbi.corlibMissingPages          = (kbi.corlibVirtualSize - kbi.corlibSize) >> 12;
+
+  if (kbi.corlibVirtualStart <= kbi.kernelVirtualStart + kbi.kernelVirtualSize)
+  {
+    ((uint16*)0xB8000)[0] = 0x1000 | 'C';
+    __asm hlt;
+  }
+
+
 
   // Place the kernel stack after the kernel.
   // Skip the first page which is a page guard
   kbi.stackSize                   = 0x00010000; // 64k stack
-  kbi.stackPhysicalStart          = kbi.pdbPhysicalEnd;
+  kbi.stackPhysicalStart          = kbi.corlibPhysicalEnd;
   kbi.stackPhysicalEnd            = kbi.stackPhysicalStart + kbi.stackSize;
-  kbi.stackVirtualStart           = kbi.pdbVirtualStart + kbi.pdbSize + 0x1000;   // PageGuard placeholder
+  kbi.stackVirtualStart           = 0xC0021000; //kbi.corlibVirtualStart + kbi.corlibSize + 0x1000;   // PageGuard placeholder
   kbi.stackVirtualEnd             = kbi.stackVirtualStart + kbi.stackSize;
 
   // Reserve a frame for the CRT
@@ -186,56 +223,80 @@ valid_grub_id:
   kbi.availableMemoryPhysicalBase += 0x1000;
   memset((intptr)kbi.pageDirectory, (uint32)0, 1024);
 
-  // Allocate a frame for a page table.
+
+  // Allocate a frame for page table 0 (v:0x00000000 -> v:0x00400000).
   kbi.pageTable0 = (uint32*)kbi.availableMemoryPhysicalBase;
   kbi.availableMemoryPhysicalBase += 0x1000;
   memset((intptr)kbi.pageTable0, (uint32)0, 1024);
   kbi.pageDirectory[0] = (uint32)kbi.pageTable0 | 3;
 
-  // Identity map: lower memory + kldr (0 -> kernelStart)
+  // Identity map: lower memory + kldr (p:0x00000000 -> p:kernelStart)
   for( uint32 address = 0x00000000; address < kbi.kernelPhysicalStart; address += 0x1000)
   {
-    kbi.pageTable0[address >> 12] = address | 3;
+    const uint32 virtualAddress = address;
+    pageIndex = (virtualAddress >> 12) & 0x03FF;
+    kbi.pageTable0[pageIndex] = address | 3;
   }
 
-  // Allocate a frame for a page table.
+
+  // Allocate a frame for page table 768 (v:0xC0000000 -> v:0xC0400000).
+  //   768 = 0x300 = (0xC0000000 >> 22)
   kbi.pageTable768 = (uint32*)kbi.availableMemoryPhysicalBase;
   kbi.availableMemoryPhysicalBase += 0x1000;
   memset((intptr)kbi.pageTable768, (uint32)0, 1024);
   kbi.pageDirectory[768] = (uint32)kbi.pageTable768 | 3;
 
-  // Map the kernel and the PDB at 3GiB
+  // Map the kernel and the corlib at 3GiB
   for( uint32 address = kbi.kernelPhysicalStart; address < kbi.kernelPhysicalEnd; address += 0x1000)
   {
     const uint32 virtualAddress = kbi.kernelVirtualStart + (address - kbi.kernelPhysicalStart);
-    const uint32 pageIndex = (virtualAddress >> 12) & 0x03FF;
+    pageIndex = (virtualAddress >> 12) & 0x03FF;
     kbi.pageTable768[pageIndex] = address | 3;
   }
-  for( uint32 address = kbi.pdbPhysicalStart; address < kbi.pdbPhysicalEnd; address += 0x1000)
+  for( uint32 index = 0; index < kbi.kernelMissingPages; index++ )
   {
-    const uint32 virtualAddress = kbi.pdbVirtualStart + (address - kbi.pdbPhysicalStart);
-    const uint32 pageIndex = (virtualAddress >> 12) & 0x03FF;
+    // Allocate a frame for the new page
+    const uint32 frame = kbi.availableMemoryPhysicalBase;
+    kbi.availableMemoryPhysicalBase += 0x1000;
+    memset((intptr)frame, (uint32)0, 1024);
+
+    kbi.pageTable768[pageIndex + index + 1] = frame | 3;
+  }
+
+  for( uint32 address = kbi.corlibPhysicalStart; address < kbi.corlibPhysicalEnd; address += 0x1000)
+  {
+    const uint32 virtualAddress = kbi.corlibVirtualStart + (address - kbi.corlibPhysicalStart);
+    pageIndex = (virtualAddress >> 12) & 0x03FF;
     kbi.pageTable768[pageIndex] = address | 3;
+  }
+  for( uint32 index = 0; index < kbi.corlibMissingPages; index++ )
+  {
+    // Allocate a frame for the new page
+    const uint32 frame = kbi.availableMemoryPhysicalBase;
+    kbi.availableMemoryPhysicalBase += 0x1000;
+    memset((intptr)frame, (uint32)0, 1024);
+
+    kbi.pageTable768[pageIndex + index + 1] = frame | 3;
   }
 
   for( uint32 address = kbi.stackPhysicalStart; address < kbi.stackPhysicalEnd; address += 0x1000)
   {
     const uint32 virtualAddress = kbi.stackVirtualStart + (address - kbi.stackPhysicalStart);
-    const uint32 pageIndex = (virtualAddress >> 12) & 0x03FF;
+    pageIndex = (virtualAddress >> 12) & 0x03FF;
     kbi.pageTable768[pageIndex] = address | 3;
   }
 
   for( uint32 address = kbi.crtPhysicalStart; address < kbi.crtPhysicalEnd; address += 0x1000)
   {
     const uint32 virtualAddress = kbi.crtVirtualStart + (address - kbi.crtPhysicalStart);
-    const uint32 pageIndex = (virtualAddress >> 12) & 0x03FF;
+    pageIndex = (virtualAddress >> 12) & 0x03FF;
     kbi.pageTable768[pageIndex] = address | 3;
   }
 
   for( uint32 address = kbi.frameManagerPhysicalStart; address < kbi.frameManagerPhysicalEnd; address += 0x1000)
   {
     const uint32 virtualAddress = kbi.frameManagerVirtualStart + (address - kbi.frameManagerPhysicalStart);
-    const uint32 pageIndex = (virtualAddress >> 12) & 0x03FF;
+    pageIndex = (virtualAddress >> 12) & 0x03FF;
     kbi.pageTable768[pageIndex] = address | 3;
   }
 
@@ -255,6 +316,9 @@ valid_grub_id:
 
   kbi.availableMemorySize         = mbi->MemoryUpper * 1024 - (kbi.availableMemoryPhysicalBase - 0x00100000);
 
+  const uint32 entryPoint = kernel_nt32->OptionalHeader.ImageBase + kernel_nt32->OptionalHeader.AddressOfEntryPoint;
+
+  ((uint16*)0xB8000)[0] = 0x1000 | 'Z';
 
   __asm
   {
@@ -265,7 +329,12 @@ valid_grub_id:
     mov eax, cr0
     or eax, 0x80000000
     mov cr0, eax
+  }
 
+  ((uint16*)0xB8000)[0] = 0x1000 | 'Y';
+
+  __asm
+  {
 ; set up the stack for our kernel
     mov esp, kbi.stackVirtualEnd
 
@@ -274,7 +343,7 @@ valid_grub_id:
     push eax
 
 ; TODO: dynamically read entry point
-    mov eax, 0xC0001000
+    mov eax, entryPoint
     call eax;
 
 ; this should never be reached
@@ -287,3 +356,4 @@ void memset(intptr dst, uint32 value, size_t count)
 	uint32* d = (uint32*)dst;
 	while(count--) { *d++ = value; }
 }
+

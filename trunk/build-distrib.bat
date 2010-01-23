@@ -25,6 +25,7 @@ copy /b %SRC%\grub\menu.lst A:\
 copy /b %BIN%\kldr.exe A:\
 copy /b %BIN%\kernel.exe A:\
 copy /b %BIN%\kernel.pdb A:\
+copy /b %BIN%\corlib.dll A:\
 
 rem Unmount the image
 rem ---------------------------------------

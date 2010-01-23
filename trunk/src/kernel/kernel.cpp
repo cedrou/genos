@@ -111,24 +111,35 @@ void Kernel::Run_step1()
 
 
 #if 0
-  Screen::cout << "kernelSize: 0x" <<                  _bootinfo->kernelSize << Screen::endl;
-  Screen::cout << "kernelPhysicalStart: 0x" <<         _bootinfo->kernelPhysicalStart << Screen::endl;
-  Screen::cout << "kernelPhysicalEnd: 0x" <<           _bootinfo->kernelPhysicalEnd << Screen::endl;
-  Screen::cout << "kernelVirtualStart: 0x" <<          _bootinfo->kernelVirtualStart << Screen::endl;
-  Screen::cout << "pdbSize: 0x" <<                     _bootinfo->pdbSize << Screen::endl;
-  Screen::cout << "pdbPhysicalStart: 0x" <<            _bootinfo->pdbPhysicalStart << Screen::endl;
-  Screen::cout << "pdbPhysicalEnd: 0x" <<              _bootinfo->pdbPhysicalEnd << Screen::endl;
-  Screen::cout << "pdbVirtualStart: 0x" <<             _bootinfo->pdbVirtualStart << Screen::endl;
-  Screen::cout << "stackSize: 0x" <<                   _bootinfo->stackSize << Screen::endl;
-  Screen::cout << "stackPhysicalStart: 0x" <<          _bootinfo->stackPhysicalStart << Screen::endl;
-  Screen::cout << "stackPhysicalEnd: 0x" <<            _bootinfo->stackPhysicalEnd << Screen::endl;
-  Screen::cout << "stackVirtualStart: 0x" <<           _bootinfo->stackVirtualStart << Screen::endl;
-  Screen::cout << "stackVirtualEnd: 0x" <<             _bootinfo->stackVirtualEnd << Screen::endl;
-  Screen::cout << "frameManagerSize: 0x" <<            _bootinfo->frameManagerSize << Screen::endl;
-  Screen::cout << "frameManagerPhysicalStart: 0x" <<   _bootinfo->frameManagerPhysicalStart << Screen::endl;
-  Screen::cout << "frameManagerPhysicalEnd: 0x" <<     _bootinfo->frameManagerPhysicalEnd << Screen::endl;
-  Screen::cout << "frameManagerVirtualStart: 0x" <<    _bootinfo->frameManagerVirtualStart << Screen::endl;
-  Screen::cout << "frameManagerVirtualEnd: 0x" <<      _bootinfo->frameManagerVirtualEnd << Screen::endl;
+  Screen::cout << "         Size      PStart    PEnd      VStart    VEnd" << Screen::endl;
+  Screen::cout << "  kernel " << _bootinfo->kernelSize 
+                << "  " << _bootinfo->kernelPhysicalStart
+                << "  " << _bootinfo->kernelPhysicalEnd
+                << "  " << _bootinfo->kernelVirtualStart 
+                << "  " << _bootinfo->kernelVirtualStart + _bootinfo->kernelSize
+                << Screen::endl;
+
+  Screen::cout << "  corlib " << _bootinfo->corlibSize 
+                << "  " << _bootinfo->corlibPhysicalStart
+                << "  " << _bootinfo->corlibPhysicalEnd
+                << "  " << _bootinfo->corlibVirtualStart 
+                << "  " << _bootinfo->corlibVirtualStart + _bootinfo->corlibSize
+                << Screen::endl;
+  
+  Screen::cout << "   stack " << _bootinfo->stackSize 
+                << "  " << _bootinfo->stackPhysicalStart
+                << "  " << _bootinfo->stackPhysicalEnd
+                << "  " << _bootinfo->stackVirtualStart 
+                << "  " << _bootinfo->stackVirtualEnd
+                      << Screen::endl;
+
+  Screen::cout << "framemgr " << _bootinfo->frameManagerSize 
+                << "  " << _bootinfo->frameManagerPhysicalStart
+                << "  " << _bootinfo->frameManagerPhysicalEnd
+                << "  " << _bootinfo->frameManagerVirtualStart 
+                << "  " << _bootinfo->frameManagerVirtualEnd
+                      << Screen::endl;
+
   Screen::cout << "availableMemoryPhysicalBase: 0x" << _bootinfo->availableMemoryPhysicalBase << Screen::endl;
   Screen::cout << "availableMemorySize: 0x" <<         _bootinfo->availableMemorySize << Screen::endl;
   Screen::cout << "pageDirectory: 0x" <<               _bootinfo->pageDirectory << Screen::endl;

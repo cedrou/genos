@@ -364,6 +364,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\peformat.h"
+				>
+			</File>
+			<File
 				RelativePath=".\process.h"
 				>
 			</File>
